@@ -1,0 +1,31 @@
+{
+  "name": "pdjr-ais-reporter",
+  "version": "1.0.0",
+  "description": "Report AIS.",
+  "main": "index.js",
+  "signalk-plugin-enabled-by-default": false,
+  "scripts": {
+    "publish": "yq -o=json -I=2 resources/openApi.yaml > resources/openApi.json",
+    "test": "echo \"Error: no test specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pdjr-signalk/pdjr-ais-reporter.git"
+  },
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-category-utility"
+  ],
+  "author": "Paul Reeve <preeve@pdjr.eu>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/pdjr-signalk/pdjr-skplugin-devantech/issues"
+  },
+  "homepage": "https://github.com/pdjr-signalk/pdjr-skplugin-devantech#readme",
+  "dependencies": {
+    "signalk-libdelta": "github:pdjr-signalk/signalk-libdelta",
+    "signalk-liblog": "github:pdjr-signalk/signalk-liblog",
+    "sprintf-js": "^1.1.3"
+  },
+  "directories": {}
+}

@@ -16,8 +16,7 @@
 
 const AisEncode = require("ggencoder").AisEncode;
 const dgram = require("dgram");
-const Log = require("signalk-liblog/Log.js");
-const App = require('signalk-libapp/App.js');
+const Log = require("./lib/signalk-liblog/Log.js");
 
 
 const PLUGIN_ID = "pdjr-ais-reporter";
@@ -66,12 +65,12 @@ const PLUGIN_SCHEMA = {
       properties: {
         positionupdateinterval: {
           type: 'number',
-          title: 'My vessel position update rate (s)',
+          title: 'Target vessel position update rate (s)',
           default: 0
         },
         staticupdateinterval: {
           type: 'number',
-          title: 'My vessel static update rate (s)',
+          title: 'Target vessel static update rate (s)',
           default: 0
         }
       }
@@ -90,7 +89,6 @@ module.exports = function (app) {
   plugin.description = PLUGIN_DESCRIPTION;
   plugin.schema = PLUGIN_SCHEMA;
   plugin.uiSchema = PLUGIN_UISCHEMA;
-  plugin.app = new App(app);
   plugin.log = new Log(plugin.id, { ncallback: app.setPluginStatus, ecallback: app.setPluginError });
   
   plugin.start = function(options, restartPlugin) {
@@ -99,9 +97,11 @@ module.exports = function (app) {
 
     udpSocket= dgram.createSocket('udp4');
 
-    if (plugin.options.endpoints) {
-      if (options.targets.positionupdateinterval > 0) intervalIds.push(setInterval(reportPosition, (options.targets.positionupdaterate * 1000)));
-      if (options.targets.staticupdateinterval > 0) intervalIds.push(setInterval(reportStatic, (options.targets.staticupdateinterval * 1000)));
+    if ((options.endpoints) && (options.endpoints.length > 0)) {
+      //if (options.myvessel.positionupdateinterval > 0) intervalIds.push(setInterval(reportVesselPosition, (options.myvessel.positionupdateinterval * 1000), options));
+      //if (options.myvessel.staticupdateinterval > 0) intervalIds.push(setInterval(reportVesselStatic, (options.myvessel.staticupdateinterval * 1000), options));
+      if (options.targets.positionupdateinterval > 0) intervalIds.push(setInterval(reportTargetPosition, (options.targets.positionupdateinterval * 1000), options));
+      //if (options.targets.staticupdateinterval > 0) intervalIds.push(setInterval(reportTargetStatic, (options.targets.staticupdateinterval * 1000), options));
     }
   }
 
@@ -111,65 +111,78 @@ module.exports = function (app) {
   }
 
   plugin.registerWithRouter = function(router) {
-    router.get('/keys', handleRoutes);
-    router.get('/digest/', handleRoutes);
-    router.get('/outputs/', handleRoutes);
-    router.get('/output/:name', handleRoutes);
-    router.patch('/suppress/:name', handleRoutes);
+    //router.get('/keys', handleRoutes);
+    //router.get('/digest/', handleRoutes);
+    //router.get('/outputs/', handleRoutes);
+    //router.get('/output/:name', handleRoutes);
+    //router.patch('/suppress/:name', handleRoutes);
   }
 
-  plugin.getOpenApi = () => require("./resources/openApi.json");
+  //plugin.getOpenApi = () => require("./resources/openApi.json");
 
-  function reportPosition() {
+  function reportVesselPosition(options) {
+
+  }
+
+  function reportVesselStatic(options) {
+
+  }
+  
+  /********************************************************************
+   * Report the position of an AIS target.
+   */
+  function reportTargetPosition(options) {
     var msg = null;
     var vessels = app.getPath('vessels');
+    var aisProperties;
 
-    vessels.keys.foreach(vessel => {
-      switch (vessel.sensor.ais.class) {
-        case 'A': 
-          msg = new AisEncode({
-            aistype: 1,
-            repeat: 0,
-            mmsi: vessel.mmsi,
-            sog: (vessel.speedOverGround !== undefined) ? mpsToKn(vessel.speedOverGround) : undefined,
-            accuracy: 0, // 0 = regular GPS, 1 = DGPS
-            lon: vessel.navigation.position.longitude,
-            lat: vessel.navigation.position.latitude,
-            cog: (vessel.navigation.courseOverGroundTrue !== undefined) ? radsToDeg(vessel.navigation.courseOverGroundTrue) : undefined
-          });
-          break;
-        case 'B':
-          msg = new AisEncode({
-            aistype: 18,
-            repeat: 0,
-            mmsi: vessel.mmsi,
-            sog: (vessel.speedOverGround !== undefined) ? mpsToKn(vessel.speedOverGround) : undefined,
-            accuracy: 0, // 0 = regular GPS, 1 = DGPS
-            lon: vessel.navigation.position.longitude,
-            lat: vessel.navigation.position.latitude,
-            cog: (vessel.navigation.courseOverGroundTrue !== undefined) ? radsToDeg(vessel.navigation.courseOverGroundTrue) : undefined
-          });
-          break;
-        default:
-          break;
+    Object.keys(vessels).forEach(vessel => {
+      aisProperties = {};
+      try {
+        if ((new Date(vessels[vessel].navigation.position.timestamp)).getTime() > (Date.now() - (options.targets.positionupdateinterval * 1000))) {
+          aisProperties['aistype'] = (vessels[vessel].sensors.ais.class.value == 'A') ? 1 : 18;
+          aisProperties['repeat'] = 0;
+          aisProperties['mmsi'] = vessels[vessel].mmsi;
+          aisProperties['smi'] = Math.floor((new Date(vessels[vessel].navigation.position.timestamp)).getTime() / 1000);
+          aisProperties['lon'] = vessels[vessel].navigation.position.value.longitude;
+          aisProperties['lat'] = vessels[vessel].navigation.position.value.latitude;
+          aisProperties['accuracy'] = 0;
+          aisProperties['sog'] = mpsToKn(vessels[vessel].navigation.speedOverGround.value);
+          aisProperties['cog'] = radsToDeg(vessels[vessel].navigation.courseOverGroundTrue.value);
+          //plugin.log.N("AIS props: %s", JSON.stringify(aisProperties));   
+          if (msg = new AisEncode(aisProperties)) {
+            if (msg.valid) {
+              options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+            }
+          }
+        }    
+      } catch(e) {
+        app.debug('Error making datagram (%s)', e.message);
       }
-      if (msg) options.endpoints.forEach(endpoint => sendReportMsg(msg, endpoint.ipaddress, endpoint.port));
     });
-
   }
 
-  function reportStatic() {
+  /********************************************************************
+   * Report static data for an AIS target.
+   */
+  function reportTargetStatic(options) {
     var msg = null;
     var vessels = app.getPath('vessels');
 
-    vessels.keys.forEach(vessel => {
-      switch (vessel.sensor.ais.class) {
+    Object.keys(vessels).forEach(vessel => {
+      switch (vessel.sensors.ais.class || 'B') {
         case 'A' :
+          msg = new AisEncode({
+            aistype: 5,
+            repeat: 0,
+            mmsi: vessel.mmsi
+          });
           break;
         case 'B' :
           msg = new AisEncode({
             aistype : 24,
             repeat: 0,
+            mmsi: vessel.mmsi,
             shipname: vessel.name,
             cargo: '',
             callsign: '',
@@ -188,12 +201,22 @@ module.exports = function (app) {
 
   function sendReportMsg(msg, ipaddress, port) {
     if (udpSocket) {
+      app.debug("Sending message: %s", msg);
       udpSocket.send(msg + '\n', 0, msg.length + 1, port, ipaddress, err => {
         if (err) {
-          Log.E('Failed to send report (%s)', err)
+          app.debug('Failed to send report message (%s)', err)
         }
-      })
+      });
     }
+  }
+  
+
+  function radsToDeg(radians) {
+    return radians * 180 / Math.PI
+  }
+  
+  function mpsToKn(mps) {
+    return 1.9438444924574 * mps
   }
 
   return(plugin);
