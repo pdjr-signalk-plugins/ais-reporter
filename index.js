@@ -159,12 +159,12 @@ module.exports = function (app) {
               aisProperties['lat'] = vessels[v].navigation.position.value.latitude;
               aisProperties['lon'] = vessels[v].navigation.position.value.longitude;
               aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
-              aisProperties['navstatus'] = 15; //vessels[v].navigation.state.value;
+              //aisProperties['navstatus'] = 15; //vessels[v].navigation.state.value;
               aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessels[v].mmsi));
               aisProperties['repeat'] = 3;
               aisProperties['rot'] = 128; try { aisProperties['rot'] = vessels[v].navigation.rateOfTurn.value; } catch(e) {};
               aisProperties['sog'] = mpsToKn(vessels[v].navigation.speedOverGround.value);
-              aisProperties['smi'] = 60;
+              aisProperties['smi'] = 0;
               break;
             default:
               break;
@@ -173,7 +173,7 @@ module.exports = function (app) {
           msg = new AisEncode(aisProperties);
           if ((msg) && (msg.valid)) {
             app.debug("encoded sentence as '%s'", msg.nmea);
-            app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg.nmea)));
+            app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg)));
             options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
             count++;
           } else {
