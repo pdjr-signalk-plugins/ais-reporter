@@ -95,8 +95,12 @@ module.exports = function (app) {
     udpSocket= dgram.createSocket('udp4');
 
     if ((options.endpoints) && (options.endpoints.length > 0)) {
-      if (options.positionupdateinterval > 0) intervalIds.push(setInterval(reportTargetPosition, (options.positionupdateinterval * 1000), options));
-      //if (options.staticupdateinterval > 0) intervalIds.push(setInterval(reportTargetStatic, (options.staticupdateinterval * 1000), options));
+      if (options.positionupdateinterval > 0) {
+        intervalIds.push(setInterval(reportPositions, (options.positionupdateinterval * 1000), options));
+      }
+      if ((options.positionupdateinterval > 0) && (options.staticupdateinterval > 0)) {
+        intervalIds.push(setInterval(reportStaticData, (options.staticupdateinterval * 1000), options));
+      }
     }
     plugin.log.N("Connected to %d endpoint%s", options.endpoints.length, (options.endpoints.length == 1)?'':'s');
   }
@@ -116,18 +120,10 @@ module.exports = function (app) {
 
   //plugin.getOpenApi = () => require("./resources/openApi.json");
 
-  function reportVesselPosition(options) {
-
-  }
-
-  function reportVesselStatic(options) {
-
-  }
-  
   /********************************************************************
    * Report the position of an AIS target.
    */
-  function reportTargetPosition(options) {
+  function reportPositions(options) {
     var msg = null;
     var vessels = app.getPath('vessels');
     var aisProperties;
@@ -196,7 +192,7 @@ module.exports = function (app) {
   /********************************************************************
    * Report static data for an AIS target.
    */
-  function reportTargetStatic(options) {
+  function reportStaticData(options) {
     var msg = null;
     var vessels = app.getPath('vessels');
 
@@ -240,7 +236,6 @@ module.exports = function (app) {
     }
   }
   
-
   function radsToDeg(radians) {
     return radians * 180 / Math.PI
   }
