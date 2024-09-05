@@ -15,6 +15,7 @@
  */
 
 const AisEncode = require("ggencoder").AisEncode;
+const AisDecode = require("ggencoder").AisDecode;
 const dgram = require("dgram");
 const Log = require("./lib/signalk-liblog/Log.js");
 
@@ -45,35 +46,30 @@ const PLUGIN_SCHEMA = {
         }        
       }
     },
-    myvessel: {
-      type: 'object',
-      properties: {
-        positionupdaterate: {
-          type: 'number',
-          title: 'My vessel position update rate (s)',
-          default: 60
-        },
-        staticupdaterate: {
-          type: 'number',
-          title: 'My vessel static update rate (s)',
-          default: 360
-        }
-      }
+    positionupdateinterval: {
+      type: 'number',
+      title: 'Position update interval (s)',
+      default: 60
     },
-    targets: {
-      type: 'object',
-      properties: {
-        positionupdateinterval: {
-          type: 'number',
-          title: 'Target vessel position update rate (s)',
-          default: 0
-        },
-        staticupdateinterval: {
-          type: 'number',
-          title: 'Target vessel static update rate (s)',
-          default: 0
-        }
-      }
+    staticupdateinterval: {
+      type: 'number',
+      title: 'Static data update interval (s)',
+      default: 360
+    },
+    expiryinterval: {
+      type: 'number',
+      title: 'Ignore data older than (s)',
+      default: 3600
+    },
+    myaisclass: {
+      type: 'string',
+      title: 'My AIS transceiver class',
+      oneOf: [
+        { const: 'B', title: 'none' },
+        { const: 'A', title: 'Class A' },
+        { const: 'B', title: 'Class B' }
+      ],
+      default: 18
     }
   }
 };
@@ -92,17 +88,17 @@ module.exports = function (app) {
   plugin.log = new Log(plugin.id, { ncallback: app.setPluginStatus, ecallback: app.setPluginError });
   
   plugin.start = function(options, restartPlugin) {
+    options.mymmsi = app.getSelfPath('mmsi');
 
     app.debug(`using configuration: ${JSON.stringify(plugin.options, null, 2)}`);
 
     udpSocket= dgram.createSocket('udp4');
 
     if ((options.endpoints) && (options.endpoints.length > 0)) {
-      //if (options.myvessel.positionupdateinterval > 0) intervalIds.push(setInterval(reportVesselPosition, (options.myvessel.positionupdateinterval * 1000), options));
-      //if (options.myvessel.staticupdateinterval > 0) intervalIds.push(setInterval(reportVesselStatic, (options.myvessel.staticupdateinterval * 1000), options));
-      if (options.targets.positionupdateinterval > 0) intervalIds.push(setInterval(reportTargetPosition, (options.targets.positionupdateinterval * 1000), options));
-      //if (options.targets.staticupdateinterval > 0) intervalIds.push(setInterval(reportTargetStatic, (options.targets.staticupdateinterval * 1000), options));
+      if (options.positionupdateinterval > 0) intervalIds.push(setInterval(reportTargetPosition, (options.positionupdateinterval * 1000), options));
+      //if (options.staticupdateinterval > 0) intervalIds.push(setInterval(reportTargetStatic, (options.staticupdateinterval * 1000), options));
     }
+    plugin.log.N("Connected to %d endpoint%s", options.endpoints.length, (options.endpoints.length == 1)?'':'s');
   }
 
   plugin.stop = function() {
@@ -135,31 +131,66 @@ module.exports = function (app) {
     var msg = null;
     var vessels = app.getPath('vessels');
     var aisProperties;
+    var aisClass;
+    var targetTimestamp;
+    var count = 0;
 
-    Object.keys(vessels).forEach(vessel => {
+    Object.keys(vessels).forEach(v => {
       aisProperties = {};
       try {
-        if ((new Date(vessels[vessel].navigation.position.timestamp)).getTime() > (Date.now() - (options.targets.positionupdateinterval * 1000))) {
-          aisProperties['aistype'] = (vessels[vessel].sensors.ais.class.value == 'A') ? 1 : 18;
-          aisProperties['repeat'] = 0;
-          aisProperties['mmsi'] = vessels[vessel].mmsi;
-          aisProperties['smi'] = Math.floor((new Date(vessels[vessel].navigation.position.timestamp)).getTime() / 1000);
-          aisProperties['lon'] = vessels[vessel].navigation.position.value.longitude;
-          aisProperties['lat'] = vessels[vessel].navigation.position.value.latitude;
-          aisProperties['accuracy'] = 0;
-          aisProperties['sog'] = mpsToKn(vessels[vessel].navigation.speedOverGround.value);
-          aisProperties['cog'] = radsToDeg(vessels[vessel].navigation.courseOverGroundTrue.value);
-          //plugin.log.N("AIS props: %s", JSON.stringify(aisProperties));   
-          if (msg = new AisEncode(aisProperties)) {
-            if (msg.valid) {
-              options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
-            }
+        // get timestamp in milliseconds of most recent position update.
+        targetTimestamp = (new Date(vessels[v].navigation.position.timestamp)).getTime();
+        // check update was within this reporting period.
+        if (targetTimestamp > (Date.now() - (options.expiryinterval * 1000))) {
+          try { aisClass = vessels[v].sensors.ais.class.value; } catch(e) { aisClass = options.myaisclass };
+          switch (aisClass) {
+            case 'B':
+              aisProperties['aistype'] = 18;
+              aisProperties['accuracy'] = 0;
+              aisProperties['cog'] = radsToDeg(vessels[v].navigation.courseOverGroundTrue.value);
+              aisProperties['hdg'] = 511; try { aisProperties['hdg'] = vessels[v].navigation.headingTrue.value } catch(e) {};
+              aisProperties['lat'] = vessels[v].navigation.position.value.latitude;
+              aisProperties['lon'] = vessels[v].navigation.position.value.longitude;
+              aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
+              aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessels[v].mmsi));
+              aisProperties['repeat'] = 3;
+              aisProperties['sog'] = mpsToKn(vessels[v].navigation.speedOverGround.value);
+              break;
+            case 'A':
+              aisProperties['aistype'] = 1;
+              aisProperties['cog'] = radsToDeg(vessels[v].navigation.courseOverGroundTrue.value);
+              aisProperties['hdg'] = 511; try { aisProperties['hdg'] = vessels[v].navigation.headingTrue.value } catch(e) {};
+              aisProperties['lat'] = vessels[v].navigation.position.value.latitude;
+              aisProperties['lon'] = vessels[v].navigation.position.value.longitude;
+              aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
+              aisProperties['navstatus'] = 15; //vessels[v].navigation.state.value;
+              aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessels[v].mmsi));
+              aisProperties['repeat'] = 3;
+              aisProperties['rot'] = 128; try { aisProperties['rot'] = vessels[v].navigation.rateOfTurn.value; } catch(e) {};
+              aisProperties['sog'] = mpsToKn(vessels[v].navigation.speedOverGround.value);
+              aisProperties['smi'] = 60;
+              break;
+            default:
+              break;
           }
-        }    
+          app.debug("encoding sentence type %d using configuration '%s'", aisProperties['aistype'], JSON.stringify(aisProperties));
+          msg = new AisEncode(aisProperties);
+          if ((msg) && (msg.valid)) {
+            app.debug("encoded sentence as '%s'", msg.nmea);
+            app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg.nmea)));
+            options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+            count++;
+          } else {
+            app.debug("error encoding sentence");
+          }
+        } else {
+          app.debug("not reporting stale data for '%s'", v);
+        } 
       } catch(e) {
-        app.debug('Error making datagram (%s)', e.message);
+        app.debug("error processing sentence for '%s' (%s)", v, e.message);
       }
     });
+    plugin.log.N("Last sent %d position report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
   }
 
   /********************************************************************
@@ -201,12 +232,11 @@ module.exports = function (app) {
 
   function sendReportMsg(msg, ipaddress, port) {
     if (udpSocket) {
-      app.debug("Sending message: %s", msg);
-      udpSocket.send(msg + '\n', 0, msg.length + 1, port, ipaddress, err => {
-        if (err) {
-          app.debug('Failed to send report message (%s)', err)
-        }
+      udpSocket.send(msg + '\n', 0, msg.length + 1, port, ipaddress, e => {
+        if (e) plugin.log.E('send failure (%s)', e.message);
       });
+    } else {
+      app.debug("udp port not available");
     }
   }
   
@@ -217,6 +247,14 @@ module.exports = function (app) {
   
   function mpsToKn(mps) {
     return 1.9438444924574 * mps
+  }
+
+  function getNavState(vessel) {
+    var retval = 15; // not defined
+    if ((vessel.navigation) && (vessel.navigation.state)) {
+
+    }
+    return(retval);
   }
 
   return(plugin);
