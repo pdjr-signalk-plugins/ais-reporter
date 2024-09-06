@@ -16,7 +16,7 @@ The definition of 'active' is user configurable.
 ### UDP endpoints to report to
 A list of service endpoints to which the plugin should send AIS reports.
 
-Each service is specified by its IP address and the number of its
+Each service endpoint is specified by its IP address and the number of its
 listening port.
 
 ### Position update interval (s)
@@ -37,8 +37,8 @@ be sent to endpoints, expressed as an interval in seconds.
 A value of 0 disbles static data reporting.
 
 ### Ignore data older than (s)
-The interval after which position and static data reports cease to be
-transmitted after vessel's AIS updates stop being received.
+The interval after which a vessel's data reports cease to be transmitted
+after SignalK stops receiving AIS updates for the vessel.
 This value determines what constitutes an 'active' vs. 'inactive'
 vessels.
 
