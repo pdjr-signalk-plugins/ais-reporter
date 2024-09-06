@@ -195,35 +195,79 @@ module.exports = function (app) {
   function reportStaticData(options) {
     var msg = null;
     var vessels = app.getPath('vessels');
+    var aisProperties;
+    var aisClass;
+    var targetTimestamp;
+    var count = 0;
 
-    Object.keys(vessels).forEach(vessel => {
-      switch (vessel.sensors.ais.class || 'B') {
-        case 'A' :
-          msg = new AisEncode({
-            aistype: 5,
-            repeat: 0,
-            mmsi: vessel.mmsi
-          });
-          break;
-        case 'B' :
-          msg = new AisEncode({
-            aistype : 24,
-            repeat: 0,
-            mmsi: vessel.mmsi,
-            shipname: vessel.name,
-            cargo: '',
-            callsign: '',
-            dimA: (vessel.design.length.overall !== undefined) ? vessel.design.length.overall : 0,
-            dimB: 0,
-            dimC: (vessel.design.beam !== undefined) ? vessel.design.beam : 0,
-            dimD: 0
-          });
+    Object.keys(vessels).forEach(v => {
+      aisProperties = {};
+      try {
+        // get timestamp in milliseconds of most recent position update.
+        targetTimestamp = (new Date(vessels[v].navigation.position.timestamp)).getTime();
+        // check update was within this reporting period.
+        if (targetTimestamp > (Date.now() - (options.expiryinterval * 1000))) {
+          try { aisClass = vessels[v].sensors.ais.class.value; } catch(e) { aisClass = options.myaisclass };
+          aisProperties['callsign'] = '';
+          try { aisProperties['cargo'] = vessels[v].design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
+          try { aisProperties['destination'] = vessels[v].navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
+          try { putDimensions(aisProperties, vessels[v].design.length.value.overall, vessels[v].design.beam.value, vessels[v].sensors.ais.fromBow.value, vessels[v].sensors.ais.fromCenter.value) } catch() { putDimensions(aisProperties, 0, 0, 0, 0) };
+          try { aisProperties['draught'] = vessels[v].design.draft.value.maximum } catch(e) { aisProperties['draught'] = 0 }
+          aisProperties['etaDay'] = 0;
+          aisProperties['etaHr'] = 0
+          aisProperties['etaMin'] = 0;
+          aisProperties['etaMo'] = 0;
+          aisProperties['imo'] = ''
+          aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
+          aisProperties['repeat'] = 3
+          aisProperties['shipname'] = ''; try { aisProperties['shipname'] = vessels[v].name; } catch(e) {};
+          switch (aisClass) {
+            case 'A':
+              aisProperties['aistype'] = 5;
+              msg = new AisEncode(aisProperties);
+              if ((msg) && (msg.valid)) {
+                app.debug("encoded sentence as '%s'", msg.nmea);
+                app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg)));    
+                //options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+                count++;
+              } else {
+                app.debug("error encoding sentence type %d", aisProperties['aistype]']);
+              }
               break;
-        default:
-          break;
+            case 'B':
+              aisProperties['aistype'] = 24;
+              aisProperties['part'] = 0;
+              msg = new AisEncode(aisProperties);
+              if ((msg) && (msg.valid)) {
+                app.debug("encoded sentence as '%s'", msg.nmea);
+                app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg)));    
+                //options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+                count++;
+              } else {
+                app.debug("error encoding sentence type %d part %d", aisProperties['aistype]'], aisProperties['part']);
+              }
+              aisProperties['part'] = 1;
+              msg = new AisEncode(aisProperties);
+              if ((msg) && (msg.valid)) {
+                app.debug("encoded sentence as '%s'", msg.nmea);
+                app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg)));    
+                //options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+                count++;
+              } else {
+                app.debug("error encoding sentence type %d part %d", aisProperties['aistype]'], aisProperties['part']);
+              }
+              break;
+            default:
+              break;
+          }          
+        } else {
+          app.debug("not reporting stale data for '%s'", v);
+        }
+      } catch(e) {
+        app.debug("error processing sentence for '%s' (%s)", v, e.message);
       }
-      if (msg) options.endpoints.forEach(endpoint => sendReportMsg(msg, endpoint.ipaddress, endpoint.port));
     });
+    plugin.log.N("Last sent %d static data report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
   }
 
   function sendReportMsg(msg, ipaddress, port) {
@@ -244,12 +288,11 @@ module.exports = function (app) {
     return 1.9438444924574 * mps
   }
 
-  function getNavState(vessel) {
-    var retval = 15; // not defined
-    if ((vessel.navigation) && (vessel.navigation.state)) {
-
-    }
-    return(retval);
+  function putDimensions(aisProperties, length: number | undefined = 0, beam: number | undefined = 0, fromBow: number | undefined = 0, fromCenter: number | undefined = 0) {
+    aisProperties.dimA = fromBow.toFixed(0)
+    aisProperties.dimB = (length - fromBow).toFixed(0)
+    aisProperties.dimC = (beam / 2 + fromCenter).toFixed(0)
+    aisProperties.dimD = (beam / 2 - fromCenter).toFixed(0)
   }
 
   return(plugin);
