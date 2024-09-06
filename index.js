@@ -272,7 +272,7 @@ module.exports = function (app) {
         if (e) plugin.log.E('send failure (%s)', e.message);
       });
     } else {
-      app.debug("udp port not available");
+      plugin.log.E("UDP port is no longer available");
     }
   }
   
