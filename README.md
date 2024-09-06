@@ -1,19 +1,20 @@
 # pdjr-ais-reporter
 
-Report AIS data for active vessels to one or more remote UDP endpoints.
-
 **pdjr-ais-reporter** is a
 [SiknalK]()
-plugin which reports AIS data to services like
+plugin which reports position and static data for all recorded vessels to
+one or more specified UDP endpoints.
+The plugin can be used to send updates to online AIS consolidation services
+like
 [MarineTraffic](https://www.marinetraffic.com).
+
 On a vessel with no AIS transceiver the plugin will fake AIS data for the
-host ship allowing its position to be publicised.
+'self' vessel allowing its position to be publicised.
 On a vessel with an AIS receiver data on all identified vessels will be
 uploaded to the specified endpoints.
 
-Reports are issued at a user configured rate for all vessels that are
-active in Signal K, including 'self'.
-The definition of 'active' is user configurable.
+Reports are issued at a user configured rate for all active vessels giving
+some control over data and bandwidth use.
 
 ## Configuration
 
