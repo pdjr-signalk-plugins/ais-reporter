@@ -15,9 +15,9 @@
  */
 
 const AisEncode = require("ggencoder").AisEncode;
-const AisDecode = require("ggencoder").AisDecode;
 const dgram = require("dgram");
 const Log = require("./lib/signalk-liblog/Log.js");
+const { version } = require("os");
 
 
 const PLUGIN_ID = "pdjr-ais-reporter";
@@ -169,21 +169,19 @@ module.exports = function (app) {
             default:
               break;
           }
-          app.debug("encoding sentence type %d using configuration '%s'", aisProperties['aistype'], JSON.stringify(aisProperties));
           msg = new AisEncode(aisProperties);
           if ((msg) && (msg.valid)) {
-            app.debug("encoded sentence as '%s'", msg.nmea);
-            app.debug("which decodes to '%s'", JSON.stringify(new AisDecode(msg)));
+            app.debug("created position report for '%s' (%s)", v, msg.nmea);
             options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
             count++;
           } else {
-            app.debug("error encoding sentence");
+            app.debug("error creating position report for '%s'", v);
           }
         } else {
-          app.debug("not reporting stale data for '%s'", v);
+          app.debug("ignoring inactive vessel '%s'" , v);
         } 
       } catch(e) {
-        app.debug("error processing sentence for '%s' (%s)", v, e.message);
+        app.debug("error creating AIS sentence configuration for '%s' (%s)", v, e.message);
       }
     });
     plugin.log.N("Last sent %d position report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
@@ -193,7 +191,7 @@ module.exports = function (app) {
    * Report static data for an AIS target.
    */
   function reportStaticData(options) {
-    var msg = null;
+    var msg = null, msgB = null;
     var vessels = app.getPath('vessels');
     var aisProperties;
     var aisClass;
@@ -229,11 +227,11 @@ module.exports = function (app) {
               aisProperties['aistype'] = 5;
               msg = new AisEncode(aisProperties);
               if ((msg) && (msg.valid)) {
-                app.debug("successfully encoded sentence type %d as '%s'", aisProperties['aistype'], msg.nmea);
+                app.debug("created static data report for '%s' (%s)", v, msg.nmea);
                 options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
                 count++;
               } else {
-                app.debug("error encoding sentence type %d", aisProperties['aistype]']);
+                app.debug("error creating static data report for '%s'", v);
               }
               break;
             case 'B':
@@ -241,29 +239,28 @@ module.exports = function (app) {
               aisProperties['part'] = 0;
               msg = new AisEncode(aisProperties);
               if ((msg) && (msg.valid)) {
-                app.debug("successfully encoded sentence type %d part 0 as '%s'", aisProperties['aistype'], msg.nmea);
-                options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
-                count++;
+                aisProperties['part'] = 1;
+                msgB = new AisEncode(aisProperties);
+                if ((msgB) && (msgB.valid)) {
+                  app.debug("created static data report for '%s'", v);
+                  options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+                  options.endpoints.forEach(endpoint => sendReportMsg(msgB.nmea, endpoint.ipaddress, endpoint.port));
+                  count++;
+                } else {
+                  app.debug("error creating static data report for '%s' (Part 2 failed)", v);
+                }
               } else {
-                app.debug("error encoding sentence type %d part %d", aisProperties['aistype]'], aisProperties['part']);
-              }
-              aisProperties['part'] = 1;
-              msg = new AisEncode(aisProperties);
-              if ((msg) && (msg.valid)) {
-                app.debug("successfully encoded sentence type %d part 1 as '%s'", aisProperties['aistype'], msg.nmea);
-                options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
-              } else {
-                app.debug("error encoding sentence type %d part %d", aisProperties['aistype]'], aisProperties['part']);
+                app.debug("error creating static data report for '%s' (Part 1 failed)", v);
               }
               break;
             default:
               break;
           }          
         } else {
-          app.debug("not reporting stale data for '%s'", v);
+          app.debug("ignoring inactive vessel '%s'", v);
         }
       } catch(e) {
-        app.debug("error processing sentence for '%s' (%s)", v, e.message);
+        app.debug("error creating AIS sentence configuration for '%s' (%s)", v, e.message);
       }
     });
     plugin.log.N("Last sent %d static data report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
@@ -285,13 +282,6 @@ module.exports = function (app) {
   
   function mpsToKn(mps) {
     return 1.9438444924574 * mps
-  }
-
-  function putDimensions(aisProperties, length = 0, beam = 0, fromBow = 0, fromCenter = 0) {
-    aisProperties.dimA = fromBow.toFixed(0)
-    aisProperties.dimB = (length - fromBow).toFixed(0)
-    aisProperties.dimC = (beam / 2 + fromCenter).toFixed(0)
-    aisProperties.dimD = (beam / 2 - fromCenter).toFixed(0)
   }
 
   return(plugin);
