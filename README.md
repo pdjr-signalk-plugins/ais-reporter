@@ -8,13 +8,13 @@ The plugin can be used to send updates to online AIS consolidation services
 like
 [MarineTraffic](https://www.marinetraffic.com).
 
-On a vessel with no AIS transceiver the plugin will fake AIS data for the
-'self' vessel allowing its position to be publicised.
+On a vessel with no AIS transceiver (but a working GPS) the plugin will
+publish fake AIS data for the 'self' vessel.
 On a vessel with an AIS receiver data on all identified vessels will be
 uploaded to the specified endpoints.
 
-Reports are issued at a user configured rate for all active vessels giving
-some control over data and bandwidth use.
+Reports are issued at a user configured rate giving some control over
+Ethernet data and bandwidth use.
 
 ## Configuration
 
