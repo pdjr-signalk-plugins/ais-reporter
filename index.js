@@ -17,8 +17,6 @@
 const AisEncode = require("ggencoder").AisEncode;
 const dgram = require("dgram");
 const Log = require("./lib/signalk-liblog/Log.js");
-const { version } = require("os");
-
 
 const PLUGIN_ID = "pdjr-ais-reporter";
 const PLUGIN_NAME = "pdjr-ais-reporter";
