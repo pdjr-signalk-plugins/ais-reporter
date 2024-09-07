@@ -122,64 +122,41 @@ module.exports = function (app) {
    * Report the position of an AIS target.
    */
   function reportPositions(options) {
-    var msg = null;
-    var vessels = app.getPath('vessels');
-    var aisProperties;
     var aisClass;
-    var targetTimestamp;
+    var aisProperties;
     var count = 0;
+    var msg;
 
-    Object.keys(vessels).forEach(v => {
+    app.getPath('vessels').forEach(vessel => {
       aisProperties = {};
       try {
-        // get timestamp in milliseconds of most recent position update.
-        targetTimestamp = (new Date(vessels[v].navigation.position.timestamp)).getTime();
-        // check update was within this reporting period.
-        if (targetTimestamp > (Date.now() - (options.expiryinterval * 1000))) {
-          try { aisClass = vessels[v].sensors.ais.class.value; } catch(e) { aisClass = options.myaisclass };
-          switch (aisClass) {
-            case 'B':
-              aisProperties['aistype'] = 18;
-              aisProperties['accuracy'] = 0;
-              aisProperties['cog'] = radsToDeg(vessels[v].navigation.courseOverGroundTrue.value);
-              aisProperties['hdg'] = 511; try { aisProperties['hdg'] = vessels[v].navigation.headingTrue.value } catch(e) {};
-              aisProperties['lat'] = vessels[v].navigation.position.value.latitude;
-              aisProperties['lon'] = vessels[v].navigation.position.value.longitude;
-              aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
-              aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessels[v].mmsi));
-              aisProperties['repeat'] = 3;
-              aisProperties['sog'] = mpsToKn(vessels[v].navigation.speedOverGround.value);
-              break;
-            case 'A':
-              aisProperties['aistype'] = 1;
-              aisProperties['cog'] = radsToDeg(vessels[v].navigation.courseOverGroundTrue.value);
-              aisProperties['hdg'] = 511; try { aisProperties['hdg'] = vessels[v].navigation.headingTrue.value } catch(e) {};
-              aisProperties['lat'] = vessels[v].navigation.position.value.latitude;
-              aisProperties['lon'] = vessels[v].navigation.position.value.longitude;
-              aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
-              //aisProperties['navstatus'] = 15; //vessels[v].navigation.state.value;
-              aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessels[v].mmsi));
-              aisProperties['repeat'] = 3;
-              aisProperties['rot'] = 128; try { aisProperties['rot'] = vessels[v].navigation.rateOfTurn.value; } catch(e) {};
-              aisProperties['sog'] = mpsToKn(vessels[v].navigation.speedOverGround.value);
-              aisProperties['smi'] = 0;
-              break;
-            default:
-              break;
-          }
+        if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
+          try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
+          aisProperties['accuracy'] = 0;
+          aisProperties['aistype'] = (aisClass == 'A')?1:18;
+          aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value);
+          try { aisProperties['hdg'] = vessel.navigation.headingTrue.value } catch(e) { aisProperties['hdg'] = 511 }
+          aisProperties['lat'] = vessel.navigation.position.value.latitude;
+          aisProperties['lon'] = vessel.navigation.position.value.longitude;
+          aisProperties['mmsi'] = parseInt(vessel.mmsi);
+          aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessel.mmsi))
+          aisProperties['repeat'] = 3;
+          try { aisProperties['rot'] = vessel.navigation.rateOfTurn.value; } catch(e) { aisProperties['rot'] = 128}
+          aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value);
+          aisProperties['smi'] = 0;
           msg = new AisEncode(aisProperties);
           if ((msg) && (msg.valid)) {
-            app.debug("created position report for '%s' (%s)", v, msg.nmea);
+            app.debug("created position report for '%s' (%s)", vessel.mmsi, msg.nmea);
             options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
             count++;
           } else {
-            app.debug("error creating position report for '%s'", v);
+            app.debug("error creating position report for '%s'", vessel.mmsi);
           }
         } else {
-          app.debug("ignoring inactive vessel '%s'" , v);
+          app.debug("ignoring inactive vessel '%s'" , vessel.mmsi);
         } 
       } catch(e) {
-        app.debug("error creating AIS sentence configuration for '%s' (%s)", v, e.message);
+        app.debug("error creating AIS sentence configuration for '%s' (%s)", vessel.mmsi, e.message);
       }
     });
     plugin.log.N("Last sent %d position report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
@@ -189,47 +166,42 @@ module.exports = function (app) {
    * Report static data for an AIS target.
    */
   function reportStaticData(options) {
-    var msg = null, msgB = null;
-    var vessels = app.getPath('vessels');
-    var aisProperties;
     var aisClass;
-    var targetTimestamp;
+    var aisProperties;
     var count = 0;
+    var msg, msgB;
 
-    Object.keys(vessels).forEach(v => {
+    app.getPath('vessels').forEach(vessel => {
       aisProperties = {};
       try {
-        // get timestamp in milliseconds of most recent position update.
-        targetTimestamp = (new Date(vessels[v].navigation.position.timestamp)).getTime();
-        // check update was within this reporting period.
-        if (targetTimestamp > (Date.now() - (options.expiryinterval * 1000))) {
-          try { aisClass = vessels[v].sensors.ais.class.value } catch(e) { aisClass = options.myaisclass };
+        if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
+          try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
           aisProperties['callsign'] = '';
-          try { aisProperties['cargo'] = vessels[v].design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
-          try { aisProperties['destination'] = vessels[v].navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
-          try { aisProperties['dimA'] = vessels[v].sensors.ais.fromBow.value.toFixed(0) } catch(e) { aisProperties['dimA'] = 0 }
-          try { aisProperties['dimB'] = (vessels[v].design.length.value.overall - vessels[v].sensors.gps.fromBow.value).toFixed(0) } catch(e) { aisProperties['dimB'] = 0 }
-          try { aisProperties['dimC'] = (vessels[v].design.beam.value / 2 + vessels[v].sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimC'] = 0 }
-          try { aisProperties['dimD'] = (vessels[v].design.beam.value / 2 - vessels[v].sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimD'] = 0 }
-          try { aisProperties['draught'] = vessels[v].design.draft.value.maximum } catch(e) { aisProperties['draught'] = 0 }
+          try { aisProperties['cargo'] = vessel.design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
+          try { aisProperties['destination'] = vessel.navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
+          try { aisProperties['dimA'] = vessel.sensors.ais.fromBow.value.toFixed(0) } catch(e) { aisProperties['dimA'] = 0 }
+          try { aisProperties['dimB'] = (vessel.design.length.value.overall - vessel.sensors.gps.fromBow.value).toFixed(0) } catch(e) { aisProperties['dimB'] = 0 }
+          try { aisProperties['dimC'] = (vessel.design.beam.value / 2 + vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimC'] = 0 }
+          try { aisProperties['dimD'] = (vessel.design.beam.value / 2 - vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimD'] = 0 }
+          try { aisProperties['draught'] = vessel.design.draft.value.maximum } catch(e) { aisProperties['draught'] = 0 }
           aisProperties['etaDay'] = 0;
           aisProperties['etaHr'] = 0
           aisProperties['etaMin'] = 0;
           aisProperties['etaMo'] = 0;
           aisProperties['imo'] = ''
-          aisProperties['mmsi'] = parseInt(vessels[v].mmsi);
+          aisProperties['mmsi'] = parseInt(vessel.mmsi);
           aisProperties['repeat'] = 3
-          try { aisProperties['shipname'] = vessels[v].name } catch(e) { aisProperties['shipname'] = '' }
+          try { aisProperties['shipname'] = vessel.name } catch(e) { aisProperties['shipname'] = '' }
           switch (aisClass) {
             case 'A':
               aisProperties['aistype'] = 5;
               msg = new AisEncode(aisProperties);
               if ((msg) && (msg.valid)) {
-                app.debug("created static data report for '%s' (%s)", v, msg.nmea);
+                app.debug("created static data report for '%s' (%s)", vessel.mmsi, msg.nmea);
                 options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
                 count++;
               } else {
-                app.debug("error creating static data report for '%s'", v);
+                app.debug("error creating static data report for '%s'", vessel.mmsi);
               }
               break;
             case 'B':
@@ -240,25 +212,25 @@ module.exports = function (app) {
                 aisProperties['part'] = 1;
                 msgB = new AisEncode(aisProperties);
                 if ((msgB) && (msgB.valid)) {
-                  app.debug("created static data report for '%s'", v);
+                  app.debug("created static data report for '%s'", vessel.mmsi);
                   options.endpoints.forEach(endpoint => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
                   options.endpoints.forEach(endpoint => sendReportMsg(msgB.nmea, endpoint.ipaddress, endpoint.port));
                   count++;
                 } else {
-                  app.debug("error creating static data report for '%s' (Part 2 failed)", v);
+                  app.debug("error creating static data report for '%s' (Part 2 failed)", vessel.mmsi);
                 }
               } else {
-                app.debug("error creating static data report for '%s' (Part 1 failed)", v);
+                app.debug("error creating static data report for '%s' (Part 1 failed)", vessel.mmsi);
               }
               break;
             default:
               break;
           }          
         } else {
-          app.debug("ignoring inactive vessel '%s'", v);
+          app.debug("ignoring inactive vessel '%s'", vessel.mmsi);
         }
       } catch(e) {
-        app.debug("error creating AIS sentence configuration for '%s' (%s)", v, e.message);
+        app.debug("error creating AIS sentence configuration for '%s' (%s)", vessel.mmsi, e.message);
       }
     });
     plugin.log.N("Last sent %d static data report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
