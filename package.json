@@ -1,7 +1,7 @@
 {
   "name": "pdjr-ais-reporter",
   "version": "1.0.0",
-  "description": "Report AIS.",
+  "description": "Report AIS data to remote UTP services.",
   "main": "index.js",
   "signalk-plugin-enabled-by-default": false,
   "scripts": {
@@ -19,11 +19,10 @@
   "author": "Paul Reeve <preeve@pdjr.eu>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/pdjr-signalk/pdjr-skplugin-devantech/issues"
+    "url": "https://github.com/pdjr-signalk/pdjr-ais-reporter/issues"
   },
-  "homepage": "https://github.com/pdjr-signalk/pdjr-skplugin-devantech#readme",
+  "homepage": "https://github.com/pdjr-signalk/pdjr-ais-reporter#readme",
   "dependencies": {
-    "signalk-libdelta": "github:pdjr-signalk/signalk-libdelta",
     "signalk-liblog": "github:pdjr-signalk/signalk-liblog",
     "sprintf-js": "^1.1.3"
   },

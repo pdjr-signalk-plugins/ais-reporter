@@ -20,7 +20,7 @@ const Log = require("./lib/signalk-liblog/Log.js");
 
 const PLUGIN_ID = "pdjr-ais-reporter";
 const PLUGIN_NAME = "pdjr-ais-reporter";
-const PLUGIN_DESCRIPTION = "Report NMEA 0183 AIS data to remote UTP services.";
+const PLUGIN_DESCRIPTION = "Report AIS data to remote UTP services.";
 const PLUGIN_SCHEMA = {
   type: 'object',
   properties: {
