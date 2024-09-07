@@ -47,6 +47,12 @@ after SignalK stops receiving AIS updates for the vessel.
 This value determines what constitutes an 'active' vs. 'inactive'
 vessels.
 
+### Report self?
+Whether or not to report the host vessel.
+
+### Report others?
+Whether or not to report received AIS data.
+
 ### My AIS transceiver class
 The class of transceiver used on the host vessel (if any).
 

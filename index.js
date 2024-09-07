@@ -59,9 +59,19 @@ const PLUGIN_SCHEMA = {
       title: 'Ignore data older than (s)',
       default: 3600
     },
+    reportself: {
+      type: 'boolean',
+      title: 'Report own vessel (self)?',
+      default: true
+    },
+    reportothers: {
+      type: 'boolean',
+      title: 'Report other vessels?',
+      default: true
+    },
     myaisclass: {
       type: 'string',
-      title: 'My AIS transceiver class',
+      title: 'Own vessel AIS transceiver type',
       oneOf: [
         { const: 'B', title: 'none' },
         { const: 'A', title: 'Class A' },
@@ -128,6 +138,8 @@ module.exports = function (app) {
     var msg;
 
     Object.values(app.getPath('vessels')).forEach(vessel => {
+      if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return;
+      if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return;
       aisProperties = {};
       try {
         if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
@@ -172,6 +184,8 @@ module.exports = function (app) {
     var msg, msgB;
 
     Object.values(app.getPath('vessels')).forEach(vessel => {
+      if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return;
+      if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return;
       aisProperties = {};
       try {
         if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
