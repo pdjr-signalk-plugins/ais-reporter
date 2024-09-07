@@ -8,8 +8,8 @@ The plugin can be used to send vessel data to online AIS consolidation
 services like
 [MarineTraffic](https://www.marinetraffic.com).
 
-On a vessel with no AIS transceiver (but a working GPS) the plugin will
-publish position and static data for the 'self' vessel.
+The plugin always publishes position and static data for the 'self' vessel
+even if the host ship does not have an AIS capability.
 On a vessel with an AIS receiver data on all vessels known to Signal K
 will be uploaded to the specified endpoints.
 
