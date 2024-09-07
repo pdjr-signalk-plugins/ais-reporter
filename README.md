@@ -44,8 +44,8 @@ A value of 0 disbles static data reporting.
 ### Ignore data older than (s)
 The interval after which a vessel's data reports cease to be transmitted
 after SignalK stops receiving AIS updates for the vessel.
-This value determines what constitutes an 'active' vs. 'inactive'
-vessels.
+This value determines what constitutes an 'active' vs. an 'inactive'
+vessel.
 
 ### Report self?
 Whether or not to report the host vessel.
