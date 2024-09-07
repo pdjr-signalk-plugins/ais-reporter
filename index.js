@@ -127,7 +127,7 @@ module.exports = function (app) {
     var count = 0;
     var msg;
 
-    app.getPath('vessels').forEach(vessel => {
+    Object.values(app.getPath('vessels')).forEach(vessel => {
       aisProperties = {};
       try {
         if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
@@ -171,7 +171,7 @@ module.exports = function (app) {
     var count = 0;
     var msg, msgB;
 
-    app.getPath('vessels').forEach(vessel => {
+    Object.values(app.getPath('vessels')).forEach(vessel => {
       aisProperties = {};
       try {
         if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
