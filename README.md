@@ -4,7 +4,7 @@
 [Signal K](https://www.signalk.org/)
 plugin which reports position and static data for the host ship and for
 vessels detected over AIS to one or more UDP endpoints.
-The plugin can be used to send vessel updates to online AIS consolidation
+The plugin can be used to send vessel data to online AIS consolidation
 services like
 [MarineTraffic](https://www.marinetraffic.com).
 
