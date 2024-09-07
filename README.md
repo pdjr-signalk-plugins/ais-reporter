@@ -51,7 +51,7 @@ vessels.
 Whether or not to report the host vessel.
 
 ### Report others?
-Whether or not to report received AIS data.
+Whether or not to report vessels whose data has been received over AIS.
 
 ### My AIS transceiver class
 The class of transceiver used on the host vessel (if any).
