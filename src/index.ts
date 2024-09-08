@@ -84,7 +84,7 @@ const PLUGIN_UISCHEMA: any = {};
 
 export default function  (app: any) {
   let udpSocket: dgram.Socket
-  let intervalIds:  number[] = []
+  let intervalIds: number[] = []
 
   const plugin: any = {
 
@@ -103,10 +103,10 @@ export default function  (app: any) {
 
       if ((options.endpoints) && (options.endpoints.length > 0)) {
         if (options.positionupdateinterval > 0) {
-          intervalIds.push(setInterval(reportPositions, (options.positionupdateinterval * 1000), app, options, udpSocket));
+          intervalIds.push(Number(setInterval(reportPositions, (options.positionupdateinterval * 1000), app, options, udpSocket)));
         }
         if ((options.positionupdateinterval > 0) && (options.staticupdateinterval > 0)) {
-          intervalIds.push(setInterval(reportStaticData, (options.staticupdateinterval * 1000), app, options, udpSocket));
+          intervalIds.push(Number(setInterval(reportStaticData, (options.staticupdateinterval * 1000), app, options, udpSocket)));
         }
       }
       app.setPluginStatus("Connected to ${options.endpoints.length} endpoint(s)");
