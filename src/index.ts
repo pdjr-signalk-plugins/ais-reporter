@@ -71,16 +71,14 @@ const PLUGIN_SCHEMA: any = {
     myaisclass: {
       type: 'string',
       title: 'Own vessel AIS transceiver type',
-      oneOf: [
-        { const: 'B', title: 'none' },
-        { const: 'A', title: 'Class A' },
-        { const: 'B', title: 'Class B' }
-      ],
-      default: 18
+      enum: [ '', 'A', 'B' ],
+      enumNames: [ 'none', 'Class A', 'Class B' ],
+      default: 'none'
     }
   }
-};
-const PLUGIN_UISCHEMA: any = {};
+}
+
+const PLUGIN_UISCHEMA: any = {}
 
 export default function  (app: any) {
   let udpSocket: dgram.Socket
@@ -95,11 +93,12 @@ export default function  (app: any) {
     uiSchema: PLUGIN_UISCHEMA,
   
     start: function(options: any) {
-      options.mymmsi = app.getSelfPath('mmsi');
+      options.mymmsi = app.getSelfPath('mmsi')
+      options.myaisclass = (options.myaisclass == '')?'B':options.myaisclass
 
-      app.debug(`using configuration: ${JSON.stringify(options, null, 2)}`);
+      app.debug(`using configuration: ${JSON.stringify(options, null, 2)}`)
 
-      udpSocket = dgram.createSocket('udp4');
+      udpSocket = dgram.createSocket('udp4')
 
       if ((options.endpoints) && (options.endpoints.length > 0)) {
         if (options.positionupdateinterval > 0) {
@@ -109,7 +108,7 @@ export default function  (app: any) {
           intervalIds.push(Number(setInterval(reportStaticData, (options.staticupdateinterval * 1000))));
         }
       }
-      app.setPluginStatus(`Connected to ${options.endpoints.length} endpoint(s)`);
+      app.setPluginStatus(`Reporting to ${options.endpoints.length} endpoint(s)`);
 
       function reportPositions() {
         var aisClass: string
