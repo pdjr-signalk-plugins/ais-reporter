@@ -264,9 +264,6 @@ export default function  (app: any) {
   return plugin
 }
 
-
-
-  
 function radsToDeg(radians: number): number {
   return(radians * 180 / Math.PI)
 }
