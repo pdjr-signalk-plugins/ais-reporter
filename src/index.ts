@@ -109,7 +109,7 @@ export default function  (app: any) {
           intervalIds.push(Number(setInterval(reportStaticData, (options.staticupdateinterval * 1000), app, options, udpSocket)));
         }
       }
-      app.setPluginStatus("Connected to ${options.endpoints.length} endpoint(s)");
+      app.setPluginStatus(`Connected to ${options.endpoints.length} endpoint(s)`);
     },
 
     stop: function() {
@@ -134,47 +134,46 @@ export default function  (app: any) {
 
 function reportPositions(app: any, options: any, udpSocket: dgram.Socket) {
   var aisClass: string
-  var aisProperties: any
-  var count: number = 0;
-  var msg: any;
+  var aisProperties: AisEncodeOptions
+  var count: number = 0
+  var msg: any
 
   Object.values(app.getPath('vessels')).forEach((vessel: any) => {
-    if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return;
-    if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return;
-    aisProperties = {};
+    if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return
+    if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return
+    aisProperties = { mmsi: vessel.mmsi }
     try {
       if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
         try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
-        aisProperties['accuracy'] = 0;
-        aisProperties['aistype'] = (aisClass == 'A')?1:18;
-        aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value);
+        aisProperties['accuracy'] = 0
+        aisProperties['aistype'] = (aisClass == 'A')?1:18
+        aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value)
         try { aisProperties['hdg'] = vessel.navigation.headingTrue.value } catch(e) { aisProperties['hdg'] = 511 }
-        aisProperties['lat'] = vessel.navigation.position.value.latitude;
-        aisProperties['lon'] = vessel.navigation.position.value.longitude;
-        aisProperties['mmsi'] = parseInt(vessel.mmsi);
-        aisProperties['own'] = (parseInt(options.mymmsi) == parseInt(vessel.mmsi))
-        aisProperties['repeat'] = 3;
+        aisProperties['lat'] = vessel.navigation.position.value.latitude
+        aisProperties['lon'] = vessel.navigation.position.value.longitude
+        aisProperties['own'] = (options.mymmsi == vessel.mmsi)?1:0
+        aisProperties['repeat'] = 3
         try { aisProperties['rot'] = vessel.navigation.rateOfTurn.value; } catch(e) { aisProperties['rot'] = 128}
-        aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value);
-        aisProperties['smi'] = 0;
-        msg = new AisEncode(aisProperties);
+        aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value)
+        aisProperties['smi'] = 0
+        msg = new AisEncode(aisProperties)
         if ((msg) && (msg.valid)) {
-          app.debug("created position report for '%s' (%s)", vessel.mmsi, msg.nmea);
-          options.endpoints.forEach((endpoint: any) => sendReportMsg(app, udpSocket, msg.nmea, endpoint.ipaddress, endpoint.port));
+          app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
+          options.endpoints.forEach((endpoint: any) => sendReportMsg(app, udpSocket, msg.nmea, endpoint.ipaddress, endpoint.port))
           count++;
         } else {
-          app.debug("error creating position report for '%s'", vessel.mmsi)
+          app.debug(`error creating position report for '${vessel.mmsi}'`)
         }
       } else {
-        app.debug("ignoring inactive vessel '%s'" , vessel.mmsi)
+        app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
       } 
     } catch(e) {
       if (e instanceof Error) {
-        app.debug("error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})")
+        app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
       }
     }
   })
-  app.setPluginStatus("Last sent %d position report%s to %d endpoint%s", count, (count == 1)?'':'s', options.endpoints.length, (options.endpoints.length == 1)?'':'s');
+  app.setPluginStatus(`Last sent ${count} position report(s) to ${options.endpoints.length} endpoint(s)`)
 }
 
 function reportStaticData(app: any, options: any, udpSocket: dgram.Socket) {
@@ -190,7 +189,7 @@ function reportStaticData(app: any, options: any, udpSocket: dgram.Socket) {
     try {
       if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
         try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
-        aisProperties['callsign'] = '';
+        aisProperties['callsign'] = ''
         try { aisProperties['cargo'] = vessel.design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
         try { aisProperties['destination'] = vessel.navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
         try { aisProperties['dimA'] = vessel.sensors.ais.fromBow.value.toFixed(0) } catch(e) { aisProperties['dimA'] = 0 }
@@ -198,12 +197,12 @@ function reportStaticData(app: any, options: any, udpSocket: dgram.Socket) {
         try { aisProperties['dimC'] = (vessel.design.beam.value / 2 + vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimC'] = 0 }
         try { aisProperties['dimD'] = (vessel.design.beam.value / 2 - vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimD'] = 0 }
         try { aisProperties['draught'] = vessel.design.draft.value.maximum } catch(e) { aisProperties['draught'] = 0 }
-        aisProperties['etaDay'] = 0;
+        aisProperties['etaDay'] = 0
         aisProperties['etaHr'] = 0
-        aisProperties['etaMin'] = 0;
-        aisProperties['etaMo'] = 0;
+        aisProperties['etaMin'] = 0
+        aisProperties['etaMo'] = 0
         aisProperties['imo'] = ''
-        aisProperties['mmsi'] = parseInt(vessel.mmsi);
+        aisProperties['mmsi'] = parseInt(vessel.mmsi)
         aisProperties['repeat'] = 3
         try { aisProperties['shipname'] = vessel.name } catch(e) { aisProperties['shipname'] = '' }
         switch (aisClass) {
@@ -211,11 +210,11 @@ function reportStaticData(app: any, options: any, udpSocket: dgram.Socket) {
             aisProperties['aistype'] = 5;
             msg = new AisEncode(aisProperties);
             if ((msg) && (msg.valid)) {
-              app.debug("created static data report for '%s' (%s)", vessel.mmsi, msg.nmea);
+              app.debug(`created static data report for '${vessel.mmsi}' (${msg.nmea})`)
               options.endpoints.forEach((endpoint: any) => sendReportMsg(app, udpSocket, msg.nmea, endpoint.ipaddress, endpoint.port));
               count++;
             } else {
-              app.debug("error creating static data report for '%s'", vessel.mmsi);
+              app.debug(`error creating static data report for '${vessel.mmsi}'`)
             }
             break;
           case 'B':
@@ -226,41 +225,41 @@ function reportStaticData(app: any, options: any, udpSocket: dgram.Socket) {
               aisProperties['part'] = 1;
               msgB = new AisEncode(aisProperties);
               if ((msgB) && (msgB.valid)) {
-                app.debug("created static data report for '%s'", vessel.mmsi);
+                app.debug(`created static data report for '${vessel.mmsi}'`);
                 options.endpoints.forEach((endpoint: any) => sendReportMsg(app, udpSocket, msg.nmea, endpoint.ipaddress, endpoint.port));
                 options.endpoints.forEach((endpoint: any) => sendReportMsg(app, udpSocket, msgB.nmea, endpoint.ipaddress, endpoint.port));
                 count++;
               } else {
-                app.debug("error creating static data report for '${vessel.mmsi}' (Part 2 failed)")
+                app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
               }
             } else {
-              app.debug("error creating static data report for '${vessel.mmsi}' (Part 1 failed)")
+              app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
             }
             break;
           default:
             break;
         }          
       } else {
-        app.debug("ignoring inactive vessel '${vessel.mmsi}'")
+        app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
       }
     } catch(e) {
       if (e instanceof Error) {
-        app.debug("error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})")
+        app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
       }
     }
   })
-  app.setPluginStatus("Last sent ${count} static data report(s) to ${options.endpoints.length} endpoint(s)")
+  app.setPluginStatus(`Last sent ${count} static data report(s) to ${options.endpoints.length} endpoint(s)`)
 }
 
 function sendReportMsg(app: any, udpSocket: dgram.Socket, msg: string, ipaddress: string, port: number) {
   if (udpSocket) {
     udpSocket.send(msg + '\n', 0, msg.length + 1, port, ipaddress, (e: any) => {
       if (e instanceof Error) {
-        app.setPluginStatus('send failure (${e.message})')
+        app.setPluginStatus(`send failure (${e.message})`)
       }
     })
   } else {
-    app.setPluginStatus("UDP port is no longer available")
+    app.setPluginStatus(`UDP port is no longer available`)
   }
 }
   

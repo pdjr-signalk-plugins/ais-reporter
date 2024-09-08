@@ -1,3 +1,0 @@
-[submodule "lib/signalk-liblog"]
-	path = lib/signalk-liblog
-	url = https://github.com/pdjr-signalk/signalk-liblog
