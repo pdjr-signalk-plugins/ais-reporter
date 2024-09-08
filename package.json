@@ -6,7 +6,9 @@
   "signalk-plugin-enabled-by-default": false,
   "scripts": {
     "publish": "yq -o=json -I=2 resources/openApi.yaml > resources/openApi.json",
-    "test": "echo \"Error: no test specified\""
+    "test": "echo \"Error: no test specified\"",
+    "build": "tsc",
+    "prepare": "tsc"
   },
   "repository": {
     "type": "git",
@@ -23,8 +25,8 @@
   },
   "homepage": "https://github.com/pdjr-signalk/pdjr-ais-reporter#readme",
   "dependencies": {
-    "signalk-liblog": "github:pdjr-signalk/signalk-liblog",
-    "sprintf-js": "^1.1.3"
+    "@types/node": "^22.5.4",
+    "ggencoder": "^0.1.18"
   },
   "directories": {}
 }
