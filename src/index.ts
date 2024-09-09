@@ -133,9 +133,9 @@ export default function  (app: any) {
               aisProperties['lon'] = vessel.navigation.position.value.longitude
               aisProperties['own'] = (options.mymmsi == vessel.mmsi)?1:0
               aisProperties['repeat'] = 3
-              try { aisProperties['rot'] = vessel.navigation.rateOfTurn.value; } catch(e) { aisProperties['rot'] = 128}
+              try { aisProperties['rot'] = vessel.navigation.rateOfTurn.value; } catch(e) { aisProperties['rot'] = 128 }
               aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value)
-              aisProperties['smi'] = 0
+              try { aisProperties['smi'] = decodeSMI(vessel.navigation.specialManeuver) } catch(e) { aisProperties['smi'] = 0 } 
               msg = new AisEncode(aisProperties)
               if ((msg) && (msg.valid)) {
                 app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
@@ -262,5 +262,14 @@ function radsToDeg(radians: number): number {
   
 function mpsToKn(mps: number): number {
   return(1.9438444924574 * mps)
+}
+
+function decodeSMI(label: string): number {
+  switch (label) {
+    case 'not available': return(0);
+    case 'not engaged': return(1);
+    case 'engaged': return(2);
+    default: return(0);
+  }
 }
 
