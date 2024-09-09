@@ -20,7 +20,7 @@ import * as dgram from 'dgram'
 const PLUGIN_ID: string = "pdjr-ais-reporter";
 const PLUGIN_NAME: string = "pdjr-ais-reporter";
 const PLUGIN_DESCRIPTION: string = "Report AIS data to remote UTP services.";
-const PLUGIN_SCHEMA: any = {
+const PLUGIN_SCHEMA: object = {
   type: 'object',
   properties: {
     endpoints: {
@@ -77,8 +77,7 @@ const PLUGIN_SCHEMA: any = {
     }
   }
 }
-
-const PLUGIN_UISCHEMA: any = {
+const PLUGIN_UISCHEMA: object = {
 }
 
 export default function  (app: any) {
