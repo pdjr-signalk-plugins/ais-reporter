@@ -72,8 +72,8 @@ const PLUGIN_SCHEMA: object = {
       type: 'string',
       title: 'Own vessel AIS transceiver type',
       enum: [ '', 'A', 'B' ],
-      enumNames: [ 'none', 'Class A', 'Class B' ],
-      default: 'none'
+      enumNames: [ 'auto', 'Class A', 'Class B' ],
+      default: 'auto'
     }
   }
 }
