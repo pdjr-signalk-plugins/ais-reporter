@@ -1,7 +1,7 @@
 {
   "name": "pdjr-ais-reporter",
   "version": "1.0.0",
-  "description": "Report AIS data to remote UTP services.",
+  "description": "Report AIS data to remote UDP services.",
   "main": "index.js",
   "signalk-plugin-enabled-by-default": false,
   "scripts": {
