@@ -56,7 +56,7 @@ Whether or not to report vessels whose data has been received over AIS.
 ### My AIS transceiver class
 The class of transceiver used on the host vessel (if any).
 
-A value of 'none' will fake a Class B position and status report
+A value of 'auto' will fake Class B position and status reports
 for the host vessel even if it does not have AIS equipment.
 
 If you do have an AIS transceiver then specify its type here.
