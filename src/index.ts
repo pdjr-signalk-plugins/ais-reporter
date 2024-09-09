@@ -111,7 +111,7 @@ export default function  (app: any) {
       app.setPluginStatus(`Reporting to ${options.endpoints.length} endpoint(s)`);
 
       function reportPositions() {
-        var aisClass: string
+        var aisClass: string;
         var aisProperties: AisEncodeOptions
         var count: number = 0
         var msg: any
@@ -120,9 +120,11 @@ export default function  (app: any) {
           try {
             if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return
             if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return
+
             aisProperties = { mmsi: vessel.mmsi }
+            aisClass = (vessel.mmsi == options.mymmsi)?options.myaisclass:vessel.sensors.ais.class.value;
+
             if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
-              try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
               aisProperties['accuracy'] = 0
               aisProperties['aistype'] = (aisClass == 'A')?1:18
               aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value)
@@ -164,9 +166,11 @@ export default function  (app: any) {
           try {
             if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return
             if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return
+
             aisProperties = { mmsi: vessel.mmsi }
+            aisClass = (vessel.mmsi == options.mymmsi)?options.myaisclass:vessel.sensors.ais.class.value;
+
             if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
-              try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
               aisProperties['callsign'] = ''
               try { aisProperties['cargo'] = vessel.design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
               try { aisProperties['destination'] = vessel.navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
