@@ -245,17 +245,7 @@ export default function  (app: any) {
     stop: function() {
 	    intervalIds.forEach((id: number) => clearInterval(id));
       intervalIds = [];
-    },
-
-    registerWithRouter: function(router: any) {
-    //router.get('/keys', handleRoutes);
-    //router.get('/digest/', handleRoutes);
-    //router.get('/outputs/', handleRoutes);
-    //router.get('/output/:name', handleRoutes);
-    //router.patch('/suppress/:name', handleRoutes);
     }
-
-    //plugin.getOpenApi = () => require("./resources/openApi.json");
 
   }
 
