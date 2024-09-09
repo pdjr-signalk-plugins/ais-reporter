@@ -73,13 +73,13 @@ const PLUGIN_SCHEMA: any = {
       title: 'Own vessel AIS transceiver type',
       enum: [ '', 'A', 'B' ],
       enumNames: [ 'none', 'Class A', 'Class B' ],
-      default: 'none',
-      uniqueItems: true
+      default: 'none'
     }
   }
 }
 
-const PLUGIN_UISCHEMA: any = {}
+const PLUGIN_UISCHEMA: any = {
+}
 
 export default function  (app: any) {
   let udpSocket: dgram.Socket
