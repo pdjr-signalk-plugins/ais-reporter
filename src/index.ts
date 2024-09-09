@@ -117,10 +117,10 @@ export default function  (app: any) {
         var msg: any
       
         Object.values(app.getPath('vessels')).forEach((vessel: any) => {
-          if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return
-          if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return
-          aisProperties = { mmsi: vessel.mmsi }
           try {
+            if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return
+            if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return
+            aisProperties = { mmsi: vessel.mmsi }
             if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
               try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
               aisProperties['accuracy'] = 0
@@ -161,10 +161,10 @@ export default function  (app: any) {
         var msg: any, msgB: any
       
         Object.values(app.getPath('vessels')).forEach((vessel: any) => {
-          if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return;
-          if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return;
-          aisProperties = {};
           try {
+            if ((!options.reportself) && (vessel.mmsi == options.mymmsi)) return
+            if ((!options.reportothers) && (vessel.mmsi != options.mymmsi)) return
+            aisProperties = { mmsi: vessel.mmsi }
             if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
               try { aisClass = vessel.sensors.ais.class.value } catch(e) { aisClass = options.myaisclass }
               aisProperties['callsign'] = ''
@@ -180,7 +180,6 @@ export default function  (app: any) {
               aisProperties['etaMin'] = 0
               aisProperties['etaMo'] = 0
               aisProperties['imo'] = ''
-              aisProperties['mmsi'] = parseInt(vessel.mmsi)
               aisProperties['repeat'] = 3
               try { aisProperties['shipname'] = vessel.name } catch(e) { aisProperties['shipname'] = '' }
               switch (aisClass) {

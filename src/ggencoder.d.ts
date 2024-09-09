@@ -1,6 +1,5 @@
 declare module 'ggencoder' {
   export interface AisEncodeOptions {
-    mmsi: string,
     accuracy?: number,
     aistype?: number,
     cargo?: string | undefined
@@ -19,6 +18,7 @@ declare module 'ggencoder' {
     imo?: string | undefined,
     lat?: number | undefined,
     lon?: number | undefined,
+    mmsi: string,
     own?: number | undefined,
     part?: number,
     repeat?: number,
