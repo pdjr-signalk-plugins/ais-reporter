@@ -27,7 +27,7 @@ listening port.
 ### Position update interval (s)
 The frequency at which position updates for active vessels should
 be sent to endpoints, expressed as an interval in seconds.
-A value of 0 disbles all position and static reporting.
+A value of 0 disables all position and static reporting.
 
 At the end of an update interval the most recent position report
 received from each active vessel is transmitted to every endpoint.
@@ -39,7 +39,7 @@ in position reporting.
 ### Static update interval (s)
 The frequency at which static data updates for active vessels should
 be sent to endpoints, expressed as an interval in seconds.
-A value of 0 disbles static data reporting.
+A value of 0 disables static data reporting.
 
 ### Ignore data older than (s)
 The interval after which a vessel's data reports cease to be transmitted
