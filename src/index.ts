@@ -266,6 +266,7 @@ function mpsToKn(mps: number): number {
 
 function decodeSMI(label: string): number {
   switch (label) {
+    case 'not available': return(0);
     case 'not engaged': return(1);
     case 'engaged': return(2);
     default: return(0);
