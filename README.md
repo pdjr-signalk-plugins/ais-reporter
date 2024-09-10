@@ -63,4 +63,3 @@ If you do have an AIS transceiver then specify its type here.
 
 ## Author
 Paul Reeve <preeve@pdjr.eu>
-
