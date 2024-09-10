@@ -77,8 +77,7 @@ const PLUGIN_SCHEMA: object = {
     }
   }
 }
-const PLUGIN_UISCHEMA: object = {
-}
+const PLUGIN_UISCHEMA: object = {}
 
 export default function  (app: any) {
   let udpSocket: dgram.Socket
