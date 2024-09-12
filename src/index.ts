@@ -71,9 +71,9 @@ const PLUGIN_SCHEMA: object = {
     myaisclass: {
       type: 'string',
       title: 'Own vessel AIS transceiver type',
-      enum: [ '', 'A', 'B' ],
-      enumNames: [ 'auto', 'Class A', 'Class B' ],
-      default: 'auto'
+      enum: [ 'none', 'A', 'B' ],
+      enumNames: [ 'none', 'Class A', 'Class B' ],
+      default: 'none'
     }
   }
 }
@@ -93,7 +93,7 @@ export default function  (app: any) {
   
     start: function(options: any) {
       options.mymmsi = app.getSelfPath('mmsi')
-      options.myaisclass = (options.myaisclass == '')?'B':options.myaisclass
+      options.myaisclass = (options.myaisclass == 'none')?'B':options.myaisclass
 
       app.debug(`using configuration: ${JSON.stringify(options, null, 2)}`)
 
