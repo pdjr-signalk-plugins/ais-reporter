@@ -62,4 +62,4 @@ for the host vessel if it does not have AIS equipment.
 If you do have an AIS transceiver then specify its type here.
 
 ## Author
-Paul Reeve <preeve@pdjr.eu>
+Paul Reeve <preeve_at_pdjr_dot_eu>
