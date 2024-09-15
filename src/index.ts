@@ -83,7 +83,7 @@ export default function  (app: any) {
   let udpSocket: dgram.Socket
   let intervalIds: number[] = []
 
-  const plugin: any = {
+  const plugin: SKPlugin = {
 
     id: PLUGIN_ID,
     name: PLUGIN_NAME,
@@ -270,5 +270,16 @@ function decodeSMI(label: string): number {
     case 'engaged': return(2);
     default: return(0);
   }
+}
+
+interface SKPlugin {
+  id: string,
+  name: string,
+  description: string,
+  schema: any,
+  uiSchema: any,
+
+  start: (app: any) => void,
+  stop: () => void,
 }
 
