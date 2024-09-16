@@ -25,8 +25,10 @@
   },
   "homepage": "https://github.com/pdjr-signalk/pdjr-ais-reporter#readme",
   "dependencies": {
-    "@types/node": "^22.5.4",
     "ggencoder": "^0.1.18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4"
   },
   "directories": {}
 }

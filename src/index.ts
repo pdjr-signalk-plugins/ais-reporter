@@ -279,7 +279,7 @@ interface SKPlugin {
   schema: any,
   uiSchema: any,
 
-  start: (app: any) => void,
-  stop: () => void,
+  start: (options: any) => void,
+  stop: () => void
 }
 
