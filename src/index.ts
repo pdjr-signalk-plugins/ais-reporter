@@ -79,7 +79,7 @@ const PLUGIN_SCHEMA: object = {
 }
 const PLUGIN_UISCHEMA: object = {}
 
-module.exports = function  (app: any) {
+module.exports = function(app: any) {
   let udpSocket: dgram.Socket
   let intervalIds: number[] = []
 
