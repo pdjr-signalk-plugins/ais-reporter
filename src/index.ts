@@ -138,7 +138,7 @@ module.exports = function(app: any) {
               msg = new AisEncode(aisProperties)
               if ((msg) && (msg.valid)) {
                 app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
-                options.endpoints.forEach((endpoint: any) => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port))
+                options.endpoints.forEach((endpoint: Endpoint) => sendReportMsg(msg.nmea, endpoint))
                 count++;
               } else {
                 app.debug(`error creating position report for '${vessel.mmsi}'`)
@@ -191,7 +191,7 @@ module.exports = function(app: any) {
                   msg = new AisEncode(aisProperties);
                   if ((msg) && (msg.valid)) {
                     app.debug(`created static data report for '${vessel.mmsi}' (${msg.nmea})`)
-                    options.endpoints.forEach((endpoint: any) => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
+                    options.endpoints.forEach((endpoint: Endpoint) => sendReportMsg(msg.nmea, endpoint));
                     count++;
                   } else {
                     app.debug(`error creating static data report for '${vessel.mmsi}'`)
@@ -206,8 +206,8 @@ module.exports = function(app: any) {
                     msgB = new AisEncode(aisProperties);
                     if ((msgB) && (msgB.valid)) {
                       app.debug(`created static data report for '${vessel.mmsi}'`);
-                      options.endpoints.forEach((endpoint: any) => sendReportMsg(msg.nmea, endpoint.ipaddress, endpoint.port));
-                      options.endpoints.forEach((endpoint: any) => sendReportMsg(msgB.nmea, endpoint.ipaddress, endpoint.port));
+                      options.endpoints.forEach((endpoint: Endpoint) => sendReportMsg(msg.nmea, endpoint));
+                      options.endpoints.forEach((endpoint: Endpoint) => sendReportMsg(msgB.nmea, endpoint));
                       count++;
                     } else {
                       app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
@@ -231,12 +231,10 @@ module.exports = function(app: any) {
         app.setPluginStatus(`Last sent ${count} static data report(s) to ${options.endpoints.length} endpoint(s)`)
       }
 
-      function sendReportMsg(msg: string, ipaddress: string, port: number) {
+      function sendReportMsg(msg: string, endpoint: Endpoint) {
         if (udpSocket) {
-          udpSocket.send(msg + '\n', 0, msg.length + 1, port, ipaddress, (e: any) => {
-            if (e instanceof Error) {
-              app.setPluginStatus(`send failure (${e.message})`)
-            }
+          udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipaddress, (e: any) => {
+            if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
           })
         } else {
           app.setPluginStatus(`UDP port is no longer available`)
@@ -276,10 +274,15 @@ interface SKPlugin {
   id: string,
   name: string,
   description: string,
-  schema: any,
-  uiSchema: any,
+  schema: object,
+  uiSchema: object,
 
   start: (options: any) => void,
   stop: () => void
+}
+
+interface Endpoint {
+  ipaddress: string,
+  port: number
 }
 
