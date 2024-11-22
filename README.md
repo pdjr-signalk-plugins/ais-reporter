@@ -75,7 +75,8 @@ The class of transceiver used on the host vessel (if any).
 Defaults to 'none', although a value of 'none' will make the plugin
 fake Class B position and status reports for the host vessel.
 
-If you do have an AIS transceiver then specify its type here.
+If you do have an AIS transceiver then you can specify its type
+here.
 
 ## Author
 Paul Reeve <preeve_at_pdjr_dot_eu>

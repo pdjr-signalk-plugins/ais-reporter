@@ -73,8 +73,8 @@ const PLUGIN_SCHEMA: object = {
     myaisclass: {
       type: 'string',
       title: 'Own vessel AIS transceiver type',
-      enum: [ 'A', 'B' ],
-      enumNames: [ 'Class A', 'Class B' ],
+      enum: [ 'none', 'A', 'B' ],
+      enumNames: [ 'none', 'Class A', 'Class B' ],
       default: 'B'
     }
   }
@@ -111,10 +111,6 @@ module.exports = function(app: any) {
         }
       }
       app.setPluginStatus(`Reporting to ${options.endpoints.length} endpoint(s)`);
-
-      
-
-      
     },
 
     stop: function() {
