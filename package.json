@@ -8,8 +8,9 @@
   "scripts": {
     "publish": "yq -o=json -I=2 resources/openApi.yaml > resources/openApi.json",
     "test": "echo \"Error: no test specified\"",
+    "prepare": "npm install",
     "build": "tsc",
-    "prepare": "tsc"
+    "clean": "rm -rf node_modules package-lock.json"
   },
   "repository": {
     "type": "git",
@@ -26,9 +27,11 @@
   },
   "homepage": "https://github.com/pdjr-signalk/pdjr-ais-reporter#readme",
   "dependencies": {
-    "ggencoder": "^0.1.18"
+    "ggencoder": "^0.1.18",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.13",
     "@types/node": "^22.5.4",
     "typescript": "^5.6.2"
   },
