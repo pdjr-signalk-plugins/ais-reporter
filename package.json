@@ -8,8 +8,7 @@
   "scripts": {
     "publish": "yq -o=json -I=2 resources/openApi.yaml > resources/openApi.json",
     "test": "echo \"Error: no test specified\"",
-    "prepare": "npm install",
-    "build": "tsc",
+    "make": "npm install ; tsc",
     "clean": "rm -rf node_modules package-lock.json"
   },
   "repository": {
