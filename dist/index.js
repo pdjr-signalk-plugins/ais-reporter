@@ -17,7 +17,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ggencoder_1 = require("ggencoder");
 const dgram = require("dgram");
-const _ = require("lodash");
 const PLUGIN_ID = "ais-reporter";
 const PLUGIN_NAME = "pdjr-ais-reporter";
 const PLUGIN_DESCRIPTION = "Report AIS data to remote UDP services.";
@@ -36,7 +35,7 @@ const PLUGIN_SCHEMA = {
             type: 'number',
             title: 'Position update interval (s)'
         },
-        staticupdateinterval: {
+        staticdataupdateinterval: {
             type: 'number',
             title: 'Static data update interval (s)'
         },
@@ -73,7 +72,7 @@ const PLUGIN_SCHEMA = {
                         type: 'number',
                         title: 'Position update interval (s)'
                     },
-                    staticupdateinterval: {
+                    staticdataupdateinterval: {
                         type: 'number',
                         title: 'Static data update interval (s)'
                     },
@@ -97,57 +96,93 @@ const PLUGIN_SCHEMA = {
 const PLUGIN_UISCHEMA = {};
 const DEFAULT_MY_AIS_CLASS = 'B';
 const DEFAULT_POSITION_UPDATE_INTERVAL = 120;
-const DEFAULT_STATIC_UPDATE_INTERVAL = 600;
+const DEFAULT_STATIC_DATA_UPDATE_INTERVAL = 600;
 const DEFAULT_EXPIRY_INTERVAL = 900;
 const DEFAULT_REPORT_SELF = true;
 const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     let udpSocket = undefined;
     let intervalIds = [];
-    let pluginConfiguration;
-     | undefined;
-    undefined;
+    let pluginConfiguration = {};
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
         description: PLUGIN_DESCRIPTION,
         schema: PLUGIN_SCHEMA,
         uiSchema: PLUGIN_UISCHEMA,
-        start: function (props) {
-            options = _.cloneDeep(props);
-            options.mymmsi = app.getSelfPath('mmsi');
-            app.debug(`using configuration: ${JSON.stringify(options, null, 2)}`);
-            udpSocket = dgram.createSocket('udp4');
-            if ((options.endpoints) && (options.endpoints.length > 0)) {
-                if (options.positionupdateinterval > 0) {
-                    intervalIds.push(Number(setInterval(reportPositions, (options.positionupdateinterval * 1000))));
+        start: function (options) {
+            try {
+                pluginConfiguration = makePluginConfiguration(options);
+                app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
+                udpSocket = dgram.createSocket('udp4');
+                if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
+                    app.setPluginStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoints`);
+                    pluginConfiguration.endpoints.forEach((endpoint) => {
+                        if (endpoint.positionUpdateInterval > 0) {
+                            endpoint.intervalIds.push(Number(setInterval(() => { reportPositions(endpoint); }, (endpoint.positionUpdateInterval * 1000))));
+                        }
+                        if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
+                            endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval) ? endpoint.positionUpdateInterval : endpoint.staticDataUpdateInterval;
+                            endpoint.intervalIds.push(Number(setInterval(() => { reportStaticData(endpoint); }, (endpoint.staticDataUpdateInterval * 1000))));
+                        }
+                    });
                 }
-                if ((options.positionupdateinterval > 0) && (options.staticupdateinterval > 0)) {
-                    options.staticupdateinterval = (options.staticupdateinterval < options.positionupdateinterval) ? options.positionupdateinterval : options.staticupdateinterval;
-                    intervalIds.push(Number(setInterval(reportStaticData, (options.staticupdateinterval * 1000))));
+                else {
+                    app.setPluginStatus('Stopped: no configured endpoints');
                 }
             }
-            app.setPluginStatus(`Reporting to ${options.endpoints.length} endpoint(s)`);
+            catch (e) {
+                app.setPluginStatus('Stopped: configuration error');
+                app.setPluginError(e.message);
+            }
         },
         stop: function () {
-            intervalIds.forEach((id) => clearInterval(id));
-            intervalIds = [];
+            if (pluginConfiguration.endpoints) {
+                pluginConfiguration.endpoints.forEach((endpoint) => {
+                    endpoint.intervalIds.forEach((intervalId) => clearInterval(intervalId));
+                    endpoint.intervalIds = [];
+                });
+            }
         }
     };
-    function reportPositions() {
+    function makePluginConfiguration(options) {
+        let pluginConfiguration = {
+            myMMSI: app.getSelfPath('mmsi'),
+            myAisClass: (options.myaisclass || app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS),
+            endpoints: []
+        };
+        options.endpoints.forEach((endpointOption) => {
+            if (!endpointOption.ipaddress)
+                throw new Error('endpoint had missing \'ipaddress\' property');
+            if (!endpointOption.port)
+                throw new Error('endpoint had missing \'port\' property');
+            let endpoint = {
+                ipAddress: endpointOption.ipaddress,
+                port: endpointOption.port,
+                positionUpdateInterval: (endpointOption.positionupdateinterval || options.positionupdateinterval || DEFAULT_POSITION_UPDATE_INTERVAL),
+                staticDataUpdateInterval: (endpointOption.staticdataupdateinterval || options.staticdataupdateinterval || DEFAULT_STATIC_DATA_UPDATE_INTERVAL),
+                expiryInterval: (endpointOption.expiryinterval || options.expiryinterval || DEFAULT_EXPIRY_INTERVAL),
+                reportSelf: (endpointOption.reportself || options.reportself || DEFAULT_REPORT_SELF),
+                reportOthers: (endpointOption.reportothers || options.reportothers || DEFAULT_REPORT_OTHERS),
+                intervalIds: []
+            };
+            return (endpoint);
+        });
+        return (pluginConfiguration);
+    }
+    function reportPositions(endpoint) {
         var aisClass;
         var aisProperties;
-        var count = 0;
         var msg;
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
-                if ((!options.reportself) && (vessel.mmsi == options.mymmsi))
+                if ((!endpoint.reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
                     return;
-                if ((!options.reportothers) && (vessel.mmsi != options.mymmsi))
+                if ((!endpoint.reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI))
                     return;
                 aisProperties = { mmsi: vessel.mmsi };
-                aisClass = (vessel.mmsi == options.mymmsi) ? options.myaisclass : vessel.sensors.ais.class.value;
-                if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
+                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
+                if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 1000))) {
                     aisProperties['accuracy'] = 0;
                     aisProperties['aistype'] = (aisClass == 'A') ? 1 : 18;
                     aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value);
@@ -159,7 +194,7 @@ module.exports = function (app) {
                     }
                     aisProperties['lat'] = vessel.navigation.position.value.latitude;
                     aisProperties['lon'] = vessel.navigation.position.value.longitude;
-                    aisProperties['own'] = (options.mymmsi == vessel.mmsi) ? 1 : 0;
+                    aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi) ? 1 : 0;
                     aisProperties['repeat'] = 3;
                     try {
                         aisProperties['rot'] = vessel.navigation.rateOfTurn.value;
@@ -177,8 +212,7 @@ module.exports = function (app) {
                     msg = new ggencoder_1.AisEncode(aisProperties);
                     if ((msg) && (msg.valid)) {
                         app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`);
-                        options.endpoints.forEach((endpoint) => sendReportMsg(msg.nmea, endpoint));
-                        count++;
+                        sendReportMsg(msg.nmea, endpoint);
                     }
                     else {
                         app.debug(`error creating position report for '${vessel.mmsi}'`);
@@ -194,22 +228,20 @@ module.exports = function (app) {
                 }
             }
         });
-        app.setPluginStatus(`Last sent ${count} position report(s) to ${options.endpoints.length} endpoint(s)`);
     }
-    function reportStaticData() {
+    function reportStaticData(endpoint) {
         var aisClass;
         var aisProperties;
-        var count = 0;
         var msg, msgB;
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
-                if ((!options.reportself) && (vessel.mmsi == options.mymmsi))
+                if ((!endpoint.reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
                     return;
-                if ((!options.reportothers) && (vessel.mmsi != options.mymmsi))
+                if ((!endpoint.reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI))
                     return;
                 aisProperties = { mmsi: vessel.mmsi };
-                aisClass = (vessel.mmsi == options.mymmsi) ? options.myaisclass : vessel.sensors.ais.class.value;
-                if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (options.expiryinterval * 1000))) {
+                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
+                if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 1000))) {
                     aisProperties['callsign'] = '';
                     try {
                         aisProperties['cargo'] = vessel.design.aisShipType.value.id;
@@ -271,8 +303,7 @@ module.exports = function (app) {
                             msg = new ggencoder_1.AisEncode(aisProperties);
                             if ((msg) && (msg.valid)) {
                                 app.debug(`created static data report for '${vessel.mmsi}' (${msg.nmea})`);
-                                options.endpoints.forEach((endpoint) => sendReportMsg(msg.nmea, endpoint));
-                                count++;
+                                sendReportMsg(msg.nmea, endpoint);
                             }
                             else {
                                 app.debug(`error creating static data report for '${vessel.mmsi}'`);
@@ -287,9 +318,8 @@ module.exports = function (app) {
                                 msgB = new ggencoder_1.AisEncode(aisProperties);
                                 if ((msgB) && (msgB.valid)) {
                                     app.debug(`created static data report for '${vessel.mmsi}'`);
-                                    options.endpoints.forEach((endpoint) => sendReportMsg(msg.nmea, endpoint));
-                                    options.endpoints.forEach((endpoint) => sendReportMsg(msgB.nmea, endpoint));
-                                    count++;
+                                    sendReportMsg(msg.nmea, endpoint);
+                                    sendReportMsg(msgB.nmea, endpoint);
                                 }
                                 else {
                                     app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`);
@@ -313,32 +343,31 @@ module.exports = function (app) {
                 }
             }
         });
-        app.setPluginStatus(`Last sent ${count} static data report(s) to ${options.endpoints.length} endpoint(s)`);
     }
     function sendReportMsg(msg, endpoint) {
         if (udpSocket) {
-            udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipaddress, (e) => {
+            udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
                 if (e instanceof Error)
                     app.setPluginStatus(`send failure (${e.message})`);
             });
         }
         else {
-            app.setPluginStatus(`UDP port is no longer available`);
+            app.setPluginStatus(`Stopped: UDP port is no longer available`);
+        }
+    }
+    function radsToDeg(radians) {
+        return (radians * 180 / Math.PI);
+    }
+    function mpsToKn(mps) {
+        return (1.9438444924574 * mps);
+    }
+    function decodeSMI(label) {
+        switch (label) {
+            case 'not available': return (0);
+            case 'not engaged': return (1);
+            case 'engaged': return (2);
+            default: return (0);
         }
     }
     return (plugin);
 };
-function radsToDeg(radians) {
-    return (radians * 180 / Math.PI);
-}
-function mpsToKn(mps) {
-    return (1.9438444924574 * mps);
-}
-function decodeSMI(label) {
-    switch (label) {
-        case 'not available': return (0);
-        case 'not engaged': return (1);
-        case 'engaged': return (2);
-        default: return (0);
-    }
-}

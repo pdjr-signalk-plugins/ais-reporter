@@ -8,19 +8,29 @@ The plugin can be used to send vessel data to online AIS consolidation
 services like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The plugin can report position and static data for the 'self' vessel,
-requiring only that the current vessel position is available on a
-Signal K path.
+The plugin can report position and static data for the 'self' vessel
+requiring only that MMSI and vessel position are available on their
+default Signal K paths of ```mmsi``` and ```navigation.position```
+repectively.
 
 On a vessel with an AIS receiver data on all nearby vessels known to
 Signal K may be uploaded to the specified endpoints.
 
-Reports are issued at a user configured rate giving some control over
-Ethernet data and bandwidth use.
+Reports are issued at a user configured rate to each defined endpoint
+giving some control over Ethernet data and bandwidth use.
 
 ## Configuration
 
-### UDP endpoints to report to
+Reporting options all have sensible default values, so a minimal
+plugin configuration will require just the definition of one or more
+reporting enpoints by specification of IP address and port number.
+
+Built in defaults can be overriden by specifying some alternative
+top-level option values which will be applied to all endpoints.
+Each endpoint configuration can include its own option values which
+will override any other defaults.
+
+### UDP endpoints to report to (```endpoints```)
 A list of service endpoints to which the plugin should send AIS
 reports.
 Each service endpoint is specified by its IP address and the
