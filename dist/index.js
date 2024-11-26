@@ -166,7 +166,7 @@ module.exports = function (app) {
                 reportOthers: (endpointOption.reportothers || options.reportothers || DEFAULT_REPORT_OTHERS),
                 intervalIds: []
             };
-            return (endpoint);
+            pluginConfiguration.endpoints?.push(endpoint);
         });
         return (pluginConfiguration);
     }
