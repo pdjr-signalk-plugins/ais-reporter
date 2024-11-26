@@ -25,6 +25,33 @@ const PLUGIN_SCHEMA = {
     type: 'object',
     required: ["endpoints"],
     properties: {
+        myaisclass: {
+            type: 'string',
+            title: 'Own vessel AIS transceiver type',
+            enum: ['none', 'A', 'B'],
+            enumNames: ['none', 'Class A', 'Class B'],
+            default: 'B'
+        },
+        positionupdateinterval: {
+            type: 'number',
+            title: 'Position update interval (s)'
+        },
+        staticupdateinterval: {
+            type: 'number',
+            title: 'Static data update interval (s)'
+        },
+        expiryinterval: {
+            type: 'number',
+            title: 'Ignore data older than (s)'
+        },
+        reportself: {
+            type: 'boolean',
+            title: 'Report own vessel (self)?'
+        },
+        reportothers: {
+            type: 'boolean',
+            title: 'Report other vessels?'
+        },
         endpoints: {
             type: 'array',
             title: 'UDP endpoints to report to',
@@ -41,49 +68,45 @@ const PLUGIN_SCHEMA = {
                         type: 'number',
                         title: 'Port',
                         default: 12345
+                    },
+                    positionupdateinterval: {
+                        type: 'number',
+                        title: 'Position update interval (s)'
+                    },
+                    staticupdateinterval: {
+                        type: 'number',
+                        title: 'Static data update interval (s)'
+                    },
+                    expiryinterval: {
+                        type: 'number',
+                        title: 'Ignore data older than (s)'
+                    },
+                    reportself: {
+                        type: 'boolean',
+                        title: 'Report own vessel (self)?'
+                    },
+                    reportothers: {
+                        type: 'boolean',
+                        title: 'Report other vessels?'
                     }
                 }
             }
-        },
-        positionupdateinterval: {
-            type: 'number',
-            title: 'Position update interval (s)',
-            default: 60
-        },
-        staticupdateinterval: {
-            type: 'number',
-            title: 'Static data update interval (s)',
-            default: 360
-        },
-        expiryinterval: {
-            type: 'number',
-            title: 'Ignore data older than (s)',
-            default: 3600
-        },
-        reportself: {
-            type: 'boolean',
-            title: 'Report own vessel (self)?',
-            default: true
-        },
-        reportothers: {
-            type: 'boolean',
-            title: 'Report other vessels?',
-            default: false
-        },
-        myaisclass: {
-            type: 'string',
-            title: 'Own vessel AIS transceiver type',
-            enum: ['none', 'A', 'B'],
-            enumNames: ['none', 'Class A', 'Class B'],
-            default: 'B'
         }
     }
 };
 const PLUGIN_UISCHEMA = {};
+const DEFAULT_MY_AIS_CLASS = 'B';
+const DEFAULT_POSITION_UPDATE_INTERVAL = 120;
+const DEFAULT_STATIC_UPDATE_INTERVAL = 600;
+const DEFAULT_EXPIRY_INTERVAL = 900;
+const DEFAULT_REPORT_SELF = true;
+const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     let udpSocket = undefined;
     let intervalIds = [];
-    let options = undefined;
+    let pluginConfiguration;
+     | undefined;
+    undefined;
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,

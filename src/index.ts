@@ -25,6 +25,33 @@ const PLUGIN_SCHEMA: object = {
   type: 'object',
   required: [ "endpoints" ],
   properties: {
+    myaisclass: {
+      type: 'string',
+      title: 'Own vessel AIS transceiver type',
+      enum: [ 'none', 'A', 'B' ],
+      enumNames: [ 'none', 'Class A', 'Class B' ],
+      default: 'B'
+    },
+    positionupdateinterval: {
+      type: 'number',
+      title: 'Position update interval (s)'
+    },
+    staticdataupdateinterval: {
+      type: 'number',
+      title: 'Static data update interval (s)'
+    },
+    expiryinterval: {
+      type: 'number',
+      title: 'Ignore data older than (s)'
+    },
+    reportself: {
+      type: 'boolean',
+      title: 'Report own vessel (self)?'
+    },
+    reportothers: {
+      type: 'boolean',
+      title: 'Report other vessels?'
+    },
     endpoints: {
       type: 'array',
       title: 'UDP endpoints to report to',
@@ -41,50 +68,47 @@ const PLUGIN_SCHEMA: object = {
             type: 'number',
             title: 'Port',
             default: 12345
+          },
+          positionupdateinterval: {
+            type: 'number',
+            title: 'Position update interval (s)'
+          },
+          staticdataupdateinterval: {
+            type: 'number',
+            title: 'Static data update interval (s)'
+          },
+          expiryinterval: {
+            type: 'number',
+            title: 'Ignore data older than (s)'
+          },
+          reportself: {
+            type: 'boolean',
+            title: 'Report own vessel (self)?'
+          },
+          reportothers: {
+            type: 'boolean',
+            title: 'Report other vessels?'
           }
         }        
       }
-    },
-    positionupdateinterval: {
-      type: 'number',
-      title: 'Position update interval (s)',
-      default: 60
-    },
-    staticupdateinterval: {
-      type: 'number',
-      title: 'Static data update interval (s)',
-      default: 360
-    },
-    expiryinterval: {
-      type: 'number',
-      title: 'Ignore data older than (s)',
-      default: 3600
-    },
-    reportself: {
-      type: 'boolean',
-      title: 'Report own vessel (self)?',
-      default: true
-    },
-    reportothers: {
-      type: 'boolean',
-      title: 'Report other vessels?',
-      default: false
-    },
-    myaisclass: {
-      type: 'string',
-      title: 'Own vessel AIS transceiver type',
-      enum: [ 'none', 'A', 'B' ],
-      enumNames: [ 'none', 'Class A', 'Class B' ],
-      default: 'B'
     }
   }
 }
 const PLUGIN_UISCHEMA: object = {}
 
+const DEFAULT_MY_AIS_CLASS = 'B';
+const DEFAULT_POSITION_UPDATE_INTERVAL: number = 120;
+const DEFAULT_STATIC_DATA_UPDATE_INTERVAL : number = 600;
+const DEFAULT_EXPIRY_INTERVAL: number = 900;
+const DEFAULT_REPORT_SELF: boolean = true;
+const DEFAULT_REPORT_OTHERS: boolean = false;
+
+
 module.exports = function(app: any) {
+
   let udpSocket: dgram.Socket | undefined = undefined
   let intervalIds: number[] = []
-  let options: any = undefined 
+  let pluginConfiguration: PluginConfiguration | undefined  = undefined 
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
@@ -93,15 +117,14 @@ module.exports = function(app: any) {
     schema: PLUGIN_SCHEMA,
     uiSchema: PLUGIN_UISCHEMA,
   
-    start: function(props: any) {
-      options = _.cloneDeep(props)
-      options.mymmsi = app.getSelfPath('mmsi')
+    start: function(options: any) {
+      try {
+        pluginConfiguration = makePluginConfiguration(options);
+        app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
 
-      app.debug(`using configuration: ${JSON.stringify(options, null, 2)}`)
+        udpSocket = dgram.createSocket('udp4')
 
-      udpSocket = dgram.createSocket('udp4')
-
-      if ((options.endpoints) && (options.endpoints.length > 0)) {
+        if ((options.endpoints) && (options.endpoints.length > 0)) {
         if (options.positionupdateinterval > 0) {
           intervalIds.push(Number(setInterval(reportPositions, (options.positionupdateinterval * 1000))));
         }
@@ -117,6 +140,28 @@ module.exports = function(app: any) {
 	    intervalIds.forEach((id: number) => clearInterval(id));
       intervalIds = [];
     }
+  }
+
+  function makePluginConfiguration(options: any): pluginConfiguration {
+    let pluginConfiguration: PluginConfiguration = {
+      myAisClass: (options.myaisclass || app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS),
+      endpoints: []
+    };
+    options.endpoints.forEach((endpointOption: any) => {
+      if (!endpointOption.ipaddress) throw new Error('endpoint had missing \'ipaddress\' property');
+      if (!endpointOption.port) throw new Error('endpoint had missing \'port\' property');
+      let endpoint: PluginConfigurationEndpoint = {
+        ipAddress: endpointOption.ipaddress,
+        port: endpointOption.port
+      };
+      endpoint.positionUpdateInterval = (endpointOption.positionupdateinterval || options.positionupdateinterval || DEFAULT_POSITION_UPDATE_INTERVAL);
+      endpoint.staticDataUpdateInterval = (endpointOption.staticdataupdateinterval || options.staticdataupdateinterval || DEFAULT_STATIC_DATA_UPDATE_INTERVAL);
+      endpoint.expiryInterval = (endpointOption.expiryinterval || options.expiryinterval || DEFAULT_EXPIRY_INTERVAL);
+      endpoint.reportSelf = (endpointOption.reportself || options.reportself || DEFAULT_REPORT_SELF);
+      endpoint.reportOthers = (endpointOption.reportothers || options.reportothers || DEFAULT_REPORT_OTHERS);
+      return(endpoint);
+    });
+    return(pluginConfiguration);
   }
 
   function reportPositions() {
@@ -282,8 +327,19 @@ interface SKPlugin {
   stop: () => void
 }
 
-interface Endpoint {
-  ipaddress: string,
-  port: number
+interface PluginConfigurationEndpoint {
+  ipAddress: string,
+  port: number,
+  positionUpdateInterval?: number,
+  staticDataUpdateInterval? : number,
+  expiryInterval?: number,
+  reportSelf?: boolean,
+  reportOthers?: boolean,
 }
+
+interface PluginConfiguration {
+  myAisClass: string,
+  endpoints: PluginConfigurationEndpoint[]
+}
+
 
