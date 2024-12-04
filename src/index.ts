@@ -110,7 +110,7 @@ module.exports = function(app: any) {
 
   var udpSocket: dgram.Socket | undefined = undefined;
   var pluginConfiguration: PluginConfiguration = {};
-  var pluginStatus = new PluginStatus(app, '');
+  var pluginStatus = new PluginStatus(app, '', 3);
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
@@ -133,14 +133,14 @@ module.exports = function(app: any) {
             if (endpoint.positionUpdateInterval > 0) {
               endpoint.intervalIds.push(setInterval(() => {
                 reportPositions(endpoint);
-                pluginStatus.setStatus(`reporting position change to ${endpoint.name}`);
+                pluginStatus.setStatus(`sending position change to ${endpoint.name}`);
               }, (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
               endpoint.intervalIds.push(setInterval(() => {
                 reportStaticData(endpoint);
-                pluginStatus.setStatus(`reporting static data to ${endpoint.name}`);
+                pluginStatus.setStatus(`sending static data to ${endpoint.name}`);
               }, (endpoint.staticDataUpdateInterval * 1000)));
             }
           });

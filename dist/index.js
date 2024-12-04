@@ -106,7 +106,7 @@ const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     var udpSocket = undefined;
     var pluginConfiguration = {};
-    var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '');
+    var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '', 3);
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
@@ -125,14 +125,14 @@ module.exports = function (app) {
                         if (endpoint.positionUpdateInterval > 0) {
                             endpoint.intervalIds.push(setInterval(() => {
                                 reportPositions(endpoint);
-                                pluginStatus.setStatus(`reporting position change to ${endpoint.name}`);
+                                pluginStatus.setStatus(`sending position change to ${endpoint.name}`);
                             }, (endpoint.positionUpdateInterval * 1000)));
                         }
                         if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
                             endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval) ? endpoint.positionUpdateInterval : endpoint.staticDataUpdateInterval;
                             endpoint.intervalIds.push(setInterval(() => {
                                 reportStaticData(endpoint);
-                                pluginStatus.setStatus(`reporting static data to ${endpoint.name}`);
+                                pluginStatus.setStatus(`sending static data to ${endpoint.name}`);
                             }, (endpoint.staticDataUpdateInterval * 1000)));
                         }
                     });
