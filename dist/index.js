@@ -106,7 +106,7 @@ const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     var udpSocket = undefined;
     var pluginConfiguration = {};
-    var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '', 3);
+    var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '', 3, true);
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
