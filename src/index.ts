@@ -131,11 +131,11 @@ module.exports = function(app: any) {
           pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
-              endpoint.intervalIds.push(setInterval(() => reportPositions(endpoint), (endpoint.positionUpdateInterval * 1000)));
+              endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint), (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
-              endpoint.intervalIds.push(setInterval(() => reportStaticData(endpoint), (endpoint.staticDataUpdateInterval * 1000)));
+              endpoint.intervalIds.push(setInterval(reportStaticData.bind(this, endpoint), (endpoint.staticDataUpdateInterval * 1000)));
             }
           });
         } else {
