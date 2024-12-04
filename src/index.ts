@@ -110,7 +110,7 @@ module.exports = function(app: any) {
 
   var udpSocket: dgram.Socket | undefined = undefined;
   var pluginConfiguration: PluginConfiguration = {};
-  var pluginStatus = new PluginStatus(app, '', 3);
+  var pluginStatus: PluginStatus = new PluginStatus(app, '', 3);
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
