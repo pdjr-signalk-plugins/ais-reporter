@@ -17,6 +17,7 @@
 import { AisEncode, AisEncodeOptions } from 'ggencoder'
 import * as dgram from 'dgram'
 import * as _ from 'lodash'
+import { PluginStatus } from 'signalk-libpluginstatus';
 
 const PLUGIN_ID: string = "ais-reporter";
 const PLUGIN_NAME: string = "pdjr-ais-reporter";
@@ -106,7 +107,6 @@ const DEFAULT_REPORT_OTHERS: boolean = false;
 module.exports = function(app: any) {
 
   let udpSocket: dgram.Socket | undefined = undefined;
-  let intervalIds: number[] = [];
   let pluginConfiguration: PluginConfiguration = {};
 
   const plugin: SKPlugin = {
@@ -117,6 +117,7 @@ module.exports = function(app: any) {
     uiSchema: PLUGIN_UISCHEMA,
   
     start: function(options: any) {
+      var pluginStatus = new PluginStatus(app, '');
       try {
         pluginConfiguration = makePluginConfiguration(options);
         app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
@@ -124,21 +125,27 @@ module.exports = function(app: any) {
         udpSocket = dgram.createSocket('udp4')
 
         if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
-          app.setPluginStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoints`);
+          pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoints`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
-              endpoint.intervalIds.push(Number(setInterval(() => { reportPositions(endpoint); }, (endpoint.positionUpdateInterval * 1000))));
+              endpoint.intervalIds.push(setInterval(() => {
+                reportPositions(endpoint);
+                pluginStatus.setStatus(`reporting position change to ${endpoint.ipAddress}`);
+              }, (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
-              endpoint.intervalIds.push(Number(setInterval(() => { reportStaticData(endpoint); }, (endpoint.staticDataUpdateInterval * 1000))));
+              endpoint.intervalIds.push(setInterval(() => {
+                reportStaticData(endpoint);
+                pluginStatus.setStatus(`reporting static data to ${endpoint.ipAddress}`);
+              }, (endpoint.staticDataUpdateInterval * 1000)));
             }
           });
         } else {
-          app.setPluginStatus('Stopped: no configured endpoints');
+          pluginStatus.setDefaultStatus('Stopped: no configured endpoints');
         }
       } catch(e: any) {
-        app.setPluginStatus('Stopped: configuration error');
+        pluginStatus.setDefaultStatus('Stopped: configuration error');
         app.setPluginError(e.message);
       }
     },
@@ -162,7 +169,7 @@ module.exports = function(app: any) {
     options.endpoints.forEach((endpointOption: any) => {
       if (!endpointOption.ipaddress) throw new Error('endpoint had missing \'ipaddress\' property');
       if (!endpointOption.port) throw new Error('endpoint had missing \'port\' property');
-      let endpoint: PluginConfigurationEndpoint = {
+      let endpoint: Endpoint = {
         ipAddress: endpointOption.ipaddress,
         port: endpointOption.port,
         positionUpdateInterval: (endpointOption.positionupdateinterval || options.positionupdateinterval || DEFAULT_POSITION_UPDATE_INTERVAL),
@@ -177,7 +184,7 @@ module.exports = function(app: any) {
     return(pluginConfiguration);
   }
 
-  function reportPositions(endpoint: PluginConfigurationEndpoint) {
+  function reportPositions(endpoint: Endpoint) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
@@ -220,7 +227,7 @@ module.exports = function(app: any) {
     });
   }
 
-  function reportStaticData(endpoint: PluginConfigurationEndpoint) {
+  function reportStaticData(endpoint: Endpoint) {
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
@@ -292,7 +299,7 @@ module.exports = function(app: any) {
     })
   }
 
-  function sendReportMsg(msg: string, endpoint: PluginConfigurationEndpoint) {
+  function sendReportMsg(msg: string, endpoint: Endpoint) {
     if (udpSocket) {
       udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
@@ -333,7 +340,7 @@ interface SKPlugin {
   stop: () => void
 }
 
-interface PluginConfigurationEndpoint {
+interface Endpoint {
   ipAddress: string,
   port: number,
   positionUpdateInterval: number,
@@ -342,13 +349,13 @@ interface PluginConfigurationEndpoint {
   reportSelf: boolean,
   reportOthers: boolean,
 
-  intervalIds: number[]
+  intervalIds: NodeJS.Timeout[]
 }
 
 interface PluginConfiguration {
   myMMSI?: string,
   myAisClass?: string,
-  endpoints?: PluginConfigurationEndpoint[]
+  endpoints?: Endpoint[]
 }
 
 

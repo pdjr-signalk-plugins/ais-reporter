@@ -17,6 +17,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ggencoder_1 = require("ggencoder");
 const dgram = require("dgram");
+const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
 const PLUGIN_ID = "ais-reporter";
 const PLUGIN_NAME = "pdjr-ais-reporter";
 const PLUGIN_DESCRIPTION = "Report AIS data to remote UDP services.";
@@ -102,7 +103,6 @@ const DEFAULT_REPORT_SELF = true;
 const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     let udpSocket = undefined;
-    let intervalIds = [];
     let pluginConfiguration = {};
     const plugin = {
         id: PLUGIN_ID,
@@ -111,28 +111,35 @@ module.exports = function (app) {
         schema: PLUGIN_SCHEMA,
         uiSchema: PLUGIN_UISCHEMA,
         start: function (options) {
+            var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '');
             try {
                 pluginConfiguration = makePluginConfiguration(options);
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
                 udpSocket = dgram.createSocket('udp4');
                 if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
-                    app.setPluginStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoints`);
+                    pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoints`);
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
-                            endpoint.intervalIds.push(Number(setInterval(() => { reportPositions(endpoint); }, (endpoint.positionUpdateInterval * 1000))));
+                            endpoint.intervalIds.push(setInterval(() => {
+                                reportPositions(endpoint);
+                                pluginStatus.setStatus(`reporting position change to ${endpoint.ipAddress}`);
+                            }, (endpoint.positionUpdateInterval * 1000)));
                         }
                         if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
                             endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval) ? endpoint.positionUpdateInterval : endpoint.staticDataUpdateInterval;
-                            endpoint.intervalIds.push(Number(setInterval(() => { reportStaticData(endpoint); }, (endpoint.staticDataUpdateInterval * 1000))));
+                            endpoint.intervalIds.push(setInterval(() => {
+                                reportStaticData(endpoint);
+                                pluginStatus.setStatus(`reporting static data to ${endpoint.ipAddress}`);
+                            }, (endpoint.staticDataUpdateInterval * 1000)));
                         }
                     });
                 }
                 else {
-                    app.setPluginStatus('Stopped: no configured endpoints');
+                    pluginStatus.setDefaultStatus('Stopped: no configured endpoints');
                 }
             }
             catch (e) {
-                app.setPluginStatus('Stopped: configuration error');
+                pluginStatus.setDefaultStatus('Stopped: configuration error');
                 app.setPluginError(e.message);
             }
         },
