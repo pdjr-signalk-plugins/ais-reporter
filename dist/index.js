@@ -59,15 +59,17 @@ const PLUGIN_SCHEMA = {
                 type: 'object',
                 required: ['ipaddress', 'port'],
                 properties: {
+                    name: {
+                        type: 'string',
+                        title: 'Endpoint name',
+                    },
                     ipaddress: {
                         type: 'string',
-                        title: 'UDP endpoint IP address',
-                        default: '0.0.0.0'
+                        title: 'UDP endpoint IP address'
                     },
                     port: {
                         type: 'number',
-                        title: 'Port',
-                        default: 12345
+                        title: 'Port'
                     },
                     positionupdateinterval: {
                         type: 'number',
@@ -117,19 +119,20 @@ module.exports = function (app) {
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
                 udpSocket = dgram.createSocket('udp4');
                 if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
-                    pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoints`);
+                    pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
+                    pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ');
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
                             endpoint.intervalIds.push(setInterval(() => {
                                 reportPositions(endpoint);
-                                pluginStatus.setStatus(`reporting position change to ${endpoint.ipAddress}`);
+                                pluginStatus.setStatus(`reporting position change to ${endpoint.name}`);
                             }, (endpoint.positionUpdateInterval * 1000)));
                         }
                         if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
                             endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval) ? endpoint.positionUpdateInterval : endpoint.staticDataUpdateInterval;
                             endpoint.intervalIds.push(setInterval(() => {
                                 reportStaticData(endpoint);
-                                pluginStatus.setStatus(`reporting static data to ${endpoint.ipAddress}`);
+                                pluginStatus.setStatus(`reporting static data to ${endpoint.name}`);
                             }, (endpoint.staticDataUpdateInterval * 1000)));
                         }
                     });
@@ -164,6 +167,7 @@ module.exports = function (app) {
             if (!endpointOption.port)
                 throw new Error('endpoint had missing \'port\' property');
             let endpoint = {
+                name: endpointOption.name || endpointOption.ipAddress,
                 ipAddress: endpointOption.ipaddress,
                 port: endpointOption.port,
                 positionUpdateInterval: (endpointOption.positionupdateinterval || options.positionupdateinterval || DEFAULT_POSITION_UPDATE_INTERVAL),
