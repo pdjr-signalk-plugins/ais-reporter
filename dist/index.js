@@ -355,6 +355,7 @@ module.exports = function (app) {
                 if (e instanceof Error)
                     app.setPluginStatus(`send failure (${e.message})`);
             });
+            pluginStatus.setPluginStatus(`sending report to '${endpoint.name}'`);
         }
         else {
             app.setPluginStatus(`Stopped: UDP port is no longer available`);
