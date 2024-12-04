@@ -104,8 +104,9 @@ const DEFAULT_EXPIRY_INTERVAL = 900;
 const DEFAULT_REPORT_SELF = true;
 const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
-    let udpSocket = undefined;
-    let pluginConfiguration = {};
+    var udpSocket = undefined;
+    var pluginConfiguration = {};
+    var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '');
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
@@ -113,7 +114,6 @@ module.exports = function (app) {
         schema: PLUGIN_SCHEMA,
         uiSchema: PLUGIN_UISCHEMA,
         start: function (options) {
-            var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '');
             try {
                 pluginConfiguration = makePluginConfiguration(options);
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);

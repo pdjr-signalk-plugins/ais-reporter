@@ -108,8 +108,9 @@ const DEFAULT_REPORT_OTHERS: boolean = false;
 
 module.exports = function(app: any) {
 
-  let udpSocket: dgram.Socket | undefined = undefined;
-  let pluginConfiguration: PluginConfiguration = {};
+  var udpSocket: dgram.Socket | undefined = undefined;
+  var pluginConfiguration: PluginConfiguration = {};
+  var pluginStatus = new PluginStatus(app, '');
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
@@ -119,7 +120,6 @@ module.exports = function(app: any) {
     uiSchema: PLUGIN_UISCHEMA,
   
     start: function(options: any) {
-      var pluginStatus = new PluginStatus(app, '');
       try {
         pluginConfiguration = makePluginConfiguration(options);
         app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
