@@ -186,6 +186,8 @@ module.exports = function(app: any) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
+
+    pluginStatus.setPluginStatus(`sensing report to '${endpoint.name}'`);
   
     Object.values(app.getPath('vessels')).forEach((vessel: any) => {
       try {
@@ -302,7 +304,6 @@ module.exports = function(app: any) {
       udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
       });
-      pluginStatus.setStatus(`sending report to '${endpoint.name}'`);
     } else {
       app.setPluginStatus(`Stopped: UDP port is no longer available`);
     }

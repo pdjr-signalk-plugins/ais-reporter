@@ -179,6 +179,7 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
+        pluginStatus.setPluginStatus(`sensing report to '${endpoint.name}'`);
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
                 if ((!endpoint.reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
@@ -355,7 +356,6 @@ module.exports = function (app) {
                 if (e instanceof Error)
                     app.setPluginStatus(`send failure (${e.message})`);
             });
-            pluginStatus.setStatus(`sending report to '${endpoint.name}'`);
         }
         else {
             app.setPluginStatus(`Stopped: UDP port is no longer available`);
