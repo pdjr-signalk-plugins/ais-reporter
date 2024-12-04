@@ -302,7 +302,7 @@ module.exports = function(app: any) {
       udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
       });
-      pluginStatus.setPluginStatus(`sending report to '${endpoint.name}'`);
+      pluginStatus.setStatus(`sending report to '${endpoint.name}'`);
     } else {
       app.setPluginStatus(`Stopped: UDP port is no longer available`);
     }
