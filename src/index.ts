@@ -187,7 +187,7 @@ module.exports = function(app: any) {
     var aisProperties: AisEncodeOptions;
     var msg: any;
 
-    pluginStatus.setPluginStatus(`sensing report to '${endpoint.name}'`);
+    pluginStatus.setStatus(`sensing report to '${endpoint.name}'`);
   
     Object.values(app.getPath('vessels')).forEach((vessel: any) => {
       try {

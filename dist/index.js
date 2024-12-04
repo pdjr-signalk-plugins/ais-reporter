@@ -179,7 +179,7 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
-        pluginStatus.setPluginStatus(`sensing report to '${endpoint.name}'`);
+        pluginStatus.setStatus(`sensing report to '${endpoint.name}'`);
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
                 if ((!endpoint.reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
