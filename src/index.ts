@@ -110,7 +110,7 @@ module.exports = function(app: any) {
 
   var udpSocket: dgram.Socket | undefined = undefined;
   var pluginConfiguration: PluginConfiguration = {};
-  var pluginStatus: PluginStatus = new PluginStatus(app, '', 3, true);
+  var pluginStatus: PluginStatus;
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
@@ -127,7 +127,7 @@ module.exports = function(app: any) {
         udpSocket = dgram.createSocket('udp4')
 
         if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
-          pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
+          pluginStatus = new PluginStatus(app, `Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
               endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint, pluginStatus), (endpoint.positionUpdateInterval * 1000)));

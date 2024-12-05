@@ -106,7 +106,7 @@ const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     var udpSocket = undefined;
     var pluginConfiguration = {};
-    var pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, '', 3, true);
+    var pluginStatus;
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
@@ -119,7 +119,7 @@ module.exports = function (app) {
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
                 udpSocket = dgram.createSocket('udp4');
                 if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
-                    pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
+                    pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
                             endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint, pluginStatus), (endpoint.positionUpdateInterval * 1000)));
