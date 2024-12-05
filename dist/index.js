@@ -122,7 +122,10 @@ module.exports = function (app) {
                     pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
-                            endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint), (endpoint.positionUpdateInterval * 1000)));
+                            endpoint.intervalIds.push(setInterval(() => {
+                                pluginStatus.setStatus(`sending position report to '${endpoint.name}'`);
+                                reportPositions(endpoint);
+                            }, (endpoint.positionUpdateInterval * 1000)));
                         }
                         if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
                             endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval) ? endpoint.positionUpdateInterval : endpoint.staticDataUpdateInterval;
@@ -178,7 +181,6 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
-        pluginStatus.setStatus(`sending position report to '${endpoint.name}'`);
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
                 if ((!endpoint.reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))

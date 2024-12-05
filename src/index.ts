@@ -130,7 +130,10 @@ module.exports = function(app: any) {
           pluginStatus = new PluginStatus(app, `Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
-              endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint), (endpoint.positionUpdateInterval * 1000)));
+              endpoint.intervalIds.push(setInterval(() => {
+                pluginStatus.setStatus(`sending position report to '${endpoint.name}'`);
+                reportPositions(endpoint);
+              }, (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
@@ -185,8 +188,6 @@ module.exports = function(app: any) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
-
-    pluginStatus.setStatus(`sending position report to '${endpoint.name}'`);
   
     Object.values(app.getPath('vessels')).forEach((vessel: any) => {
       try {
