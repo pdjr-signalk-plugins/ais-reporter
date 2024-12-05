@@ -124,7 +124,7 @@ module.exports = function (app) {
                         if (endpoint.positionUpdateInterval > 0) {
                             endpoint.intervalIds.push(setInterval(() => {
                                 let reportCount = reportPositions(endpoint);
-                                pluginStatus.setStatus(`sending $${reportCount} position report${(reportCount == 1) ? '' : 's'} to endpoint '${endpoint.name}'`);
+                                pluginStatus.setStatus(`sending ${reportCount} position report${(reportCount == 1) ? '' : 's'} to endpoint '${endpoint.name}'`);
                             }, (endpoint.positionUpdateInterval * 1000)));
                         }
                         if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
