@@ -120,7 +120,6 @@ module.exports = function (app) {
                 udpSocket = dgram.createSocket('udp4');
                 if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
                     pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
-                    pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ');
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
                             endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint), (endpoint.positionUpdateInterval * 1000)));
@@ -179,7 +178,7 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
-        pluginStatus.setStatus(`sensing report to '${endpoint.name}'`);
+        pluginStatus.setStatus(`sending report to '${endpoint.name}'`);
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
                 if ((!endpoint.reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
@@ -221,16 +220,16 @@ module.exports = function (app) {
                         sendReportMsg(msg.nmea, endpoint);
                     }
                     else {
-                        app.debug(`error creating position report for '${vessel.mmsi}'`);
+                        //app.debug(`error creating position report for '${vessel.mmsi}'`)
                     }
                 }
                 else {
-                    app.debug(`ignoring inactive vessel '${vessel.mmsi}'`);
+                    //app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
                 }
             }
             catch (e) {
                 if (e instanceof Error) {
-                    app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`);
+                    //app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
                 }
             }
         });

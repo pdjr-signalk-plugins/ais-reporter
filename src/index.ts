@@ -128,7 +128,6 @@ module.exports = function(app: any) {
 
         if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
           pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
-          pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
               endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint), (endpoint.positionUpdateInterval * 1000)));
@@ -187,7 +186,7 @@ module.exports = function(app: any) {
     var aisProperties: AisEncodeOptions;
     var msg: any;
 
-    pluginStatus.setStatus(`sensing report to '${endpoint.name}'`);
+    pluginStatus.setStatus(`sending report to '${endpoint.name}'`);
   
     Object.values(app.getPath('vessels')).forEach((vessel: any) => {
       try {
@@ -214,14 +213,14 @@ module.exports = function(app: any) {
             app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
             sendReportMsg(msg.nmea, endpoint)
           } else {
-            app.debug(`error creating position report for '${vessel.mmsi}'`)
+            //app.debug(`error creating position report for '${vessel.mmsi}'`)
           }
         } else {
-          app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
+          //app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
         } 
       } catch(e) {
         if (e instanceof Error) {
-          app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
+          //app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
         }
       }
     });
