@@ -138,8 +138,8 @@ module.exports = function(app: any) {
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
               endpoint.intervalIds.push(setInterval(() => {
-                pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-                reportStaticData(endpoint);
+                let reportCount = reportStaticData(endpoint);
+                pluginStatus.setStatus(`sending ${reportCount} static data report${(reportCount == 1)?'':'s'} to endpoint '${endpoint.name}'`);
             }, (endpoint.staticDataUpdateInterval * 1000)));
             }
           });
@@ -233,7 +233,8 @@ module.exports = function(app: any) {
     return(retval);
   }
 
-  function reportStaticData(endpoint: Endpoint) {
+  function reportStaticData(endpoint: Endpoint): number {
+    var retval: number = 0;
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
@@ -272,6 +273,7 @@ module.exports = function(app: any) {
               } else {
                 app.debug(`error creating static data report for '${vessel.mmsi}'`)
               }
+              retval++;
               break;
             case 'B':
               aisProperties['aistype'] = 24;
@@ -285,24 +287,26 @@ module.exports = function(app: any) {
                   sendReportMsg(msg.nmea, endpoint);
                   sendReportMsg(msgB.nmea, endpoint);
                 } else {
-                  app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
+                  // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
                 }
               } else {
-                app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
+                // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
               }
+              retval++;
               break;
             default:
               break;
           }          
         } else {
-          app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
+          // app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
         }
       } catch(e) {
         if (e instanceof Error) {
-          app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
+          // app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
         }
       }
-    })
+    });
+    return(retval);
   }
 
   function sendReportMsg(msg: string, endpoint: Endpoint) {
