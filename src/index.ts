@@ -127,7 +127,7 @@ module.exports = function(app: any) {
         udpSocket = dgram.createSocket('udp4')
 
         if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
-          pluginStatus = new PluginStatus(app, `Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
+          pluginStatus = new PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
               endpoint.intervalIds.push(setInterval(() => {
