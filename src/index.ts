@@ -108,8 +108,8 @@ const DEFAULT_REPORT_OTHERS: boolean = false;
 
 module.exports = function(app: any) {
 
-  var udpSocket: dgram.Socket | undefined = undefined;
-  var pluginConfiguration: PluginConfiguration = {};
+  var udpSocket: dgram.Socket | undefined;
+  var pluginConfiguration: PluginConfiguration;
   var pluginStatus: PluginStatus;
 
   const plugin: SKPlugin = {

@@ -104,8 +104,8 @@ const DEFAULT_EXPIRY_INTERVAL = 900;
 const DEFAULT_REPORT_SELF = true;
 const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
-    var udpSocket = undefined;
-    var pluginConfiguration = {};
+    var udpSocket;
+    var pluginConfiguration;
     var pluginStatus;
     const plugin = {
         id: PLUGIN_ID,
