@@ -130,11 +130,11 @@ module.exports = function(app: any) {
           pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')}`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
-              endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint), (endpoint.positionUpdateInterval * 1000)));
+              endpoint.intervalIds.push(setInterval(reportPositions.bind(this, endpoint, pluginStatus), (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
-              endpoint.intervalIds.push(setInterval(reportStaticData.bind(this, endpoint), (endpoint.staticDataUpdateInterval * 1000)));
+              endpoint.intervalIds.push(setInterval(reportStaticData.bind(this, endpoint, pluginStatus), (endpoint.staticDataUpdateInterval * 1000)));
             }
           });
         } else {
@@ -181,7 +181,7 @@ module.exports = function(app: any) {
     return(pluginConfiguration);
   }
 
-  function reportPositions(endpoint: Endpoint) {
+  function reportPositions(endpoint: Endpoint, pluginStatus: PluginStatus) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
@@ -226,7 +226,7 @@ module.exports = function(app: any) {
     });
   }
 
-  function reportStaticData(endpoint: Endpoint) {
+  function reportStaticData(endpoint: Endpoint, pluginStatus: PluginStatus) {
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
