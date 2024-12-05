@@ -131,8 +131,8 @@ module.exports = function(app: any) {
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
               endpoint.intervalIds.push(setInterval(() => {
-                pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-                reportPositions(endpoint);
+                let reportCount = reportPositions(endpoint);
+                pluginStatus.setStatus(`sending $${reportCount} position report${(reportCount == 1)?'':'s'} to endpoint '${endpoint.name}'`);
               }, (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
@@ -187,7 +187,8 @@ module.exports = function(app: any) {
     return(pluginConfiguration);
   }
 
-  function reportPositions(endpoint: Endpoint) {
+  function reportPositions(endpoint: Endpoint): number {
+    var retval: number = 0;
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
@@ -216,6 +217,7 @@ module.exports = function(app: any) {
           if ((msg) && (msg.valid)) {
             app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
             sendReportMsg(msg.nmea, endpoint)
+            retval++;
           } else {
             //app.debug(`error creating position report for '${vessel.mmsi}'`)
           }
@@ -228,6 +230,7 @@ module.exports = function(app: any) {
         }
       }
     });
+    return(retval);
   }
 
   function reportStaticData(endpoint: Endpoint) {
