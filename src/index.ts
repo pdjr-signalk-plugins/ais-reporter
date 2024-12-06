@@ -123,7 +123,7 @@ module.exports = function(app: any) {
 
         let udpSocket: Socket = createSocket('udp4');
 
-        if ((pluginConfiguration.endpoints.length > 0) && (udpSocket != undefined)) {
+        if (pluginConfiguration.endpoints.length > 0) {
           pluginStatus = new PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {

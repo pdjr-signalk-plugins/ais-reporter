@@ -117,7 +117,7 @@ module.exports = function (app) {
                 pluginConfiguration = makePluginConfiguration(options);
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
                 let udpSocket = (0, dgram_1.createSocket)('udp4');
-                if ((pluginConfiguration.endpoints.length > 0) && (udpSocket != undefined)) {
+                if (pluginConfiguration.endpoints.length > 0) {
                     pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
