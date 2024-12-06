@@ -159,7 +159,16 @@ module.exports = function(app: any) {
           endpoint.intervalIds = [];
         });
       }
+    },
+
+    registerWithRouter: function(router) {
+      router.get('/status', handleRoutes);
+    },
+
+    getOpenApi: function() {
+      return(require('./openApi.json'));
     }
+
   }
 
   function makePluginConfiguration(options: any): PluginConfiguration {
@@ -180,6 +189,9 @@ module.exports = function(app: any) {
         expiryInterval: (endpointOption.expiryinterval || options.expiryinterval || DEFAULT_EXPIRY_INTERVAL),
         reportSelf: (endpointOption.reportself || options.reportself || DEFAULT_REPORT_SELF),
         reportOthers: (endpointOption.reportothers || options.reportothers || DEFAULT_REPORT_OTHERS),
+        lastReportTimestamp: undefined,
+        positionReportCount: 0,
+        staticReportCount: 0,
         intervalIds: []
       };
       pluginConfiguration.endpoints?.push(endpoint);
@@ -217,6 +229,8 @@ module.exports = function(app: any) {
           if ((msg) && (msg.valid)) {
             app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
             sendReportMsg(msg.nmea, endpoint)
+            endpoint.positionReportCount++;
+            endpoint.lastReportTimestamp = Date.now();
             retval++;
           } else {
             //app.debug(`error creating position report for '${vessel.mmsi}'`)
@@ -292,6 +306,8 @@ module.exports = function(app: any) {
               } else {
                 // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
               }
+              endpoint.staticReportCount++;
+              endpoint.lastReportTimestamp = Date.now();
               retval++;
               break;
             default:
@@ -336,6 +352,37 @@ module.exports = function(app: any) {
     }
   }
 
+  function handleRoutes(req: any, res: any) {
+    app.debug("processing %s request on %s", req.method, req.path);
+    try {
+      switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
+        case '/status':
+          const status = (pluginConfiguration.endpoints || []).reduce((a: any, endpoint: Endpoint) => {
+            a[endpoint.name] = {
+              ipAddress: endpoint.ipAddress,
+              port: endpoint.port,
+              lastTransmission: (!endpoint.lastReportTimestamp)?'never':(new Date(endpoint.lastReportTimestamp)).toUTCString(),
+              totalNumberOfPositionReports: endpoint.positionReportCount,
+              totalNumberOfStaticDataReports: endpoint.staticReportCount
+            }
+            return(a)
+          }, {})
+          expressSend(res, 200, status, req.path)
+          break
+      }
+    } catch(e: any) {
+      app.debug(e.message)
+      expressSend(res, ((/^\d+$/.test(e.message))?parseInt(e.message):500), null, req.path)
+    }
+
+    function expressSend(res: any, code: number, body: any = null, debugPrefix: any = null) {
+      const FETCH_RESPONSES: Dictionary<string | null> = { "200": null, "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" }
+      res.status(code).send((body)?body:((FETCH_RESPONSES['' + code])?FETCH_RESPONSES['' + code]:null))
+      if (debugPrefix) app.debug("%s: %d %s", debugPrefix, code, ((body)?JSON.stringify(body):((FETCH_RESPONSES['' + code])?FETCH_RESPONSES['' + code]:null)))
+      return(false);
+    }
+  }
+
   return(plugin);
 }
 
@@ -347,7 +394,9 @@ interface SKPlugin {
   uiSchema: object,
 
   start: (options: any) => void,
-  stop: () => void
+  stop: () => void,
+  registerWithRouter: (router: any) => void,
+  getOpenApi: () => string
 }
 
 interface Endpoint {
@@ -360,7 +409,10 @@ interface Endpoint {
   reportSelf: boolean,
   reportOthers: boolean,
 
-  intervalIds: NodeJS.Timeout[]
+  intervalIds: NodeJS.Timeout[],
+  lastReportTimestamp: number | undefined,
+  positionReportCount: number,
+  staticReportCount: number
 }
 
 interface PluginConfiguration {
@@ -369,4 +421,6 @@ interface PluginConfiguration {
   endpoints?: Endpoint[]
 }
 
-
+interface Dictionary<T> {
+  [key: string]: T
+}

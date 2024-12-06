@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: AIS Reporter API
+  version: 1.0.0
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  description: |
+    [pdjr-ais-reporter](https://github.com/pdjr-signalk/pdjr-ais-reporter)
+    is a plugin for the
+    [Signal K node server](https://github.com/SignalK/signalk-server).
+
+    A Signal K server hosting the plugin will present this API under
+    the root https://*server_ip*:*server_port*/plugins/interfacewatchdog.
+externalDocs:
+  description: Plugin README document
+  url: https://github.com/pdjr-signalk/pdjr-ais-reporter#readme 
+paths:
+  /status:
+    get:
+      description: |
+        Get a digest reporting the status of all configured endpoints.
+      responses:
+        200:
+          description: |
+            Success.
+            The response body is an object containing a status report
+            object for each endpoint keyed by endpoint name.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Bus0:
+                    type: object
+                    properties:
+                      interface:
+                        description: The interface monitored by this watchdog.
+                        type: string
+                        example: master
+                      threshold:
+                        description: The watchdog threshold in deltas/second.
+                        type: number
+                        minimum: 0
+                        example: 30
+                      currentState:
+                        description: The current state of this watchdog.
+                        type: string
+                        example: normal
+                      exceptionRate:
+                        description: Real-time "*exceptionCount* / *heartbeat*" for this watchdog.
+                        type: string
+                        example: 0 / 156
+                      stateHistory:
+                        description: Time-sequenced array of states adopted by this watchdog.
+                        type: array
+                        items:
+                          description: |
+                            String of the form "*time* *heartbeat* *exceptionCount* *state*".
+                          type: string
+                        example: [ 2023-10-26T14:05:53.453Z 0 0 starting, 2023-10-26T14:06:02.273Z 2 0 normal, ]
+        500:
+          description: |
+            Error.
+            The server was unable to service the request.       

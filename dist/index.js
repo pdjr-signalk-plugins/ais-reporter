@@ -152,6 +152,12 @@ module.exports = function (app) {
                     endpoint.intervalIds = [];
                 });
             }
+        },
+        registerWithRouter: function (router) {
+            router.get('/status', handleRoutes);
+        },
+        getOpenApi: function () {
+            return (require('./openApi.json'));
         }
     };
     function makePluginConfiguration(options) {
@@ -174,6 +180,9 @@ module.exports = function (app) {
                 expiryInterval: (endpointOption.expiryinterval || options.expiryinterval || DEFAULT_EXPIRY_INTERVAL),
                 reportSelf: (endpointOption.reportself || options.reportself || DEFAULT_REPORT_SELF),
                 reportOthers: (endpointOption.reportothers || options.reportothers || DEFAULT_REPORT_OTHERS),
+                lastReportTimestamp: undefined,
+                positionReportCount: 0,
+                staticReportCount: 0,
                 intervalIds: []
             };
             pluginConfiguration.endpoints?.push(endpoint);
@@ -224,6 +233,8 @@ module.exports = function (app) {
                     if ((msg) && (msg.valid)) {
                         app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`);
                         sendReportMsg(msg.nmea, endpoint);
+                        endpoint.positionReportCount++;
+                        endpoint.lastReportTimestamp = Date.now();
                         retval++;
                     }
                     else {
@@ -343,6 +354,8 @@ module.exports = function (app) {
                             else {
                                 // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
                             }
+                            endpoint.staticReportCount++;
+                            endpoint.lastReportTimestamp = Date.now();
                             retval++;
                             break;
                         default:
@@ -384,6 +397,37 @@ module.exports = function (app) {
             case 'not engaged': return (1);
             case 'engaged': return (2);
             default: return (0);
+        }
+    }
+    function handleRoutes(req, res) {
+        app.debug("processing %s request on %s", req.method, req.path);
+        try {
+            switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
+                case '/status':
+                    const status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
+                        a[endpoint.name] = {
+                            ipAddress: endpoint.ipAddress,
+                            port: endpoint.port,
+                            lastTransmission: (!endpoint.lastReportTimestamp) ? 'never' : (new Date(endpoint.lastReportTimestamp)).toUTCString(),
+                            totalNumberOfPositionReports: endpoint.positionReportCount,
+                            totalNumberOfStaticDataReports: endpoint.staticReportCount
+                        };
+                        return (a);
+                    }, {});
+                    expressSend(res, 200, status, req.path);
+                    break;
+            }
+        }
+        catch (e) {
+            app.debug(e.message);
+            expressSend(res, ((/^\d+$/.test(e.message)) ? parseInt(e.message) : 500), null, req.path);
+        }
+        function expressSend(res, code, body = null, debugPrefix = null) {
+            const FETCH_RESPONSES = { "200": null, "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" };
+            res.status(code).send((body) ? body : ((FETCH_RESPONSES['' + code]) ? FETCH_RESPONSES['' + code] : null));
+            if (debugPrefix)
+                app.debug("%s: %d %s", debugPrefix, code, ((body) ? JSON.stringify(body) : ((FETCH_RESPONSES['' + code]) ? FETCH_RESPONSES['' + code] : null)));
+            return (false);
         }
     }
     return (plugin);
