@@ -15,8 +15,7 @@
  */
 
 import { AisEncode, AisEncodeOptions } from 'ggencoder'
-import * as dgram from 'dgram'
-import * as _ from 'lodash'
+import { Socket, createSocket } from 'dgram'
 import { PluginStatus } from 'signalk-libpluginstatus';
 
 const PLUGIN_ID: string = "ais-reporter";
@@ -107,8 +106,6 @@ const DEFAULT_REPORT_SELF: boolean = true;
 const DEFAULT_REPORT_OTHERS: boolean = false;
 
 module.exports = function(app: any) {
-
-  var udpSocket: dgram.Socket | undefined;
   var pluginConfiguration: PluginConfiguration;
   var pluginStatus: PluginStatus;
 
@@ -124,21 +121,21 @@ module.exports = function(app: any) {
         pluginConfiguration = makePluginConfiguration(options);
         app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
 
-        udpSocket = dgram.createSocket('udp4')
+        let udpSocket: Socket = createSocket('udp4');
 
-        if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
+        if ((pluginConfiguration.endpoints.length > 0) && (udpSocket != undefined)) {
           pluginStatus = new PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
           pluginConfiguration.endpoints.forEach((endpoint) => {
             if (endpoint.positionUpdateInterval > 0) {
               endpoint.intervalIds.push(setInterval(() => {
-                let reportCount = reportPositions(endpoint);
+                let reportCount = reportPositions(udpSocket, endpoint);
                 pluginStatus.setStatus(`sending ${reportCount} position report${(reportCount == 1)?'':'s'} to endpoint '${endpoint.name}'`);
               }, (endpoint.positionUpdateInterval * 1000)));
             }
             if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
               endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval)?endpoint.positionUpdateInterval:endpoint.staticDataUpdateInterval;
               endpoint.intervalIds.push(setInterval(() => {
-                let reportCount = reportStaticData(endpoint);
+                let reportCount = reportStaticData(udpSocket, endpoint);
                 pluginStatus.setStatus(`sending ${reportCount} static data report${(reportCount == 1)?'':'s'} to endpoint '${endpoint.name}'`);
             }, (endpoint.staticDataUpdateInterval * 1000)));
             }
@@ -199,7 +196,7 @@ module.exports = function(app: any) {
     return(pluginConfiguration);
   }
 
-  function reportPositions(endpoint: Endpoint): number {
+  function reportPositions(socket: Socket, endpoint: Endpoint): number {
     var retval: number = 0;
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
@@ -228,7 +225,7 @@ module.exports = function(app: any) {
           msg = new AisEncode(aisProperties)
           if ((msg) && (msg.valid)) {
             app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
-            sendReportMsg(msg.nmea, endpoint)
+            sendReportMsg(socket, msg.nmea, endpoint)
             endpoint.positionReportCount++;
             endpoint.lastReportTimestamp = Date.now();
             retval++;
@@ -247,7 +244,7 @@ module.exports = function(app: any) {
     return(retval);
   }
 
-  function reportStaticData(endpoint: Endpoint): number {
+  function reportStaticData(socket: Socket, endpoint: Endpoint): number {
     var retval: number = 0;
     var aisClass: string
     var aisProperties: any
@@ -283,7 +280,7 @@ module.exports = function(app: any) {
               msg = new AisEncode(aisProperties);
               if ((msg) && (msg.valid)) {
                 app.debug(`created static data report for '${vessel.mmsi}' (${msg.nmea})`)
-                sendReportMsg(msg.nmea, endpoint);
+                sendReportMsg(socket, msg.nmea, endpoint);
               } else {
                 app.debug(`error creating static data report for '${vessel.mmsi}'`)
               }
@@ -298,8 +295,8 @@ module.exports = function(app: any) {
                 msgB = new AisEncode(aisProperties);
                 if ((msgB) && (msgB.valid)) {
                   app.debug(`created static data report for '${vessel.mmsi}'`);
-                  sendReportMsg(msg.nmea, endpoint);
-                  sendReportMsg(msgB.nmea, endpoint);
+                  sendReportMsg(socket, msg.nmea, endpoint);
+                  sendReportMsg(socket, msgB.nmea, endpoint);
                 } else {
                   // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
                 }
@@ -325,9 +322,9 @@ module.exports = function(app: any) {
     return(retval);
   }
 
-  function sendReportMsg(msg: string, endpoint: Endpoint) {
-    if (udpSocket) {
-      udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
+  function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint) {
+    if (socket) {
+      socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
       });
     } else {
@@ -416,9 +413,9 @@ interface Endpoint {
 }
 
 interface PluginConfiguration {
-  myMMSI?: string,
-  myAisClass?: string,
-  endpoints?: Endpoint[]
+  myMMSI: string,
+  myAisClass: string,
+  endpoints: Endpoint[]
 }
 
 interface Dictionary<T> {

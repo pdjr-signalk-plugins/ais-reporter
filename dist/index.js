@@ -16,7 +16,7 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const ggencoder_1 = require("ggencoder");
-const dgram = require("dgram");
+const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
 const PLUGIN_ID = "ais-reporter";
 const PLUGIN_NAME = "pdjr-ais-reporter";
@@ -104,7 +104,6 @@ const DEFAULT_EXPIRY_INTERVAL = 900;
 const DEFAULT_REPORT_SELF = true;
 const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
-    var udpSocket;
     var pluginConfiguration;
     var pluginStatus;
     const plugin = {
@@ -117,20 +116,20 @@ module.exports = function (app) {
             try {
                 pluginConfiguration = makePluginConfiguration(options);
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
-                udpSocket = dgram.createSocket('udp4');
-                if ((pluginConfiguration.endpoints) && (pluginConfiguration.endpoints.length > 0)) {
+                let udpSocket = (0, dgram_1.createSocket)('udp4');
+                if ((pluginConfiguration.endpoints.length > 0) && (udpSocket != undefined)) {
                     pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
                     pluginConfiguration.endpoints.forEach((endpoint) => {
                         if (endpoint.positionUpdateInterval > 0) {
                             endpoint.intervalIds.push(setInterval(() => {
-                                let reportCount = reportPositions(endpoint);
+                                let reportCount = reportPositions(udpSocket, endpoint);
                                 pluginStatus.setStatus(`sending ${reportCount} position report${(reportCount == 1) ? '' : 's'} to endpoint '${endpoint.name}'`);
                             }, (endpoint.positionUpdateInterval * 1000)));
                         }
                         if ((endpoint.positionUpdateInterval > 0) && (endpoint.staticDataUpdateInterval > 0)) {
                             endpoint.staticDataUpdateInterval = (endpoint.staticDataUpdateInterval < endpoint.positionUpdateInterval) ? endpoint.positionUpdateInterval : endpoint.staticDataUpdateInterval;
                             endpoint.intervalIds.push(setInterval(() => {
-                                let reportCount = reportStaticData(endpoint);
+                                let reportCount = reportStaticData(udpSocket, endpoint);
                                 pluginStatus.setStatus(`sending ${reportCount} static data report${(reportCount == 1) ? '' : 's'} to endpoint '${endpoint.name}'`);
                             }, (endpoint.staticDataUpdateInterval * 1000)));
                         }
@@ -189,7 +188,7 @@ module.exports = function (app) {
         });
         return (pluginConfiguration);
     }
-    function reportPositions(endpoint) {
+    function reportPositions(socket, endpoint) {
         var retval = 0;
         var aisClass;
         var aisProperties;
@@ -232,7 +231,7 @@ module.exports = function (app) {
                     msg = new ggencoder_1.AisEncode(aisProperties);
                     if ((msg) && (msg.valid)) {
                         app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`);
-                        sendReportMsg(msg.nmea, endpoint);
+                        sendReportMsg(socket, msg.nmea, endpoint);
                         endpoint.positionReportCount++;
                         endpoint.lastReportTimestamp = Date.now();
                         retval++;
@@ -253,7 +252,7 @@ module.exports = function (app) {
         });
         return (retval);
     }
-    function reportStaticData(endpoint) {
+    function reportStaticData(socket, endpoint) {
         var retval = 0;
         var aisClass;
         var aisProperties;
@@ -328,7 +327,7 @@ module.exports = function (app) {
                             msg = new ggencoder_1.AisEncode(aisProperties);
                             if ((msg) && (msg.valid)) {
                                 app.debug(`created static data report for '${vessel.mmsi}' (${msg.nmea})`);
-                                sendReportMsg(msg.nmea, endpoint);
+                                sendReportMsg(socket, msg.nmea, endpoint);
                             }
                             else {
                                 app.debug(`error creating static data report for '${vessel.mmsi}'`);
@@ -344,8 +343,8 @@ module.exports = function (app) {
                                 msgB = new ggencoder_1.AisEncode(aisProperties);
                                 if ((msgB) && (msgB.valid)) {
                                     app.debug(`created static data report for '${vessel.mmsi}'`);
-                                    sendReportMsg(msg.nmea, endpoint);
-                                    sendReportMsg(msgB.nmea, endpoint);
+                                    sendReportMsg(socket, msg.nmea, endpoint);
+                                    sendReportMsg(socket, msgB.nmea, endpoint);
                                 }
                                 else {
                                     // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
@@ -374,9 +373,9 @@ module.exports = function (app) {
         });
         return (retval);
     }
-    function sendReportMsg(msg, endpoint) {
-        if (udpSocket) {
-            udpSocket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
+    function sendReportMsg(socket, msg, endpoint) {
+        if (socket) {
+            socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
                 if (e instanceof Error)
                     app.setPluginStatus(`send failure (${e.message})`);
             });
