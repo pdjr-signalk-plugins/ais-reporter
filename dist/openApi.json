@@ -25,41 +25,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "Bus0": {
+                    "endpoint": {
                       "type": "object",
                       "properties": {
-                        "interface": {
-                          "description": "The interface monitored by this watchdog.",
+                        "ipAddress": {
+                          "description": "IP address of the report endpoint.",
                           "type": "string",
-                          "example": "master"
+                          "example": "192.168.1.12"
                         },
-                        "threshold": {
-                          "description": "The watchdog threshold in deltas/second.",
+                        "port": {
+                          "description": "Port number of the report endpoint.",
                           "type": "number",
-                          "minimum": 0,
-                          "example": 30
+                          "example": 12345
                         },
-                        "currentState": {
-                          "description": "The current state of this watchdog.",
+                        "lastTransmission": {
+                          "description": "UTC date of the most recent report transmission.",
                           "type": "string",
-                          "example": "normal"
+                          "example": "Fri, 06 Dec 2024 11:09:46 GMT"
                         },
-                        "exceptionRate": {
-                          "description": "Real-time \"*exceptionCount* / *heartbeat*\" for this watchdog.",
-                          "type": "string",
-                          "example": "0 / 156"
+                        "totalNumberOfPositionReports": {
+                          "description": "Count of the total number of position reports sent to this endpoint this session.",
+                          "type": "number",
+                          "example": 134
                         },
-                        "stateHistory": {
-                          "description": "Time-sequenced array of states adopted by this watchdog.",
-                          "type": "array",
-                          "items": {
-                            "description": "String of the form \"*time* *heartbeat* *exceptionCount* *state*\".\n",
-                            "type": "string"
-                          },
-                          "example": [
-                            "2023-10-26T14:05:53.453Z 0 0 starting",
-                            "2023-10-26T14:06:02.273Z 2 0 normal"
-                          ]
+                        "totalNumberOfStaticDataReports": {
+                          "description": "Count of the total number of static data reports sent to this endpoint this session.",
+                          "type": "number",
+                          "example": 11
                         }
                       }
                     }
