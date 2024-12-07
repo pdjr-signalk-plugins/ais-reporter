@@ -423,7 +423,7 @@ module.exports = function (app) {
             app.debug(e.message);
             expressSend(res, ((/^\d+$/.test(e.message)) ? parseInt(e.message) : 500), null, req.path);
         }
-        function expressSend(res, code, body = null, debugPrefix = null) {
+        function expressSend(res, code, body, debugPrefix = null) {
             const FETCH_RESPONSES = { "200": null, "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" };
             res.status(code).send((body) ? body : ((FETCH_RESPONSES['' + code]) ? FETCH_RESPONSES['' + code] : null));
             if (debugPrefix)

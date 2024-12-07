@@ -356,7 +356,7 @@ module.exports = function(app: any) {
     try {
       switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
         case '/status':
-          const status = (pluginConfiguration.endpoints || []).reduce((a: any, endpoint: Endpoint) => {
+          const status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
             a[endpoint.name] = {
               ipAddress: endpoint.ipAddress,
               port: endpoint.port,
@@ -365,7 +365,7 @@ module.exports = function(app: any) {
               totalNumberOfStaticDataReports: endpoint.staticReportCount
             }
             return(a)
-          }, {})
+          }, {});
           expressSend(res, 200, status, req.path)
           break
       }
@@ -374,7 +374,7 @@ module.exports = function(app: any) {
       expressSend(res, ((/^\d+$/.test(e.message))?parseInt(e.message):500), null, req.path)
     }
 
-    function expressSend(res: any, code: number, body: any = null, debugPrefix: any = null) {
+    function expressSend(res: any, code: number, body: Dictionary<StatusResponse> | null, debugPrefix: any = null) {
       const FETCH_RESPONSES: Dictionary<string | null> = { "200": null, "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" }
       res.status(code).send((body)?body:((FETCH_RESPONSES['' + code])?FETCH_RESPONSES['' + code]:null))
       if (debugPrefix) app.debug("%s: %d %s", debugPrefix, code, ((body)?JSON.stringify(body):((FETCH_RESPONSES['' + code])?FETCH_RESPONSES['' + code]:null)))
@@ -398,6 +398,12 @@ interface SKPlugin {
   getOpenApi: () => string
 }
 
+interface PluginConfiguration {
+  myMMSI: string,
+  myAisClass: string,
+  endpoints: Endpoint[]
+}
+
 interface Endpoint {
   name: string,
   ipAddress: string,
@@ -414,10 +420,12 @@ interface Endpoint {
   staticReportCount: number
 }
 
-interface PluginConfiguration {
-  myMMSI: string,
-  myAisClass: string,
-  endpoints: Endpoint[]
+interface StatusResponse {
+  ipAddress: string,
+  port: number,
+  lastTransmission: string,
+  totalNumberOfPositionReports: number,
+  totalNumberOfStaticDataReports: number
 }
 
 interface Dictionary<T> {
