@@ -106,6 +106,7 @@ const DEFAULT_REPORT_OTHERS = false;
 module.exports = function (app) {
     var pluginConfiguration;
     var pluginStatus;
+    var udpSocket;
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
@@ -116,7 +117,7 @@ module.exports = function (app) {
             try {
                 pluginConfiguration = makePluginConfiguration(options);
                 app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
-                let udpSocket = (0, dgram_1.createSocket)('udp4');
+                udpSocket = (0, dgram_1.createSocket)('udp4');
                 if (pluginConfiguration.endpoints.length > 0) {
                     pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
                     pluginConfiguration.endpoints.forEach((endpoint) => {
@@ -145,6 +146,7 @@ module.exports = function (app) {
             }
         },
         stop: function () {
+            udpSocket.close();
             if (pluginConfiguration.endpoints) {
                 pluginConfiguration.endpoints.forEach((endpoint) => {
                     endpoint.intervalIds.forEach((intervalId) => clearInterval(intervalId));

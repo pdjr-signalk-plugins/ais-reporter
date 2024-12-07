@@ -108,6 +108,7 @@ const DEFAULT_REPORT_OTHERS: boolean = false;
 module.exports = function(app: any) {
   var pluginConfiguration: PluginConfiguration;
   var pluginStatus: PluginStatus;
+  var udpSocket: Socket;
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
@@ -121,7 +122,7 @@ module.exports = function(app: any) {
         pluginConfiguration = makePluginConfiguration(options);
         app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
 
-        let udpSocket: Socket = createSocket('udp4');
+        udpSocket = createSocket('udp4');
 
         if (pluginConfiguration.endpoints.length > 0) {
           pluginStatus = new PluginStatus(app, `Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
@@ -150,6 +151,7 @@ module.exports = function(app: any) {
     },
 
     stop: function() {
+      udpSocket.close();
       if (pluginConfiguration.endpoints) {
 	      pluginConfiguration.endpoints.forEach((endpoint) => {
           endpoint.intervalIds.forEach((intervalId) => clearInterval(intervalId));
