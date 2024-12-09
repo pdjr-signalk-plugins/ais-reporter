@@ -225,7 +225,7 @@ module.exports = function(app: any) {
             _.get(option, 'myVessel.staticUpdateIntervals[0]', _.get(options, 'myVessel.staticUpdateIntervals[0]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL)),
             _.get(option, 'myVessel.staticUpdateIntervals[1]', _.get(options, 'myVessel.staticUpdateIntervals[1]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL))
           ],
-          overrideTriggerPath: _.get(option, 'myVessel.overrideTriggerPath', _.get(options, 'myVessel.overrideTriggerPath', undefined)),
+          overrideTriggerPath: _.get(option, 'myVessel.overrideTriggerPath', _.get(option, 'overrideTriggerPath', _.get(options, 'myVessel.overrideTriggerPath', _.get(options, 'overrideTriggerPath', undefined)))),
           positionTimeout: undefined,
           staticTimeout: undefined,
           positionReportCount: 0,
