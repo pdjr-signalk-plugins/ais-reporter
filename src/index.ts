@@ -464,6 +464,7 @@ module.exports = function(app: any) {
   }
 
   function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint) {
+    pluginStatus.setStatus(`sending report to endpoint '${endpoint.name}'`);
     if (socket) {
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
