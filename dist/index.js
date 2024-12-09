@@ -201,13 +201,13 @@ module.exports = function (app) {
             endpoints: []
         };
         options.endpoints.forEach((option) => {
-            if (!option.ipaddress)
-                throw new Error('endpoint has missing \'ipaddress\' property');
+            if (!option.ipAddress)
+                throw new Error('endpoint has missing \'ipAddress\' property');
             if (!option.port)
                 throw new Error('endpoint has missing \'port\' property');
             let endpoint = {
                 name: option.name || option.ipAddress,
-                ipAddress: option.ipaddress,
+                ipAddress: option.ipAddress,
                 port: option.port,
                 expiryInterval: _.get(option, 'expiryInterval', _.get(options, 'expiryInterval', DEFAULT_EXPIRY_INTERVAL)),
                 myVessel: {
