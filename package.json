@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/pdjr-signalk/pdjr-ais-reporter#readme",
   "dependencies": {
+    "baconjs": "^3.0.19",
     "ggencoder": "^0.1.18",
     "lodash": "^4.17.21",
     "signalk-libpluginstatus": "github:pdjr-signalk/signalk-libpluginstatus"

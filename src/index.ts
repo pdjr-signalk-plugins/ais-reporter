@@ -15,6 +15,7 @@
  */
 
 import * as _ from 'lodash';
+import * as bacon from 'baconjs';
 import { AisEncode, AisEncodeOptions } from 'ggencoder'
 import { Socket, createSocket } from 'dgram'
 import { PluginStatus } from 'signalk-libpluginstatus';
