@@ -282,7 +282,8 @@ module.exports = function (app) {
     function startOverrideCallbacks(pluginConfiguration) {
         var retval = pluginConfiguration.endpoints.reduce((a, endpoint) => {
             if (_.get(endpoint, 'myVessel.overrideTriggerPath')) { // We have an override
-                a.push(app.getSelfPath(_.get(endpoint, 'myVessel.overrideTriggerPath')).skipDuplicates().onValue((v) => {
+                var stream = app.streambundle.getSelfStream(_.get(endpoint, 'myVessel.overrideTriggerPath'));
+                a.push(stream.skipDuplicates().onValue((v) => {
                     let positionUpdateInterval = _.get(endpoint, `myVessel.positionUpdateIntervals[${v}]`, 0) * 1000;
                     let staticUpdateInterval = _.get(endpoint, `myVessel.staticUpdateIntervals[${v}]`, 0) * 1000;
                     clearInterval(endpoint.myVessel.positionTimeout); // stop current timer
@@ -302,7 +303,8 @@ module.exports = function (app) {
                 }));
             }
             if (_.get(endpoint, 'otherVessels.overrideTriggerPath')) { // We have an override
-                a.push(app.getSelfPath(_.get(endpoint, 'otherVessels.overrideTriggerPath')).skipDuplicates().onValue((v) => {
+                var stream = app.streambundle.getSelfStream(_.get(endpoint, 'otherVessels.overrideTriggerPath'));
+                a.push(stream.skipDuplicates().onValue((v) => {
                     let positionUpdateInterval = _.get(endpoint, `otherVessels.positionUpdateIntervals[${v}]`, 0) * 1000;
                     let staticUpdateInterval = _.get(endpoint, `otherVessels.staticUpdateIntervals[${v}]`, 0) * 1000;
                     clearInterval(endpoint.otherVessels.positionTimeout); // stop current timer

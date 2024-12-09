@@ -15,7 +15,7 @@
  */
 
 import * as _ from 'lodash';
-import * as bacon from 'baconjs';
+import { EventStream } from 'baconjs';
 import { AisEncode, AisEncodeOptions } from 'ggencoder'
 import { Socket, createSocket } from 'dgram'
 import { PluginStatus } from 'signalk-libpluginstatus';
@@ -293,7 +293,8 @@ module.exports = function(app: any) {
   function startOverrideCallbacks(pluginConfiguration: PluginConfiguration): (() => void)[] {
     var retval: (() => void)[] = pluginConfiguration.endpoints.reduce((a: any, endpoint) => {
       if (_.get(endpoint, 'myVessel.overrideTriggerPath')) { // We have an override
-        a.push(app.getSelfPath(_.get(endpoint, 'myVessel.overrideTriggerPath')).skipDuplicates().onValue((v: number) => {
+        var stream: EventStream<number> = app.streambundle.getSelfStream(_.get(endpoint, 'myVessel.overrideTriggerPath'));
+        a.push(stream.skipDuplicates().onValue((v) => {
           let positionUpdateInterval = _.get(endpoint, `myVessel.positionUpdateIntervals[${v}]`, 0) * 1000;
           let staticUpdateInterval = _.get(endpoint, `myVessel.staticUpdateIntervals[${v}]`, 0) * 1000;
           clearInterval(endpoint.myVessel.positionTimeout); // stop current timer
@@ -313,7 +314,8 @@ module.exports = function(app: any) {
         }));
       }
       if (_.get(endpoint, 'otherVessels.overrideTriggerPath')) { // We have an override
-        a.push(app.getSelfPath(_.get(endpoint, 'otherVessels.overrideTriggerPath')).skipDuplicates().onValue((v: number) => {
+        var stream: EventStream<number> = app.streambundle.getSelfStream(_.get(endpoint, 'otherVessels.overrideTriggerPath'));
+        a.push(stream.skipDuplicates().onValue((v) => {
           let positionUpdateInterval = _.get(endpoint, `otherVessels.positionUpdateIntervals[${v}]`, 0) * 1000;
           let staticUpdateInterval = _.get(endpoint, `otherVessels.staticUpdateIntervals[${v}]`, 0) * 1000;
           clearInterval(endpoint.otherVessels.positionTimeout); // stop current timer
