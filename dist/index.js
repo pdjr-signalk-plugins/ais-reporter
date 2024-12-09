@@ -332,6 +332,7 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
+        pluginStatus.setStatus(`reporting ${reportSelf ? 'my vessel' : ''} ${reportOthers ? 'others' : ''} to '${endpoint.name}'`);
         Object.values(app.getPath('vessels')).forEach((vessel) => {
             try {
                 if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))

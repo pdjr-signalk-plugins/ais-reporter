@@ -344,6 +344,8 @@ module.exports = function(app: any) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
+
+    pluginStatus.setStatus(`reporting ${reportSelf?'my vessel':''} ${reportOthers?'others':''} to '${endpoint.name}'`);
   
     Object.values(app.getPath('vessels')).forEach((vessel: any) => {
       try {
