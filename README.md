@@ -40,7 +40,6 @@ For example.
   "enabled": true
 }
 ```
-
 A configuration like that shown above will report the host vessel's
 position every 15 minutes and its static data every 60 minutes, but
 will not report information about other vessels (i.e. those received
@@ -71,6 +70,55 @@ values shows the configuration as:
 }
 ```
 
+## A more elaborate configuration
+
+All of the numeric values in a configuration specify a time period
+in minutes with a zero value representing a disabled state.
+
+Any or all of the 'expiryInterval', 'myVessel' and 'otherVessels'
+properties can be expressed as properties of an endpoint, overriding
+any global defaults defined at the top level of the configuration.
+
+I use the following configuration which supports reporting to an
+Internet AIS traffic site and a local test facility.
+```
+{
+  "configuration": {
+    "expiryInterval": 15,
+    "endpoints": [
+      {
+        "name": "MarineTraffic",
+        "ipAddress": "xxx.xxx.xxx.xxx",
+        "port": nnnnn,
+        "myVessel": {
+          "triggerOverridePath": "electrical.switches.bank.16.16.state",
+          "positionUpdateIntervals": [15,1],
+          "staticUpdateIntervals": [60,60]
+        },
+        "otherVessels": {
+          "positionUpdateIntervals": [5,0],
+          "staticUpdateIntervals": [15,0]
+        }
+      }
+      {
+        "name": "Test",
+        "ipAddress": "127.0.0.1",
+        "port": 12345,
+        "myVessel": {
+          "triggerOverridePath": "electrical.switches.bank.16.16.state",
+          "positionUpdateIntervals": [2,1],
+          "staticUpdateIntervals": [3,3]
+        },
+        "otherVessels": {
+          "positionUpdateIntervals": [4,0],
+          "staticUpdateIntervals": [5,0]
+        }
+      }
+    ]
+  },
+  "enabled": true
+}
+```
 
 
 
