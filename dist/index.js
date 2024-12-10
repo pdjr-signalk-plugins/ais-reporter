@@ -276,7 +276,6 @@ module.exports = function (app) {
         var aisProperties;
         var msg;
         Object.values(app.getPath('vessels')).filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel) => {
-            app.debug(`reporting vessel ${vessel.mmsi}`);
             try {
                 aisProperties = { mmsi: vessel.mmsi };
                 aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
@@ -421,11 +420,11 @@ module.exports = function (app) {
                                     sendReportMsg(socket, msgB.nmea, endpoint);
                                 }
                                 else {
-                                    // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
+                                    app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`);
                                 }
                             }
                             else {
-                                // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
+                                app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`);
                             }
                             endpoint.lastReportTimestamp = Date.now();
                             retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) ? 1 : 10;
@@ -435,12 +434,12 @@ module.exports = function (app) {
                     }
                 }
                 else {
-                    // app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
+                    app.debug(`ignoring inactive vessel '${vessel.mmsi}'`);
                 }
             }
             catch (e) {
                 if (e instanceof Error) {
-                    // app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
+                    app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`);
                 }
             }
         });
