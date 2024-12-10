@@ -251,8 +251,6 @@ module.exports = function(app: any) {
           let ovPUI: number | undefined = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
           let ovSUI: number | undefined = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
 
-          app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
-
           if (((mvPUI !== undefined) && (mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) { 
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
             reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined)?false:((mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined)?false:((ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0)));
