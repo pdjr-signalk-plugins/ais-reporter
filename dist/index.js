@@ -249,16 +249,16 @@ module.exports = function (app) {
                     let ovPUI = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
                     let ovSUI = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
                     app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
-                    if (((mvPUI !== undefined) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (heartbeatCount % ovPUI) === 0)) {
+                    if (((mvPUI !== undefined) && (mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-                        reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === undefined) ? false : ((heartbeatCount % ovPUI) === 0));
+                        reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined) ? false : ((mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined) ? false : ((ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0)));
                         endpoint.myVessel.positionReportCount += (reportCount % 10);
                         endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
                     }
                     ;
-                    if (((mvSUI !== undefined) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== undefined) && (heartbeatCount % ovSUI) === 0)) {
+                    if (((mvSUI !== undefined) && (mvSUI !== 0) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== undefined) && (ovSUI !== 0) && (heartbeatCount % ovSUI) === 0)) {
                         pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-                        reportCount = reportStatic(udpSocket, endpoint, (mvSUI === undefined) ? false : ((heartbeatCount % mvSUI) === 0), (ovSUI === undefined) ? false : ((heartbeatCount % ovSUI) === 0));
+                        reportCount = reportStatic(udpSocket, endpoint, (mvSUI === undefined) ? false : ((mvSUI === 0) ? false : ((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined) ? false : ((ovSUI === 0) ? false : ((heartbeatCount % ovSUI) === 0)));
                         endpoint.myVessel.staticReportCount += (reportCount % 10);
                         endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
                     }
