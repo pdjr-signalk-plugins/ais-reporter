@@ -240,20 +240,31 @@ module.exports = function (app) {
         return (setInterval(() => {
             app.debug(`checking report requirement (heartbeat ${heartbeatCount})`);
             pluginConfiguration.endpoints.forEach((endpoint) => {
-                var reportCount;
-                let mvIDX = (endpoint.myVessel.overrideTriggerPath) ? app.getSelfPath(endpoint.myVessel.overrideTriggerPath) : 0;
-                let mvPUI = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, undefined);
-                let mvSUI = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, undefined);
-                let ovIDX = (endpoint.otherVessels.overrideTriggerPath) ? app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) : 0;
-                let ovPUI = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
-                let ovSUI = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
-                app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
-                reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === undefined) ? false : ((heartbeatCount % ovPUI) === 0));
-                endpoint.myVessel.positionReportCount += (reportCount % 10);
-                endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
-                reportCount += reportStatic(udpSocket, endpoint, (mvSUI === undefined) ? false : ((heartbeatCount % mvSUI) === 0), (ovSUI === undefined) ? false : ((heartbeatCount % ovSUI) === 0));
-                endpoint.myVessel.staticReportCount += (reportCount % 10);
-                endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
+                try {
+                    var reportCount;
+                    let mvIDX = (endpoint.myVessel.overrideTriggerPath) ? app.getSelfPath(endpoint.myVessel.overrideTriggerPath) : 0;
+                    let ovIDX = (endpoint.otherVessels.overrideTriggerPath) ? app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) : 0;
+                    if ((mvIDX === undefined) || (ovIDX === undefined))
+                        throw new Error(`path specified by 'overrideTriggerPath' does not exist`);
+                    if ((!inRange(mvIDX, 0, 1)) || (!inRange(ovIDX, 0, 1)))
+                        throw new Error(`bad value on path specified by 'overrideTriggerPath' (not 0 or 1)`);
+                    let mvPUI = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, undefined);
+                    let mvSUI = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, undefined);
+                    let ovPUI = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
+                    let ovSUI = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
+                    if ((mvPUI === undefined) || (mvSUI === undefined) || (ovPUI === undefined) || (ovSUI === undefined))
+                        throw new Error(`bad or missing reporting intervals`);
+                    app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
+                    reportCount = reportPosition(udpSocket, endpoint, ((heartbeatCount % mvPUI) === 0), ((heartbeatCount % ovPUI) === 0));
+                    endpoint.myVessel.positionReportCount += (reportCount % 10);
+                    endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
+                    reportCount += reportStatic(udpSocket, endpoint, ((heartbeatCount % mvSUI) === 0), ((heartbeatCount % ovSUI) === 0));
+                    endpoint.myVessel.staticReportCount += (reportCount % 10);
+                    endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
+                }
+                catch (e) {
+                    app.debug(`${e.message}`);
+                }
             });
             heartbeatCount++;
         }, DEFAULT_HEARTBEAT_INTERVAL));
@@ -453,6 +464,9 @@ module.exports = function (app) {
         else {
             app.setPluginStatus(`Stopped: UDP port is no longer available`);
         }
+    }
+    function inRange(x, min, max) {
+        return (((x - min) * (x - max)) <= 0);
     }
     function radsToDeg(radians) {
         return (radians * 180 / Math.PI);
