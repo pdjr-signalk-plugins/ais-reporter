@@ -27,13 +27,6 @@ const PLUGIN_SCHEMA: object = {
   type: 'object',
   required: [ "endpoints" ],
   properties: {
-    myAisClass: {
-      title: 'Own vessel AIS transceiver type',
-      type: 'string',
-      enum: [ 'none', 'A', 'B' ],
-      enumNames: [ 'none', 'Class A', 'Class B' ],
-      default: 'B'
-    },
     expiryinterval: {
       title: 'Ignore vessel data older than (s)',
       type: 'number'
@@ -200,7 +193,7 @@ module.exports = function(app: any) {
   function makePluginConfiguration(options: any): PluginConfiguration {
     let pluginConfiguration: PluginConfiguration = {
       myMMSI: app.getSelfPath('mmsi'),
-      myAisClass: (options.myaisclass || app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS),
+      myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
       endpoints: []
     };
     options.endpoints.forEach((option: any) => {
@@ -287,39 +280,32 @@ module.exports = function(app: any) {
     var aisProperties: AisEncodeOptions;
     var msg: any;
 
-    Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
+    Object.values(app.getPath('vessels'))
+    .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
+    .filter((vessel: any) => ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 60000))))
+    .forEach((vessel: any) => {
       try {  
         aisProperties = { mmsi: vessel.mmsi };
         aisClass = (vessel.mmsi == pluginConfiguration.myMMSI)?pluginConfiguration.myAisClass:vessel.sensors.ais.class.value;
-
-        if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 1000))) {
-          aisProperties['accuracy'] = 0
-          aisProperties['aistype'] = (aisClass == 'A')?1:18
-          aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value)
-          try { aisProperties['hdg'] = vessel.navigation.headingTrue.value } catch(e) { aisProperties['hdg'] = 511 }
-          aisProperties['lat'] = vessel.navigation.position.value.latitude
-          aisProperties['lon'] = vessel.navigation.position.value.longitude
-          aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi)?1:0
-          aisProperties['repeat'] = 3
-          try { aisProperties['rot'] = vessel.navigation.rateOfTurn.value; } catch(e) { aisProperties['rot'] = 128 }
-          aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value)
-          try { aisProperties['smi'] = decodeSMI(vessel.navigation.specialManeuver) } catch(e) { aisProperties['smi'] = 0 } 
-          msg = new AisEncode(aisProperties)
-          if ((msg) && (msg.valid)) {
-            app.debug(`created position report for '${vessel.mmsi}' (${msg.nmea})`)
-            sendReportMsg(socket, msg.nmea, endpoint)
-            endpoint.lastReportTimestamp = Date.now();
-            retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
-          } else {
-            app.debug(`error creating position report for '${vessel.mmsi}'`)
-          }
-        } else {
-          app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
-        } 
-      } catch(e) {
-        if (e instanceof Error) {
-          app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
-        }
+        aisProperties['accuracy'] = 0
+        aisProperties['aistype'] = (aisClass == 'A')?1:18
+        aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value)
+        try { aisProperties['hdg'] = vessel.navigation.headingTrue.value } catch(e) { aisProperties['hdg'] = 511 }
+        aisProperties['lat'] = vessel.navigation.position.value.latitude
+        aisProperties['lon'] = vessel.navigation.position.value.longitude
+        aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi)?1:0
+        aisProperties['repeat'] = 3
+        try { aisProperties['rot'] = vessel.navigation.rateOfTurn.value; } catch(e) { aisProperties['rot'] = 128 }
+        aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value)
+        try { aisProperties['smi'] = decodeSMI(vessel.navigation.specialManeuver) } catch(e) { aisProperties['smi'] = 0 } 
+        msg = new AisEncode(aisProperties);
+        if ((msg) && (msg.valid())) {
+          sendReportMsg(socket, msg.nmea, endpoint);
+          endpoint.lastReportTimestamp = Date.now();
+          retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10;
+        } else throw new Error('AIS encode failed');
+      } catch(e: any) {
+        app.debug(`error creating AIS sentence for vessel '${vessel.mmsi}' (${e.message})`)
       }
     });
     return(retval);
@@ -331,69 +317,57 @@ module.exports = function(app: any) {
     var aisProperties: any
     var msg: any, msgB: any
   
-    Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
+    Object.values(app.getPath('vessels'))
+    .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
+    .filter((vessel: any) => ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 60000))))    
+    .forEach((vessel: any) => {
       try {
         aisProperties = { mmsi: vessel.mmsi }
         aisClass = (vessel.mmsi == pluginConfiguration.myMMSI)?pluginConfiguration.myAisClass:vessel.sensors.ais.class.value;
-
-        if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 1000))) {
-          aisProperties['callsign'] = ''
-          try { aisProperties['cargo'] = vessel.design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
-          try { aisProperties['destination'] = vessel.navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
-          try { aisProperties['dimA'] = vessel.sensors.ais.fromBow.value.toFixed(0) } catch(e) { aisProperties['dimA'] = 0 }
-          try { aisProperties['dimB'] = (vessel.design.length.value.overall - vessel.sensors.gps.fromBow.value).toFixed(0) } catch(e) { aisProperties['dimB'] = 0 }
-          try { aisProperties['dimC'] = (vessel.design.beam.value / 2 + vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimC'] = 0 }
-          try { aisProperties['dimD'] = (vessel.design.beam.value / 2 - vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimD'] = 0 }
-          try { aisProperties['draught'] = vessel.design.draft.value.maximum } catch(e) { aisProperties['draught'] = 0 }
-          aisProperties['etaDay'] = 0
-          aisProperties['etaHr'] = 0
-          aisProperties['etaMin'] = 0
-          aisProperties['etaMo'] = 0
-          aisProperties['imo'] = ''
-          aisProperties['repeat'] = 3
-          try { aisProperties['shipname'] = vessel.name } catch(e) { aisProperties['shipname'] = '' }
-          switch (aisClass) {
-            case 'A':
-              aisProperties['aistype'] = 5;
-              msg = new AisEncode(aisProperties);
-              if ((msg) && (msg.valid)) {
-                app.debug(`created static data report for '${vessel.mmsi}' (${msg.nmea})`)
+        aisProperties['callsign'] = ''
+        try { aisProperties['cargo'] = vessel.design.aisShipType.value.id } catch(e) { aisProperties['cargo'] = 0 }
+        try { aisProperties['destination'] = vessel.navigation.destination.commonName } catch(e) { aisProperties['destination'] = '' }
+        try { aisProperties['dimA'] = vessel.sensors.ais.fromBow.value.toFixed(0) } catch(e) { aisProperties['dimA'] = 0 }
+        try { aisProperties['dimB'] = (vessel.design.length.value.overall - vessel.sensors.gps.fromBow.value).toFixed(0) } catch(e) { aisProperties['dimB'] = 0 }
+        try { aisProperties['dimC'] = (vessel.design.beam.value / 2 + vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimC'] = 0 }
+        try { aisProperties['dimD'] = (vessel.design.beam.value / 2 - vessel.sensors.gps.fromCenter.value).toFixed(0) } catch(e) { aisProperties['dimD'] = 0 }
+        try { aisProperties['draught'] = vessel.design.draft.value.maximum } catch(e) { aisProperties['draught'] = 0 }
+        aisProperties['etaDay'] = 0
+        aisProperties['etaHr'] = 0
+        aisProperties['etaMin'] = 0
+        aisProperties['etaMo'] = 0
+        aisProperties['imo'] = ''
+        aisProperties['repeat'] = 3
+        try { aisProperties['shipname'] = vessel.name } catch(e) { aisProperties['shipname'] = '' }
+        switch (aisClass) {
+          case 'A':
+            aisProperties['aistype'] = 5;
+            msg = new AisEncode(aisProperties);
+            if ((msg) && (msg.valid)) {
+              sendReportMsg(socket, msg.nmea, endpoint);
+            } else throw new Error('AIS encode failed');
+            retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
+            break;
+          case 'B':
+            aisProperties['aistype'] = 24;
+            aisProperties['part'] = 0;
+            msg = new AisEncode(aisProperties);
+            if ((msg) && (msg.valid)) {
+              aisProperties['part'] = 1;
+              msgB = new AisEncode(aisProperties);
+              if ((msgB) && (msgB.valid)) {
                 sendReportMsg(socket, msg.nmea, endpoint);
-              } else {
-                app.debug(`error creating static data report for '${vessel.mmsi}'`)
-              }
-              retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
-              break;
-            case 'B':
-              aisProperties['aistype'] = 24;
-              aisProperties['part'] = 0;
-              msg = new AisEncode(aisProperties);
-              if ((msg) && (msg.valid)) {
-                aisProperties['part'] = 1;
-                msgB = new AisEncode(aisProperties);
-                if ((msgB) && (msgB.valid)) {
-                  app.debug(`created static data report for '${vessel.mmsi}'`);
-                  sendReportMsg(socket, msg.nmea, endpoint);
-                  sendReportMsg(socket, msgB.nmea, endpoint);
-                } else {
-                  app.debug(`error creating static data report for '${vessel.mmsi}' (Part 2 failed)`)
-                }
-              } else {
-                app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
-              }
-              endpoint.lastReportTimestamp = Date.now();
-              retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
-              break;
-            default:
-              break;
-          }          
-        } else {
-          app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
-        }
-      } catch(e) {
-        if (e instanceof Error) {
-          app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
-        }
+                sendReportMsg(socket, msgB.nmea, endpoint);
+              } else throw new Error('AIS Part B encode failed');
+            } else throw new Error('AIS Part A encode failed');
+            endpoint.lastReportTimestamp = Date.now();
+            retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
+            break;
+          default:
+            break;
+        }          
+      } catch(e: any) {
+        app.debug(`error creating AIS sentence for '${vessel.mmsi}' (${e.message})`)
       }
     });
     return(retval);

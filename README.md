@@ -19,11 +19,63 @@ Signal K may be uploaded to the specified endpoints.
 Reports are issued at a user configured rate to each defined endpoint
 giving some control over Ethernet data and bandwidth use.
 
-## Configuration
+## Minimal configuration
 
-Reporting options all have sensible default values, so a minimal
-plugin configuration will require just the definition of one or more
-reporting enpoints by specification of IP address and port number.
+A minimal plugin configuration which leans on built in defaults simply
+requires the specification of an endpoint to which data should be
+transmitted.
+
+For example.
+```
+{
+  "configuration": {
+    "endpoints": [
+      {
+        "name": "MarineTraffic",
+        "ipAddress": "xxx.xxx.xxx.xxx",
+        "port": nnnnn
+      }
+    ]
+  },
+  "enabled": true
+}
+```
+
+A configuration like that shown above will report the host vessel's
+position every 15 minutes and its static data every 60 minutes, but
+will not report information about other vessels (i.e. those received
+over AIS).
+Expanding this minimal configuration with the implicit system default
+values shows the configuration as:
+```
+{
+  "configuration": {
+    "expiryInterval": 15,
+    "myVessel": {
+      "positionUpdateIntervals": [15,0],
+      "staticUpdateIntervals": [60,0]
+    },
+    "otherVessels": {
+      "positionUpdateIntervals": [0,0],
+      "staticUpdateIntervals": [0,0]
+    },
+    "endpoints": [
+      {
+        "name": "MarineTraffic",
+        "ipAddress": "xxx.xxx.xxx.xxx",
+        "port": nnnnn
+      }
+    ]
+  },
+  "enabled": true
+}
+```
+
+
+
+
+plugin's built-in defaults expand this to:
+
 
 Built in defaults can be overriden by specifying some alternative
 top-level option values which will be applied to all endpoints.
