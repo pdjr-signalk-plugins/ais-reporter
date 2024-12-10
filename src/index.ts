@@ -255,7 +255,7 @@ module.exports = function(app: any) {
         let ovIDX: number | undefined = (endpoint.otherVessels.overrideTriggerPath)?app.getSelfPath(endpoint.otherVessels.overrideTriggerPath):0;
         let ovPUI: number | undefined = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
         let ovSUI: number | undefined = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
-  
+        app.debug(`${mvIDX} ${mvPUI} ${mvSUI}`);
         reportCount = reportPosition(
           udpSocket,
           endpoint,
@@ -278,7 +278,7 @@ module.exports = function(app: any) {
     }, DEFAULT_HEARTBEAT_INTERVAL));
   }
 
-  function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): number {
+  function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): number {
     var retval: number = 0;
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
