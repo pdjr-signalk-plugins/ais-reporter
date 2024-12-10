@@ -253,23 +253,23 @@ module.exports = function(app: any) {
           let mvIDX: number = ((endpoint.myVessel.overrideTriggerPath)?(app.getSelfPath(endpoint.myVessel.overrideTriggerPath) || 0):0)?1:0;
           let ovIDX: number = ((endpoint.otherVessels.overrideTriggerPath)?(app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) || 0):0)?1:0;
   
-          let mvPUI: number = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, 0);
-          let mvSUI: number = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, 0);
-          let ovPUI: number = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, 0);
-          let ovSUI: number = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, 0);
+          let mvPUI: number | undefined = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, undefined);
+          let mvSUI: number | undefined = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, undefined);
+          let ovPUI: number | undefined = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
+          let ovSUI: number | undefined = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
 
           app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
 
-          if (((heartbeatCount % mvPUI) === 0) || ((heartbeatCount % ovPUI) === 0)) { 
+          if (((mvPUI !== undefined) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (heartbeatCount % ovPUI) === 0)) { 
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-            reportCount = reportPosition(udpSocket, endpoint, ((heartbeatCount % mvPUI) === 0), ((heartbeatCount % ovPUI) === 0));
+            reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined)?false:((heartbeatCount % mvPUI) === 0), (ovPUI === undefined)?false:((heartbeatCount % ovPUI) === 0));
             endpoint.myVessel.positionReportCount += (reportCount % 10);
             endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
           };
         
-          if (((heartbeatCount % mvSUI) === 0) || ((heartbeatCount % ovSUI) === 0)) {
+          if (((mvSUI !== undefined) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== undefined) && (heartbeatCount % ovSUI) === 0)) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-            reportCount = reportStatic(udpSocket, endpoint, ((heartbeatCount % mvSUI) === 0), ((heartbeatCount % ovSUI) === 0));
+            reportCount = reportStatic(udpSocket, endpoint, (mvSUI === undefined)?false:((heartbeatCount % mvSUI) === 0), (ovSUI === undefined)?false:((heartbeatCount % ovSUI) === 0));
             endpoint.myVessel.staticReportCount += (reportCount % 10);
             endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
           }
