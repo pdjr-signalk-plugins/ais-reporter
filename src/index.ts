@@ -259,23 +259,20 @@ module.exports = function(app: any) {
           let ovSUI: number = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, 0);
 
           app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
-          reportCount = reportPosition(
-            udpSocket,
-            endpoint,
-            ((heartbeatCount % mvPUI) === 0),
-            ((heartbeatCount % ovPUI) === 0)
-          );
-          endpoint.myVessel.positionReportCount += (reportCount % 10);
-          endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
+
+          if (((heartbeatCount % mvPUI) === 0) || ((heartbeatCount % ovPUI) === 0)) { 
+            pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
+            reportCount = reportPosition(udpSocket, endpoint, ((heartbeatCount % mvPUI) === 0), ((heartbeatCount % ovPUI) === 0));
+            endpoint.myVessel.positionReportCount += (reportCount % 10);
+            endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
+          };
         
-          reportCount += reportStatic(
-            udpSocket,
-            endpoint,
-            ((heartbeatCount % mvSUI) === 0),
-            ((heartbeatCount % ovSUI) === 0)
-          );
-          endpoint.myVessel.staticReportCount += (reportCount % 10);
-          endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
+          if (((heartbeatCount % mvSUI) === 0) || ((heartbeatCount % ovSUI) === 0)) {
+            pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
+            reportCount = reportStatic(udpSocket, endpoint, ((heartbeatCount % mvSUI) === 0), ((heartbeatCount % ovSUI) === 0));
+            endpoint.myVessel.staticReportCount += (reportCount % 10);
+            endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
+          }
         } catch(e: any) {
           app.debug(`${e.message}`);
         }
@@ -289,10 +286,8 @@ module.exports = function(app: any) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
-
-    pluginStatus.setStatus(`reporting ${reportSelf?'my vessel':''} ${reportOthers?'others':''} to '${endpoint.name}'`);
   
-    Object.values(app.getPath('vessels')).forEach((vessel: any) => {
+    Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
       try {
         if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) return(0);
         if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI)) return(0);
@@ -339,7 +334,7 @@ module.exports = function(app: any) {
     var aisProperties: any
     var msg: any, msgB: any
   
-    Object.values(app.getPath('vessels')).forEach((vessel: any) => {
+    Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
       try {
         if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) return(0);
         if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI)) return(0);
@@ -411,7 +406,7 @@ module.exports = function(app: any) {
   }
 
   function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint) {
-    pluginStatus.setStatus(`sending report to endpoint '${endpoint.name}'`);
+    app.debug(`sending report to endpoint '${endpoint.name}'`);
     if (socket) {
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
