@@ -275,6 +275,7 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
+        app.debug(reportSelf + ' ' + reportOthers);
         Object.values(app.getPath('vessels')).filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel) => {
             try {
                 if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
