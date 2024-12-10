@@ -275,14 +275,9 @@ module.exports = function (app) {
         var aisClass;
         var aisProperties;
         var msg;
-        app.debug(reportSelf + ' ' + reportOthers);
         Object.values(app.getPath('vessels')).filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel) => {
             app.debug(`reporting vessel ${vessel.mmsi}`);
             try {
-                if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
-                    return (0);
-                if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI))
-                    return (0);
                 aisProperties = { mmsi: vessel.mmsi };
                 aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
                 if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 1000))) {
@@ -342,10 +337,6 @@ module.exports = function (app) {
         var msg, msgB;
         Object.values(app.getPath('vessels')).filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel) => {
             try {
-                if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))
-                    return (0);
-                if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI))
-                    return (0);
                 aisProperties = { mmsi: vessel.mmsi };
                 aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
                 if ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 1000))) {

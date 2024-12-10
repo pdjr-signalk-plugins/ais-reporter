@@ -286,13 +286,10 @@ module.exports = function(app: any) {
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
-    app.debug(reportSelf + ' ' + reportOthers);
+
     Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
       app.debug(`reporting vessel ${vessel.mmsi}`);
-      try {
-        if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) return(0);
-        if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI)) return(0);
-  
+      try {  
         aisProperties = { mmsi: vessel.mmsi };
         aisClass = (vessel.mmsi == pluginConfiguration.myMMSI)?pluginConfiguration.myAisClass:vessel.sensors.ais.class.value;
 
@@ -337,9 +334,6 @@ module.exports = function(app: any) {
   
     Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
       try {
-        if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) return(0);
-        if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI)) return(0);
-
         aisProperties = { mmsi: vessel.mmsi }
         aisClass = (vessel.mmsi == pluginConfiguration.myMMSI)?pluginConfiguration.myAisClass:vessel.sensors.ais.class.value;
 
