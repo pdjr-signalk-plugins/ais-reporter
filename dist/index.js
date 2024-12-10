@@ -242,18 +242,12 @@ module.exports = function (app) {
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var reportCount;
-                    let mvIDX = (endpoint.myVessel.overrideTriggerPath) ? app.getSelfPath(endpoint.myVessel.overrideTriggerPath) : 0;
-                    let ovIDX = (endpoint.otherVessels.overrideTriggerPath) ? app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) : 0;
-                    if ((mvIDX === undefined) || (ovIDX === undefined))
-                        throw new Error(`path specified by 'overrideTriggerPath' does not exist`);
-                    if ((!inRange(mvIDX, 0, 1)) || (!inRange(ovIDX, 0, 1)))
-                        throw new Error(`bad value on path specified by 'overrideTriggerPath' (not 0 or 1)`);
-                    let mvPUI = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, undefined);
-                    let mvSUI = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, undefined);
-                    let ovPUI = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
-                    let ovSUI = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
-                    if ((mvPUI === undefined) || (mvSUI === undefined) || (ovPUI === undefined) || (ovSUI === undefined))
-                        throw new Error(`bad or missing reporting intervals`);
+                    let mvIDX = ((endpoint.myVessel.overrideTriggerPath) ? (app.getSelfPath(endpoint.myVessel.overrideTriggerPath) || 0) : 0) ? 1 : 0;
+                    let ovIDX = ((endpoint.otherVessels.overrideTriggerPath) ? (app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) || 0) : 0) ? 1 : 0;
+                    let mvPUI = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, 0);
+                    let mvSUI = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, 0);
+                    let ovPUI = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, 0);
+                    let ovSUI = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, 0);
                     app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
                     reportCount = reportPosition(udpSocket, endpoint, ((heartbeatCount % mvPUI) === 0), ((heartbeatCount % ovPUI) === 0));
                     endpoint.myVessel.positionReportCount += (reportCount % 10);
