@@ -288,6 +288,7 @@ module.exports = function(app: any) {
     var msg: any;
     app.debug(reportSelf + ' ' + reportOthers);
     Object.values(app.getPath('vessels')).filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI)))).forEach((vessel: any) => {
+      app.debug(`reporting vessel ${vessel.mmsi}`);
       try {
         if ((!reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) return(0);
         if ((!reportOthers) && (vessel.mmsi != pluginConfiguration.myMMSI)) return(0);
