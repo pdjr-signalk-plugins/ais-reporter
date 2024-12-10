@@ -367,7 +367,7 @@ module.exports = function(app: any) {
               } else {
                 app.debug(`error creating static data report for '${vessel.mmsi}'`)
               }
-              retval++;
+              retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
               break;
             case 'B':
               aisProperties['aistype'] = 24;
@@ -387,7 +387,7 @@ module.exports = function(app: any) {
                 // app.debug(`error creating static data report for '${vessel.mmsi}' (Part 1 failed)`)
               }
               endpoint.lastReportTimestamp = Date.now();
-              retval++;
+              retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
               break;
             default:
               break;
