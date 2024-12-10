@@ -249,13 +249,13 @@ module.exports = function(app: any) {
       app.debug(`checking report requirement (heartbeat ${heartbeatCount})`);
       pluginConfiguration.endpoints.forEach((endpoint) => {
         var reportCount : number;
-        let mvIDX: number | undefined = (endpoint.myVessel.overrideTriggerPath)?app.getSelfPath(endpoint.myVessel.overrideTriggerPath):0;
+        let mvIDX: number = (endpoint.myVessel.overrideTriggerPath)?app.getSelfPath(endpoint.myVessel.overrideTriggerPath):0;
         let mvPUI: number | undefined = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, undefined);
         let mvSUI: number | undefined = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, undefined);
-        let ovIDX: number | undefined = (endpoint.otherVessels.overrideTriggerPath)?app.getSelfPath(endpoint.otherVessels.overrideTriggerPath):0;
+        let ovIDX: number = (endpoint.otherVessels.overrideTriggerPath)?app.getSelfPath(endpoint.otherVessels.overrideTriggerPath):0;
         let ovPUI: number | undefined = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
         let ovSUI: number | undefined = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
-        app.debug(`${mvIDX} ${mvPUI} ${mvSUI}`);
+        app.debug(`${endpoint.myVessel.overrideTriggerPath} ${mvIDX} ${mvPUI} ${mvSUI}`);
         reportCount = reportPosition(
           udpSocket,
           endpoint,
