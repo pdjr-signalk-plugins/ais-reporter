@@ -312,14 +312,14 @@ module.exports = function(app: any) {
             endpoint.lastReportTimestamp = Date.now();
             retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
           } else {
-            //app.debug(`error creating position report for '${vessel.mmsi}'`)
+            app.debug(`error creating position report for '${vessel.mmsi}'`)
           }
         } else {
-          //app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
+          app.debug(`ignoring inactive vessel '${vessel.mmsi}'`)
         } 
       } catch(e) {
         if (e instanceof Error) {
-          //app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
+          app.debug(`error creating AIS sentence configuration for '${vessel.mmsi}' (${e.message})`)
         }
       }
     });
