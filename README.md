@@ -28,7 +28,7 @@ IP address and ports to which data should be transmitted.
 
 For example.
 
-> **{  **
+> **{**  
 > **&nbsp;&nbsp;"configuration": {**  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
