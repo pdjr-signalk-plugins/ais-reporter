@@ -82,46 +82,43 @@ and also local test facility.
 Normal reporting frequencies are overriden by the value on a Signal K switch
 path which reflects my engine ignition state: when the engine is running
 I transmit my position once a minute, otherwise no so often.
-```
-{
-  "configuration": {
-    "expiryInterval": 15,
-    "endpoints": [
-      {
-        "name": "MarineTraffic",
-        "ipAddress": "xxx.xxx.xxx.xxx",
-        "port": nnnnn,
-        "myVessel": {
-          "triggerOverridePath": "electrical.switches.bank.16.16.state",
-          "positionUpdateIntervals": [15,1],
-          "staticUpdateIntervals": [60,60]
-        },
-        "otherVessels": {
-          "positionUpdateIntervals": [5,0],
-          "staticUpdateIntervals": [15,0]
-        }
-      }
-      {
-        "name": "Test",
-        "ipAddress": "127.0.0.1",
-        "port": 12345,
-        "myVessel": {
-          "triggerOverridePath": "electrical.switches.bank.16.16.state",
-          "positionUpdateIntervals": [2,1],
-          "staticUpdateIntervals": [4,3]
-        },
-        "otherVessels": {
-          "positionUpdateIntervals": [5,0],
-          "staticUpdateIntervals": [6,0]
-        }
-      }
-    ]
-  },
-  "enabled": true
-}
-```
 
-
+> {  
+> "configuration": {  
+> "expiryInterval": 15,  
+> "endpoints": [  
+> {  
+> "name": "MarineTraffic",  
+> "ipAddress": "xxx.xxx.xxx.xxx",  
+> "port": nnnnn,  
+> "myVessel": {  
+> "triggerOverridePath": "electrical.switches.bank.16.16.state",  
+> "positionUpdateIntervals": [15,1],  
+> "staticUpdateIntervals": [60,60]  
+> },  
+> "otherVessels": {  
+> "positionUpdateIntervals": [5,0],  
+> "staticUpdateIntervals": [15,0]  
+> }  
+> }  
+> {  
+> "name": "Test",  
+> "ipAddress": "127.0.0.1",  
+> "port": 12345,  
+> "myVessel": {  
+> "triggerOverridePath": "electrical.switches.bank.16.16.state",  
+> "positionUpdateIntervals": [2,1],  
+> "staticUpdateIntervals": [4,3]  
+> },  
+> "otherVessels": {  
+> "positionUpdateIntervals": [5,0],  
+> "staticUpdateIntervals": [6,0]  
+> }  
+> }  
+> ]  
+> },  
+> "enabled": true  
+> }  
 
 plugin's built-in defaults expand this to:
 
