@@ -33,8 +33,8 @@ For example.
 > **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn  **
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*xxx.xxx.xxx.xxx*",  **
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *nnnnn*  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;]  **
 > **&nbsp;&nbsp;},  **
