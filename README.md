@@ -30,11 +30,20 @@ For example.
 
 > **{  **
 > **&nbsp;&nbsp;"configuration": {  **
+> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [15,0],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [60,0]  
+> &nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [0,0],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [0,0]  
+> &nbsp;&nbsp;&nbsp;&nbsp;},  
 > **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "_xxx.xxx.xxx.xxx_",  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": _nnnnn_  **
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  **
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  **
 > **&nbsp;&nbsp;&nbsp;&nbsp;]  **
 > **&nbsp;&nbsp;},  **
