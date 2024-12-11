@@ -84,40 +84,40 @@ path which reflects my engine ignition state: when the engine is running
 I transmit my position once a minute, otherwise no so often.
 
 > {  
-> "configuration": {  
-> "expiryInterval": 15,  
-> "endpoints": [  
-> {  
-> "name": "MarineTraffic",  
-> "ipAddress": "xxx.xxx.xxx.xxx",  
-> "port": nnnnn,  
-> "myVessel": {  
-> "triggerOverridePath": "electrical.switches.bank.16.16.state",  
-> "positionUpdateIntervals": [15,1],  
-> "staticUpdateIntervals": [60,60]  
-> },  
-> "otherVessels": {  
-> "positionUpdateIntervals": [5,0],  
-> "staticUpdateIntervals": [15,0]  
-> }  
-> }  
-> {  
-> "name": "Test",  
-> "ipAddress": "127.0.0.1",  
-> "port": 12345,  
-> "myVessel": {  
-> "triggerOverridePath": "electrical.switches.bank.16.16.state",  
-> "positionUpdateIntervals": [2,1],  
-> "staticUpdateIntervals": [4,3]  
-> },  
-> "otherVessels": {  
-> "positionUpdateIntervals": [5,0],  
-> "staticUpdateIntervals": [6,0]  
-> }  
-> }  
-> ]  
-> },  
-> "enabled": true  
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"triggerOverridePath": "electrical.switches.bank.16.16.state",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [15,1],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [60,60]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [5,0],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [15,0]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"triggerOverridePath": "electrical.switches.bank.16.16.state",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [2,1],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [4,3]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [5,0],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [6,0]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
 > }  
 
 plugin's built-in defaults expand this to:
