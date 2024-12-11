@@ -29,7 +29,7 @@ IP address and ports to which data should be transmitted.
 For example.
 
 > **{  **
-> **&nbsp;&nbsp;"configuration": {  **
+> **&nbsp;&nbsp;"configuration": {**  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [15,0],  
@@ -39,16 +39,16 @@ For example.
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [0,0],  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [0,0]  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
-> **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  **
-> **&nbsp;&nbsp;&nbsp;&nbsp;]  **
-> **&nbsp;&nbsp;},  **
-> **&nbsp;&nbsp;"enabled": true  **
-> **}  **
+> **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [**  
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{**  
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",**  
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",**  
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn**  
+> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}**  
+> **&nbsp;&nbsp;&nbsp;&nbsp;]**  
+> **&nbsp;&nbsp;},**  
+> **&nbsp;&nbsp;"enabled": true**  
+> **}**  
 
 A configuration like that shown above will report the host vessel's
 position every 15 minutes and its static data every 60 minutes, but
