@@ -125,13 +125,17 @@ top-level option values which will be applied to all endpoints.
 Each endpoint configuration can include its own option values which
 will override any top level definitions (including system defaults).
 
+## Required configuration properties
+
 ### UDP endpoints to report to (```endpoints```)
 A list of service endpoints to which the plugin should send AIS
 reports.
-Each service endpoint is specified by its IP address and the
+Each service endpoint is specified by the following required its IP address and the
 number of its listening port.
 
 Defaults to an empty list.
+
+###
 
 ### Position update interval (s)
 The frequency at which position updates for active vessels should
