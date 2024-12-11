@@ -27,9 +27,8 @@ requires the specification of one or more endpoints in terms of the
 IP address and ports to which data should be transmitted.
 
 The properties displayed in bold in the following example must be supplied
-to make a minimal working configuration; the normally displayed (non-bold)
-properties show how the built-in defaults are applied to make a working
-configuration.
+to make a minimal working configuration; the non-bold properties are built-in
+defaults which are applied to make a working configuration.
 
 > **{**  
 > **&nbsp;&nbsp;"configuration": {**  
@@ -53,7 +52,8 @@ configuration.
 > **}**  
 
 All of the numeric values in a configuration specify a time period
-in minutes with a zero value representing an infinite time period.
+in minutes with a zero value representing an infinite time period and
+essentially disabling the associated behaviour.
 
 The 'expiryInterval' property tells the plugin to disregard any vessel
 whose position has not been updated in the last 15 minutes.
@@ -73,15 +73,15 @@ You can see that the configuration shown above will report the host
 vessel's position every 15 minutes and its static data every 60 minutes, but
 will not report information about other vessels (i.e. those received
 over AIS).
-This configuration does not specify an override, so the second item of
-the interval arrays can be set to 0 since it is unused.
+This configuration does not specify an override trigger, so the second item
+of the interval arrays is unused.
 
 I use the following, more alaborate, configuration on my boat.
 This reports to two endpoints: the MarineTraffic AIS consolidation service
-and also local test facility.
+and a local test facility.
 Normal reporting frequencies are overriden by the value on a Signal K switch
 path which reflects my engine ignition state: when the engine is running
-I transmit my position once a minute, otherwise no so often.
+I transmit my position once a minute, otherwise not so often.
 
 > {  
 > &nbsp;&nbsp;"configuration": {  
@@ -120,13 +120,10 @@ I transmit my position once a minute, otherwise no so often.
 > &nbsp;&nbsp;"enabled": true  
 > }  
 
-plugin's built-in defaults expand this to:
-
-
 Built in defaults can be overriden by specifying some alternative
 top-level option values which will be applied to all endpoints.
 Each endpoint configuration can include its own option values which
-will override any other defaults.
+will override any top level definitions (including system defaults).
 
 ### UDP endpoints to report to (```endpoints```)
 A list of service endpoints to which the plugin should send AIS
