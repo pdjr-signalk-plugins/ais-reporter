@@ -30,6 +30,10 @@ const PLUGIN_SCHEMA = {
             title: 'Ignore vessel data older than (s)',
             type: 'number'
         },
+        overrideTriggerPath: {
+            title: 'Path which triggers all overrides',
+            type: 'string'
+        },
         myVessel: {
             type: 'object',
             properties: {
@@ -91,6 +95,10 @@ const PLUGIN_SCHEMA = {
                         title: 'Ignore vessel data older than (s)',
                         type: 'number'
                     },
+                    overrideTriggerPath: {
+                        title: 'Path which triggers this override',
+                        type: 'string'
+                    },
                     myVessel: {
                         type: 'object',
                         properties: {
@@ -103,10 +111,6 @@ const PLUGIN_SCHEMA = {
                                 title: 'Static data update interval (default, override)',
                                 type: 'array',
                                 items: { type: 'number' }
-                            },
-                            overrideTriggerPath: {
-                                title: 'Path which triggers this override',
-                                type: 'string'
                             }
                         }
                     },
@@ -122,10 +126,6 @@ const PLUGIN_SCHEMA = {
                                 title: 'Static data update interval (default, override)',
                                 type: 'array',
                                 items: { type: 'number' }
-                            },
-                            overrideTriggerPath: {
-                                title: 'Path which triggers this override',
-                                type: 'string'
                             }
                         }
                     }
@@ -219,7 +219,7 @@ module.exports = function (app) {
                         _.get(option, 'otherVessels.staticUpdateIntervals[0]', _.get(options, 'otherVessels.staticUpdateInterval[0]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL)),
                         _.get(option, 'otherVessels.staticUpdateIntervals[1]', _.get(options, 'otherVessels.staticUpdateInterval[1]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL))
                     ],
-                    overrideTriggerPath: _.get(option, 'otherVessels.overrideTriggerPath', _.get(options, 'otherVessels.overrideTriggerPath', undefined)),
+                    overrideTriggerPath: _.get(option, 'otherVessels.overrideTriggerPath', _.get(option, 'overrideTriggerPath', _.get(options, 'otherVessels.overrideTriggerPath', _.get(options, 'overrideTriggerPath', undefined)))),
                     positionReportCount: 0,
                     staticReportCount: 0
                 },
