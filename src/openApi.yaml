@@ -46,14 +46,30 @@ paths:
                         description: UTC date of the most recent report transmission.
                         type: string
                         example: Fri, 06 Dec 2024 11:09:46 GMT
-                      totalNumberOfPositionReports:
-                        description: Count of the total number of position reports sent to this endpoint this session.
-                        type: number
-                        example: 134
-                      totalNumberOfStaticDataReports:
-                        description: Count of the total number of static data reports sent to this endpoint this session.
-                        type: number
-                        example: 11
+                      myVessel:
+                        description: Report statistics for the host vessel.
+                        type: object
+                        properties:
+                          positionReportCount:
+                            description: Total number of position reports sent to this endpoint this session.
+                            type: number
+                            example: 134
+                          staticReportCount:
+                            description: Total number of static data reports sent to this endpoint this session.
+                            type: number
+                            example: 11
+                      otherVessels:
+                        description: Report statistics for AIS target data.
+                        type: object
+                        properties:
+                          positionReportCount:
+                            description: Total number of position reports sent to this endpoint this session.
+                            type: number
+                            example: 134
+                          staticReportCount:
+                            description: Total number of static data reports sent to this endpoint this session.
+                            type: number
+                            example: 11
         500:
           description: |
             Error.
