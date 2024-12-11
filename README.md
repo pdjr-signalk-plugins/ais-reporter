@@ -26,9 +26,10 @@ and a minimal plugin configuration which leans on these defaults just
 requires the specification of one or more endpoints in terms of the
 IP address and ports to which data should be transmitted.
 
-The bold items in the following example must be supplied to make a
-minimal working configuration; the italic items show how the built-in
-defaults are applied to make a working configuration.
+The properties displayed in bold in the following example must be supplied
+to make a minimal working configuration; the normally displayed (non-bold)
+properties show how the built-in defaults are applied to make a working
+configuration.
 
 > **{**  
 > **&nbsp;&nbsp;"configuration": {**  
@@ -39,7 +40,6 @@ defaults are applied to make a working configuration.
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [0,0],  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [0,0]  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [**  
 > **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{**  
@@ -52,47 +52,36 @@ defaults are applied to make a working configuration.
 > **&nbsp;&nbsp;"enabled": true**  
 > **}**  
 
-A configuration like that shown above will report the host vessel's
-position every 15 minutes and its static data every 60 minutes, but
+All of the numeric values in a configuration specify a time period
+in minutes with a zero value representing an infinite time period.
+
+The 'expiryInterval' property tells the plugin to disregard any vessel
+whose position has not been updated in the last 15 minutes.
+
+The position and static data reporting intervals are specified as separate
+properties since, at least for class 'B' reports, we normally want to update
+position data more frequently than static data.
+If the 'staticUpdateIntervals' property is ommitted, then it assumes the
+same value as the 'positionUpdateIntervals' property.
+
+Each update interval property value consists of a two element array in which
+the first item defines the normal interval between successive report
+transmissions and the second item defines the interval to be used when an
+override (if any is specified) is active.
+
+You can see that the configuration shown above will report the host
+vessel's position every 15 minutes and its static data every 60 minutes, but
 will not report information about other vessels (i.e. those received
 over AIS).
-Expanding this minimal configuration with the implicit system default
-values shows the configuration as:
-```
-{
-  "configuration": {
-    "expiryInterval": 15,
-    "myVessel": {
-      "positionUpdateIntervals": [15,0],
-      "staticUpdateIntervals": [60,0]
-    },
-    "otherVessels": {
-      "positionUpdateIntervals": [0,0],
-      "staticUpdateIntervals": [0,0]
-    },
-    "endpoints": [
-      {
-        "name": "MarineTraffic",
-        "ipAddress": "xxx.xxx.xxx.xxx",
-        "port": nnnnn
-      }
-    ]
-  },
-  "enabled": true
-}
-```
+This configuration does not specify an override, so the second item of
+the interval arrays can be set to 0 since it is unused.
 
-## A more elaborate configuration
-
-All of the numeric values in a configuration specify a time period
-in minutes with a zero value representing a disabled state.
-
-Any or all of the 'expiryInterval', 'myVessel' and 'otherVessels'
-properties can be expressed as properties of an endpoint, overriding
-any global defaults defined at the top level of the configuration.
-
-I use the following configuration which supports reporting to an
-Internet AIS traffic site and a local test facility.
+I use the following, more alaborate, configuration on my boat.
+This reports to two endpoints: the MarineTraffic AIS consolidation service
+and also local test facility.
+Normal reporting frequencies are overriden by the value on a Signal K switch
+path which reflects my engine ignition state: when the engine is running
+I transmit my position once a minute, otherwise no so often.
 ```
 {
   "configuration": {
@@ -119,11 +108,11 @@ Internet AIS traffic site and a local test facility.
         "myVessel": {
           "triggerOverridePath": "electrical.switches.bank.16.16.state",
           "positionUpdateIntervals": [2,1],
-          "staticUpdateIntervals": [3,3]
+          "staticUpdateIntervals": [4,3]
         },
         "otherVessels": {
-          "positionUpdateIntervals": [4,0],
-          "staticUpdateIntervals": [5,0]
+          "positionUpdateIntervals": [5,0],
+          "staticUpdateIntervals": [6,0]
         }
       }
     ]
