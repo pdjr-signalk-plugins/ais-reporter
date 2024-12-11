@@ -29,16 +29,16 @@ IP address and ports to which data should be transmitted.
 For example.
 
 > {  
->   "configuration": {  
->     "endpoints": [  
->       {  
->         "name": "MarineTraffic",  
->         "ipAddress": "xxx.xxx.xxx.xxx",  
->         "port": nnnnn  
->       }  
->     ]  
->   },  
->   "enabled": true  
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
 > }  
 
 A configuration like that shown above will report the host vessel's
