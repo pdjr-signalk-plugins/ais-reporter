@@ -38,7 +38,7 @@ configuration.
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [15,0],  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [60,0]  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
-> &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {
+> &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [0,0],  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [**  
