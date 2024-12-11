@@ -26,7 +26,9 @@ and a minimal plugin configuration which leans on these defaults just
 requires the specification of one or more endpoints in terms of the
 IP address and ports to which data should be transmitted.
 
-For example.
+The bold items in the following example must be supplied to make a
+minimal working configuration; the italic items show how the built-in
+defaults are applied to make a working configuration.
 
 > **{**  
 > **&nbsp;&nbsp;"configuration": {**  
