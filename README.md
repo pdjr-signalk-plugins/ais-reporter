@@ -22,14 +22,16 @@ giving some control over Ethernet data and bandwidth use.
 ## Plugin configuration
 
 Configuration of the plugin is simple with much flexibility of approach.
-Unfortunately, Signal K's dashboard plugin configuration interface
-translates this flexibility into complexity and it is easier to discuss
-configuration in terms of the plugins's JSON configuration file.
+However, Signal K's dashboard plugin configuration interface translates
+this flexibility into complexity making it easier to discuss configuration
+in terms of the plugins's JSON configuration file.
+
 Once you understand the JSON structure, you should be able to navigate
-the plugin's configuration in Signal K's dashboard interface with
+the plugin's configuration interface in the Signal K's dashboard with
 ease.
 
 ### A minimal configuration
+
 The plugin includes built-in defaults for most configuration properties
 and a minimal plugin configuration just requires the definition of at least
 one reporting endpoint in terms of its IP address and service port.
@@ -47,18 +49,20 @@ For example:
 > &nbsp;&nbsp;"enabled": true  
 > }
 
-To use this simple configuration you must supply meaningful values for
+To use this simple configuration you must supply appropriate values for
 *target_ip_address* and *target_port_number* and you may want to give the
 'name' property a more meaningful value.
 
-In fact, if you supply the values 'Local test endpoint', '127.0.0.1' and 12345
-for the 'name', 'ipAddress' and 'port' properties then you can observe the
-plugin in action by opening a terminal window on the Signal K server and
-running the command `./udp_listen.pl 12345' from the plugin installation
-folder.
+In fact, if you supply the values 'Local test endpoint', '127.0.0.1' and
+12345 for the 'name', 'ipAddress' and 'port' properties then you can observe
+the plugin in action by opening a terminal window on the Signal K server and
+running the command `./udp_listen.pl 12345' from your system's plugin
+installation folder.
 
 ### Plugin defaults
-The plugin uses some
+
+As mentioned, the plugin uses some default property values and if we elaborate
+the minimal configuration discussed above, then 
 
 The properties displayed in bold in the following example must be supplied
 to make a minimal working configuration; the non-bold properties are built-in
