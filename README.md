@@ -115,7 +115,7 @@ There are a number of ways of achieving this and here is one.
 > &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 0,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 15  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 55  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
@@ -126,10 +126,45 @@ There are a number of ways of achieving this and here is one.
 > &nbsp;&nbsp;&nbsp;&nbsp;]  
 > &nbsp;&nbsp;},  
 > &nbsp;&nbsp;"enabled": true  
-> }  
+> }
 
+I have a class B transceiver, so my 'static' AIS data really is static and
+I can set the 'staticDataUpdate' interval at as very low level.
 
-I
+### Automatically modulate reporting intervals
+
+On my ship I like to modify my position reporting intervals based upon whether
+the ship is navigating or moored: a short interval when navigating so as to
+record a good track and a long interval when moored (but frequently enough
+that the reporting endpoint I use doesn't think I have gone off-line).
+
+My ship reports the engine ignition state via an NMEA switchbank channel and
+in Signal K, `electrical.switches.bank.16.16.state` reports 0 when engine
+ignition is OFF and 1 when it is ON.
+
+To explot this I use an array property value to specify two reporting intervals for
+'positionUpdateInterval': the zeroth position in the array to be used when the
+ignition is OFF and the first position to be used when the switch is ON.
+> {  
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 0,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 0,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": [55.1],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 55  
+> &nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Local test endpoint",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
+> }
+
 
 Each update interval property value consists of a two element array in which
 the first item defines the normal interval between successive report
