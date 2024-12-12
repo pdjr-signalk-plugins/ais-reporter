@@ -62,32 +62,28 @@ installation folder.
 ### Plugin defaults
 
 As mentioned, the plugin uses some default property values and if we elaborate
-the minimal configuration discussed above, then 
-
-The properties displayed in bold in the following example must be supplied
-to make a minimal working configuration; the non-bold properties are built-in
-defaults which are applied to make a working configuration.
-
-> **{**  
-> **&nbsp;&nbsp;"configuration": {**  
+the minimal configuration discussed above with these defaults then we can
+get a clearer picture of how the configuration works.
+> {  
+> &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [15,0],  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [60,0]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": 60  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": [0,0]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": 0 
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
-> **&nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [**  
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{**  
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",**  
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",**  
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn**  
-> **&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}**  
-> **&nbsp;&nbsp;&nbsp;&nbsp;]**  
-> **&nbsp;&nbsp;},**  
-> **&nbsp;&nbsp;"enabled": true**  
-> **}**  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Local test endpoint",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
+> }  
 
 All of the numeric values in a configuration specify a time period
 in minutes with a zero value representing an infinite time period and
