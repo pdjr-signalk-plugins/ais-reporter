@@ -15,123 +15,79 @@
  */
 
 import * as _ from 'lodash';
-import { EventStream } from 'baconjs';
 import { AisEncode, AisEncodeOptions } from 'ggencoder'
 import { Socket, createSocket } from 'dgram'
 import { PluginStatus } from 'signalk-libpluginstatus';
 
-const PLUGIN_ID: string = "ais-reporter";
-const PLUGIN_NAME: string = "pdjr-ais-reporter";
-const PLUGIN_DESCRIPTION: string = "Report AIS data to remote UDP services.";
+const PLUGIN_ID: string = 'ais-reporter';
+const PLUGIN_NAME: string = 'pdjr-ais-reporter';
+const PLUGIN_DESCRIPTION: string = 'Report AIS data to remote UDP services.';
 const PLUGIN_SCHEMA: object = {
-  type: 'object',
-  required: [ "endpoints" ],
-  properties: {
-    expiryinterval: {
-      title: 'Ignore vessel data older than (s)',
-      type: 'number'
-    },
-    overrideTriggerPath: {
-      title: 'Path which triggers all overrides',
-      type: 'string'
-    },
-    myVessel: {
-      type: 'object',
-      properties: {
-        positionUpdateIntervals: {
-          title: 'Position update intervals (default, override)',
-          type: 'array',
-          items: { type: 'number' }
-        },
-        staticUpdateIntervals: {
-          title: 'Static data update interval (default, override)',
-          type: 'array',
-          items: { type: 'number' }
-        },
-        overrideTriggerPath: {
-          title: 'Path which triggers this override',
-          type: 'string'
-        }
-      }
-    },
-    otherVessels: {
-      type: 'object',
-      properties: {
-        positionUpdateIntervals: {
-          title: 'Position update intervals (default, override)',
-          type: 'array',
-          items: { type: 'number' }
-        },
-        staticUpdateIntervals: {
-          title: 'Static data update interval (default, override)',
-          type: 'array',
-          items: { type: 'number' }
-        },
-        overrideTriggerPath: {
-          title: 'Path which triggers this override',
-          type: 'string'
-        }
-      }
-    },
-    endpoints: {
-      type: 'array',
-      title: 'UDP endpoints to report to',
-      items: {
-        type: 'object',
-        required: ['ipaddress', 'port'],
-        properties: {
-          name: {
-            type: 'string',
-            title: 'Endpoint name',
+  "type": "object",
+  "required": [ "endpoints" ],
+  "properties": {
+    "$ref": "#/definitions/options",
+    "myVessel": { "$ref": "#/definitions/vessel" },
+    "otherVessels": { "$ref": "#/definitions/vessel" },  
+    "endpoints": {
+      "type": "array",
+      "title": "UDP endpoints to report to",
+      "items": {
+        "type": "object",
+        "required": ["ipaddress", "port"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Endpoint name"
           },
-          ipaddress: {
-            type: 'string',
-            title: 'UDP endpoint IP address'
+          "ipaddress": {
+            "type": "string",
+            "title": "UDP endpoint IP address",
+            "format": "ipv4"
           },
-          port: {
-            type: 'number',
-            title: 'Port'
+          "port": {
+            "type": "number",
+            "title": "Port",
+            "minimum": 0
           },
-          expiryinterval: {
-            title: 'Ignore vessel data older than (s)',
-            type: 'number'
-          },
-          overrideTriggerPath: {
-            title: 'Path which triggers this override',
-            type: 'string'
-          },
-          myVessel: {
-            type: 'object',
-            properties: {
-              positionUpdateIntervals: {
-                title: 'Position update intervals (default, override)',
-                type: 'array',
-                items: { type: 'number' }
-              },
-              staticUpdateIntervals: {
-                title: 'Static data update interval (default, override)',
-                type: 'array',
-                items: { type: 'number' }
-              }
-            }
-          },
-          otherVessels: {
-            type: 'object',
-            properties: {
-              positionUpdateIntervals: {
-                title: 'Position update intervals (default, override)',
-                type: 'array',
-                items: { type: 'number' }
-              },
-              staticUpdateIntervals: {
-                title: 'Static data update interval (default, override)',
-                type: 'array',
-                items: { type: 'number' }
-              }
-            }
-          }
+          "$ref": "#/definitions/options",
+          "myVessel": { "$ref": "#/definitions/vessel" },
+          "otherVessels": { "$ref": "#/definitions/vessel" }
         }        
       }
+    }
+  },
+  "definitions": {
+    "updateInterval": {
+      "oneOf": [
+        { "$ref": "#/$defs/interval" },
+        { "type": "array", "items": { "$ref": "#/$defs/interval" }}
+      ]
+    },
+    "interval": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "options": {
+      "expiryinterval": {
+        "title": "Ignore vessel data older than (s)",
+        "$ref": "#/definitions/interval"
+      },
+      "positionUpdateInterval": {
+        "title": "Position update interval",
+        "$ref": "#/definitions/updateInterval"
+      },
+      "staticUpdateInterval": {
+        "title": "Static data update interval",
+        "$ref": "#/definitions/updateInterval"
+      },
+      "overrideTriggerPath": {
+        "title": "Path which selects override intervals",
+        "type": "string"
+      }  
+    },
+    "vessel": {
+      "$ref": "#/definitions/options"
     }
   }
 };
@@ -199,42 +155,42 @@ module.exports = function(app: any) {
     options.endpoints.forEach((option: any) => {
       if (!option.ipAddress) throw new Error('endpoint has missing \'ipAddress\' property');
       if (!option.port) throw new Error('endpoint has missing \'port\' property');
-      let endpoint: Endpoint = {
-        name: option.name || option.ipAddress,
-        ipAddress: option.ipAddress,
-        port: option.port,
-        expiryInterval: _.get(option, 'expiryInterval', _.get(options, 'expiryInterval', DEFAULT_EXPIRY_INTERVAL)),
-        myVessel: {
-          positionUpdateIntervals: [
-            _.get(option, 'myVessel.positionUpdateIntervals[0]', _.get(options, 'myVessel.positionUpdateIntervals[0]', DEFAULT_POSITION_UPDATE_INTERVAL)),
-            _.get(option, 'myVessel.positionUpdateIntervals[1]', _.get(options, 'myVessel.positionUpdateIntervals[1]', DEFAULT_POSITION_UPDATE_INTERVAL))
-          ],
-          staticUpdateIntervals: [
-            _.get(option, 'myVessel.staticUpdateIntervals[0]', _.get(options, 'myVessel.staticUpdateIntervals[0]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL)),
-            _.get(option, 'myVessel.staticUpdateIntervals[1]', _.get(options, 'myVessel.staticUpdateIntervals[1]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL))
-          ],
-          overrideTriggerPath: _.get(option, 'myVessel.overrideTriggerPath', _.get(option, 'overrideTriggerPath', _.get(options, 'myVessel.overrideTriggerPath', _.get(options, 'overrideTriggerPath', undefined)))),
-          positionReportCount: 0,
-          staticReportCount: 0
-        },
-        otherVessels: {
-          positionUpdateIntervals: [
-            _.get(option, 'otherVessels.positionUpdateIntervals[0]', _.get(options, 'otherVessels.positionUpdateInterval[0]', DEFAULT_POSITION_UPDATE_INTERVAL)),
-            _.get(option, 'otherVessels.positionUpdateIntervals[1]', _.get(options, 'otherVessels.positionUpdateInterval[1]', DEFAULT_POSITION_UPDATE_INTERVAL))
-          ],
-          staticUpdateIntervals: [
-            _.get(option, 'otherVessels.staticUpdateIntervals[0]', _.get(options, 'otherVessels.staticUpdateInterval[0]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL)),
-            _.get(option, 'otherVessels.staticUpdateIntervals[1]', _.get(options, 'otherVessels.staticUpdateInterval[1]', DEFAULT_STATIC_DATA_UPDATE_INTERVAL))
-          ],
-          overrideTriggerPath: _.get(option, 'otherVessels.overrideTriggerPath', _.get(option, 'overrideTriggerPath', _.get(options, 'otherVessels.overrideTriggerPath', _.get(options, 'overrideTriggerPath', undefined)))),
-          positionReportCount: 0,
-          staticReportCount: 0
-        },
-        lastReportTimestamp: undefined,
-      }
-      pluginConfiguration.endpoints?.push(endpoint);
+      let endpoint: Endpoint = <Endpoint>{};
+      endpoint.name = option.name || option.ipAddress;
+      endpoint.ipAddress = option.ipAddress;
+      endpoint.port = option.port;
+      endpoint.myVessel = <Vessel>{};
+      endpoint.myVessel.expiryInterval = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
+      endpoint.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
+      endpoint.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}),option(options.myVessel || {}),,options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
+      endpoint.myVessel.overrideTriggerPath = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'overrideTriggerPath', undefined);
+      endpoint.myVessel.positionReportCount = 0;
+      endpoint.myVessel.staticReportCount = 0;
+      endpoint.otherVessels = <Vessel>{};
+      endpoint.otherVessels.expiryInterval = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
+      endpoint.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
+      endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
+      endpoint.otherVessels.overrideTriggerPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'overrideTriggerPath', undefined);
+      endpoint.otherVessels.positionReportCount = 0;
+      endpoint.otherVessels.staticReportCount = 0;
+      endpoint.lastReportTimestamp = undefined
+      pluginConfiguration.endpoints.push(endpoint);
     });
     return(pluginConfiguration);
+
+    function getOption(objects: any[], name: string, fallback: any): any {
+      objects.forEach((object: any) => {
+        if (object.hasOwnProperty(name)) return(object.name);
+      });
+      return(fallback);
+    }
+
+    function getOptionArray(objects: any[], name: string, fallback: any): any {
+      objects.forEach((object: any) => {
+        if (object.hasOwnProperty(name)) return((Array.isArray(object.name))?object.name:[object.name]);
+      });
+      return(fallback);
+    }
   }
 
   function startReporting(pluginConfiguration: PluginConfiguration, udpSocket: Socket): NodeJS.Timeout {
@@ -243,12 +199,13 @@ module.exports = function(app: any) {
       pluginConfiguration.endpoints.forEach((endpoint) => {
         try {
           var reportCount : number;
+
           let mvIDX: number = ((endpoint.myVessel.overrideTriggerPath)?(app.getSelfPath(endpoint.myVessel.overrideTriggerPath) || 0):0)?1:0;
           let ovIDX: number = ((endpoint.otherVessels.overrideTriggerPath)?(app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) || 0):0)?1:0;
-          let mvPUI: number | undefined = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, undefined);
-          let mvSUI: number | undefined = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, undefined);
-          let ovPUI: number | undefined = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, undefined);
-          let ovSUI: number | undefined = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, undefined);
+          let mvPUI: number = endpoint.myVessel.positionUpdateIntervals[mvIDX];
+          let mvSUI: number = endpoint.myVessel.staticUpdateIntervals[mvIDX];
+          let ovPUI: number = endpoint.otherVessels.positionUpdateIntervals[ovIDX];
+          let ovSUI: number = endpoint.otherVessels.staticUpdateIntervals[ovIDX];
 
           if (((mvPUI !== undefined) && (mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) { 
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
@@ -256,7 +213,7 @@ module.exports = function(app: any) {
             endpoint.myVessel.positionReportCount += (reportCount % 10);
             endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
           };
-        
+
           if (((mvSUI !== undefined) && (mvSUI !== 0) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== undefined) && (ovSUI !== 0) && (heartbeatCount % ovSUI) === 0)) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
             reportCount = reportStatic(udpSocket, endpoint, (mvSUI === undefined)?false:((mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined)?false:((ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0)));
@@ -279,7 +236,7 @@ module.exports = function(app: any) {
 
     Object.values(app.getPath('vessels'))
     .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-    .filter((vessel: any) => ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 60000))))
+    .filter((vessel: any) => (reportSelf && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 60000)))) || (reportOthers && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
     .forEach((vessel: any) => {
       try {  
         aisProperties = { mmsi: vessel.mmsi };
@@ -316,7 +273,7 @@ module.exports = function(app: any) {
   
     Object.values(app.getPath('vessels'))
     .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-    .filter((vessel: any) => ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.expiryInterval * 60000))))    
+    .filter((vessel: any) => (reportSelf && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 60000)))) || (reportOthers && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
     .forEach((vessel: any) => {
       try {
         aisProperties = { mmsi: vessel.mmsi }
@@ -465,22 +422,18 @@ interface Endpoint {
   name: string,
   ipAddress: string,
   port: number,
+  myVessel: Vessel,
+  otherVessels: Vessel,
+  lastReportTimestamp: number | undefined
+}
+
+interface Vessel {
   expiryInterval: number,
-  lastReportTimestamp: number | undefined,
-  myVessel: {
-   positionUpdateIntervals: number[],
-   staticUpdateIntervals: number[],
-   overrideTriggerPath: string,
-   positionReportCount: number,
-   staticReportCount: number,
-  },
-  otherVessels: {
-    positionUpdateIntervals: number[],
-    staticUpdateIntervals: number[],
-    overrideTriggerPath: string,
-    positionReportCount: 0,
-    staticReportCount: 0
-  },
+  positionUpdateIntervals: number[],
+  staticUpdateIntervals: number[],
+  overrideTriggerPath: string,
+  positionReportCount: 0,
+  staticReportCount: 0
 }
 
 interface StatusResponse {

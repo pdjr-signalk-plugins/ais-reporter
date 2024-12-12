@@ -138,6 +138,7 @@ Defaults to an empty list.
 ###
 
 ### Position update interval (s)
+Optional array property whuch
 The frequency at which position updates for active vessels should
 be sent to endpoints, expressed as an interval in seconds.
 A value of 0 disables all position and static reporting.
