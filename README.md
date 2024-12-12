@@ -56,7 +56,7 @@ To use this simple configuration you must supply appropriate values for
 In fact, if you supply the values 'Local test endpoint', '127.0.0.1' and
 12345 for the 'name', 'ipAddress' and 'port' properties then you can observe
 the plugin in action by opening a terminal window on the Signal K server and
-running the command `./udp_listen.pl 12345' from your system's plugin
+running the command `./udp_listen.pl 12345` from your system's plugin
 installation folder.
 
 This minimal configuration will report the position of all vessels known to
