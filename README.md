@@ -38,14 +38,24 @@ For example:
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "My Endpoint",  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*target_ip_address*",  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *target_port_number*  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
 > &nbsp;&nbsp;&nbsp;&nbsp;]  
 > &nbsp;&nbsp;},  
 > &nbsp;&nbsp;"enabled": true  
-> }  
+> }
+
+To use this simple configuration you must supply meaningful values for
+*target_ip_address* and *target_port_number* and you may want to give the
+'name' property a more meaningful value.
+
+In fact, if you supply the values 'Local test endpoint', '127.0.0.1' and 12345
+for the 'name', 'ipAddress' and 'port' properties then you can observe the
+plugin in action by opening a terminal window on the Signal K server and
+running the command `./udp_listen.pl 12345' from the plugin installation
+folder.
 
 The properties displayed in bold in the following example must be supplied
 to make a minimal working configuration; the non-bold properties are built-in
