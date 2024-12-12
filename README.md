@@ -57,6 +57,9 @@ plugin in action by opening a terminal window on the Signal K server and
 running the command `./udp_listen.pl 12345' from the plugin installation
 folder.
 
+### Plugin defaults
+The plugin uses some
+
 The properties displayed in bold in the following example must be supplied
 to make a minimal working configuration; the non-bold properties are built-in
 defaults which are applied to make a working configuration.
