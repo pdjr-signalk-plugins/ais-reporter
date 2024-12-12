@@ -21,10 +21,22 @@ giving some control over Ethernet data and bandwidth use.
 
 ## Configuration examples
 
-The plugin includes built-in defaults for most configuration options
-and a minimal plugin configuration which leans on these defaults just
-requires the specification of one or more endpoints in terms of the
-IP address and ports to which data should be transmitted.
+The plugin includes built-in defaults and a minimal plugin configuration
+requires the definition of a reporting endpoint by specifying the
+endpoint's IP address and service port.
+
+> {  
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
+> }  
 
 The properties displayed in bold in the following example must be supplied
 to make a minimal working configuration; the non-bold properties are built-in
