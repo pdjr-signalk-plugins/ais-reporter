@@ -19,19 +19,28 @@ Signal K may be uploaded to the specified endpoints.
 Reports are issued at a user configured rate to each defined endpoint
 giving some control over Ethernet data and bandwidth use.
 
-## Configuration examples
+## Plugin configuration
 
-The plugin includes built-in defaults and a minimal plugin configuration
-requires the definition of a reporting endpoint by specifying the
-endpoint's IP address and service port.
+Configuration of the plugin is simple with much flexibility of approach.
+Unfortunately, Signal K's dashboard plugin configuration interface
+translates this flexibility into complexity and it is easier to discuss
+configuration in terms of the plugins's JSON configuration file.
+Once you understand the JSON structure, you should be able to navigate
+the plugin's configuration in Signal K's dashboard interface with
+ease.
 
+### A minimal configuration
+The plugin includes built-in defaults for most configuration properties
+and a minimal plugin configuration just requires the definition of at least
+one reporting endpoint in terms of its IP address and service port.
+For example:
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "MarineTraffic",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "xxx.xxx.xxx.xxx",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": nnnnn  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*target_ip_address*",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *target_port_number*  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
 > &nbsp;&nbsp;&nbsp;&nbsp;]  
 > &nbsp;&nbsp;},  
