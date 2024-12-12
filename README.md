@@ -151,7 +151,7 @@ ignition is OFF and the first position to be used when the switch is ON.
 > &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 0,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 0,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": [55.1],  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": [55,1],  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 55  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
