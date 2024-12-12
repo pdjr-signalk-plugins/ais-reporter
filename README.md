@@ -70,8 +70,8 @@ get a clearer picture of how the configuration works.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"statusUpdateInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 15,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Local test endpoint",  
@@ -93,12 +93,43 @@ associated behaviour.
 
 The 'expiryInterval' property tells the plugin to disregard any vessel
 whose position has not been updated in the last 15 minutes.
+'positionUpdateInterval' and 'staticUpdateInterval' reporting intervals are
+specified as separate properties since, at least for class 'B' reports, we
+normally want to update position data more frequently than static data.
+If the 'staticUpdateInterval' property is ommitted, then it assumes the
+same value as the 'positionUpdateInterval' property.
 
-The position and static data reporting intervals are specified as separate
-properties since, at least for class 'B' reports, we normally want to update
-position data more frequently than static data.
-If the 'staticUpdateIntervals' property is ommitted, then it assumes the
-same value as the 'positionUpdateIntervals' property.
+### Differentiate 'self' from other vessels
+
+Sometimes we want to treat host vessel reporting differently to the reporting
+of other vessels whose data had been received over AIS.
+
+One scenario is that we want to report our own vessel frequently enough to
+document a good track when cruising and we don't want to report any other
+vessel data at all.
+There are a number of ways of achieving this and here is one.
+> {  
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 0,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 0,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 15  
+> &nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Local test endpoint",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
+> }  
+
+
+I
 
 Each update interval property value consists of a two element array in which
 the first item defines the normal interval between successive report
