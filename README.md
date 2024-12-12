@@ -59,6 +59,9 @@ the plugin in action by opening a terminal window on the Signal K server and
 running the command `./udp_listen.pl 12345' from your system's plugin
 installation folder.
 
+This minimal configuration will report the position of all vessels known to
+Signal K once every 5 minutes and static data once every 15 minutes.
+
 ### Plugin defaults
 
 As mentioned, the plugin uses some default property values and if we elaborate
@@ -67,13 +70,8 @@ get a clearer picture of how the configuration works.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": 15,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": 60  
-> &nbsp;&nbsp;&nbsp;&nbsp;},  
-> &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateIntervals": 0  
-> &nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"statusUpdateInterval": 15,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Local test endpoint",  
@@ -85,9 +83,13 @@ get a clearer picture of how the configuration works.
 > &nbsp;&nbsp;"enabled": true  
 > }  
 
-All of the numeric values in a configuration specify a time period
-in minutes with a zero value representing an infinite time period and
-essentially disabling the associated behaviour.
+The 'expiryInterval', 'positionUpdateInterval' and 'statusUpdateInterval'
+properties are declared at the top-level of the configuration and apply to
+all endpoints and all vessels.
+
+All numeric values in a configuration specify a time period in minutes with a
+zero value representing an infinite time period and essentially disabling any
+associated behaviour.
 
 The 'expiryInterval' property tells the plugin to disregard any vessel
 whose position has not been updated in the last 15 minutes.
