@@ -183,7 +183,7 @@ module.exports = function(app: any) {
 
     function getOption(objects: any[], name: string, fallback: any): any {
       var retval = fallback;
-      objects.forEach((object: any) => { if (object.name) retval = object.name; });
+      objects.forEach((object: any) => { if (object[name]) retval = object[name]; });
       return(retval);
     }
 

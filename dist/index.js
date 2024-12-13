@@ -175,8 +175,8 @@ module.exports = function (app) {
         return (pluginConfiguration);
         function getOption(objects, name, fallback) {
             var retval = fallback;
-            objects.forEach((object) => { if (object.name)
-                retval = object.name; });
+            objects.forEach((object) => { if (object[name])
+                retval = object[name]; });
             return (retval);
         }
         function getOptionArray(objects, name, fallback) {
