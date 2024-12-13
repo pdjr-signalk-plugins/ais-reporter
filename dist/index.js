@@ -176,8 +176,10 @@ module.exports = function (app) {
         function getOption(objects, name, fallback) {
             objects.forEach((object) => {
                 app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
-                if (object.name)
+                if (object.name) {
+                    app.debug('FOUND');
                     return (object.name);
+                }
             });
             return (fallback);
         }
