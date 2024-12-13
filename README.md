@@ -104,10 +104,10 @@ same value as the 'positionUpdateInterval' property.
 Sometimes we want to treat host vessel reporting differently to the reporting
 of other vessels whose data had been received over AIS.
 
-One scenario is that we want to report our own vessel frequently enough to
-document a good track when cruising and we don't want to report any other
-vessel data at all.
-There are a number of ways of achieving this and here is one.
+One such scenario is when we want to report our own vessel but not any
+others.
+One way of achieving this is to set global default update intervals to
+0 and then to override these settings for just our own ship.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
@@ -128,9 +128,6 @@ There are a number of ways of achieving this and here is one.
 > &nbsp;&nbsp;"enabled": true  
 > }
 
-I have a class B transceiver, so my 'static' AIS data really is static and
-I can set the 'staticDataUpdate' interval at as very low level.
-
 ### Automatically modulate reporting intervals
 
 On my ship I like to modify my position reporting intervals based upon whether
@@ -138,13 +135,19 @@ the ship is navigating or moored: a short interval when navigating so as to
 record a good track and a long interval when moored (but frequently enough
 that the reporting endpoint I use doesn't think I have gone off-line).
 
-My ship reports the engine ignition state via an NMEA switchbank channel and
-in Signal K, `electrical.switches.bank.16.16.state` reports 0 when engine
-ignition is OFF and 1 when it is ON.
+My ship reports the main engine ignition state via an NMEA switchbank
+channel which appears in Signal K as the path `electrical.switches.bank.16.16.state`.
+This path has the value 0 when engine ignition is OFF and 1 when it is
+ON.
 
-To explot this I use an array property value to specify two reporting intervals for
-'positionUpdateInterval': the zeroth position in the array to be used when the
-ignition is OFF and the first position to be used when the switch is ON.
+The plugin supports a simple value selection mechanism which uses the
+value on a Signal K path as an index for selecting the reporting
+interval to be used at any point in time.
+To use this mechanism we need to specify our update intervals as a two
+item array and the selection path as the value of the 'overrideTriggerPath'
+property: the value at the zeroth position in the array will be used
+when the ignition is OFF and the value at the first position in the
+array will be used when the switch is ON.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
@@ -152,7 +155,8 @@ ignition is OFF and the first position to be used when the switch is ON.
 > &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 0,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": [55,1],  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 55  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 55,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"overrideTriggerPath": "electrical.switches.bank.16.16.state"  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
@@ -165,25 +169,7 @@ ignition is OFF and the first position to be used when the switch is ON.
 > &nbsp;&nbsp;"enabled": true  
 > }
 
-
-Each update interval property value consists of a two element array in which
-the first item defines the normal interval between successive report
-transmissions and the second item defines the interval to be used when an
-override (if any is specified) is active.
-
-You can see that the configuration shown above will report the host
-vessel's position every 15 minutes and its static data every 60 minutes, but
-will not report information about other vessels (i.e. those received
-over AIS).
-This configuration does not specify an override trigger, so the second item
-of the interval arrays is unused.
-
-I use the following, more elaborate, configuration on my boat.
-This reports to two endpoints: the MarineTraffic AIS consolidation service
-and a local test facility.
-Normal reporting frequencies are overriden by the value on a Signal K switch
-path which reflects my engine ignition state: when the engine is running
-I transmit my position once a minute, otherwise not so often.
+### My current production configuration
 
 > {  
 > &nbsp;&nbsp;"configuration": {  
@@ -222,10 +208,6 @@ I transmit my position once a minute, otherwise not so often.
 > &nbsp;&nbsp;"enabled": true  
 > }  
 
-Built in defaults can be overriden by specifying some alternative
-top-level option values which will be applied to all endpoints.
-Each endpoint configuration can include its own option values which
-will override any top level definitions (including system defaults).
 
 ## Required configuration properties
 
