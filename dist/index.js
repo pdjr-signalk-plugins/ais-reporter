@@ -175,14 +175,14 @@ module.exports = function (app) {
         return (pluginConfiguration);
         function getOption(objects, name, fallback) {
             objects.forEach((object) => {
-                if (object.hasOwnProperty(name))
+                if (object.name)
                     return (object.name);
             });
             return (fallback);
         }
         function getOptionArray(objects, name, fallback) {
             objects.forEach((object) => {
-                if (object.hasOwnProperty(name))
+                if (object.name)
                     return ((Array.isArray(object.name)) ? object.name : [object.name]);
             });
             return (fallback);

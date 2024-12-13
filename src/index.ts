@@ -183,14 +183,14 @@ module.exports = function(app: any) {
 
     function getOption(objects: any[], name: string, fallback: any): any {
       objects.forEach((object: any) => {
-        if (object.hasOwnProperty(name)) return(object.name);
+        if (object.name) return(object.name);
       });
       return(fallback);
     }
 
     function getOptionArray(objects: any[], name: string, fallback: any): any {
       objects.forEach((object: any) => {
-        if (object.hasOwnProperty(name)) return((Array.isArray(object.name))?object.name:[object.name]);
+        if (object.name) return((Array.isArray(object.name))?object.name:[object.name]);
       });
       return(fallback);
     }
