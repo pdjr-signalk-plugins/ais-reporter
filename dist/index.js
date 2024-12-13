@@ -174,15 +174,10 @@ module.exports = function (app) {
         });
         return (pluginConfiguration);
         function getOption(objects, name, fallback) {
-            app.debug('getOption()...');
-            objects.forEach((object) => {
-                app.debug(`checking object ${JSON.stringify(object, null, 2)} for ${name}`);
-                if (object.name) {
-                    app.debug('FOUND');
-                    return (object.name);
-                }
-            });
-            return (fallback);
+            var retval = fallback;
+            objects.forEach((object) => { if (object.name)
+                retval = object.name; });
+            return (retval);
         }
         function getOptionArray(objects, name, fallback) {
             objects.forEach((object) => {
