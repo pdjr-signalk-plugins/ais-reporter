@@ -292,66 +292,26 @@ module.exports = function (app) {
         var bytesTransmitted;
         Object.values(app.getPath('vessels'))
             .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-            .filter((vessel) => (reportSelf && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 60000)))) || (reportOthers && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
+            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
             .forEach((vessel) => {
             try {
                 aisProperties = { mmsi: vessel.mmsi };
-                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
+                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : _.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
                 aisProperties['callsign'] = '';
-                try {
-                    aisProperties['cargo'] = vessel.design.aisShipType.value.id;
-                }
-                catch (e) {
-                    aisProperties['cargo'] = 0;
-                }
-                try {
-                    aisProperties['destination'] = vessel.navigation.destination.commonName;
-                }
-                catch (e) {
-                    aisProperties['destination'] = '';
-                }
-                try {
-                    aisProperties['dimA'] = vessel.sensors.ais.fromBow.value.toFixed(0);
-                }
-                catch (e) {
-                    aisProperties['dimA'] = 0;
-                }
-                try {
-                    aisProperties['dimB'] = (vessel.design.length.value.overall - vessel.sensors.gps.fromBow.value).toFixed(0);
-                }
-                catch (e) {
-                    aisProperties['dimB'] = 0;
-                }
-                try {
-                    aisProperties['dimC'] = (vessel.design.beam.value / 2 + vessel.sensors.gps.fromCenter.value).toFixed(0);
-                }
-                catch (e) {
-                    aisProperties['dimC'] = 0;
-                }
-                try {
-                    aisProperties['dimD'] = (vessel.design.beam.value / 2 - vessel.sensors.gps.fromCenter.value).toFixed(0);
-                }
-                catch (e) {
-                    aisProperties['dimD'] = 0;
-                }
-                try {
-                    aisProperties['draught'] = vessel.design.draft.value.maximum;
-                }
-                catch (e) {
-                    aisProperties['draught'] = 0;
-                }
+                aisProperties['cargo'] = _.get(vessel, 'design.aisShipType.value.id', 0);
+                aisProperties['destination'] = _.get(vessel, 'navigation.destination.commonName', '');
+                aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
+                aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
+                aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+                aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+                aisProperties['draught'] = _.get(vessel, 'design.draft.value.maximum', 0);
                 aisProperties['etaDay'] = 0;
                 aisProperties['etaHr'] = 0;
                 aisProperties['etaMin'] = 0;
                 aisProperties['etaMo'] = 0;
                 aisProperties['imo'] = '';
                 aisProperties['repeat'] = 3;
-                try {
-                    aisProperties['shipname'] = vessel.name;
-                }
-                catch (e) {
-                    aisProperties['shipname'] = '';
-                }
+                aisProperties['shipname'] = _.get(vessel, 'name', '');
                 switch (aisClass) {
                     case 'A':
                         aisProperties['aistype'] = 5;
