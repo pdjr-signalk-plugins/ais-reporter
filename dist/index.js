@@ -157,16 +157,18 @@ module.exports = function (app) {
             endpoint.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}), option, (options.myVessel || {}), options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
             endpoint.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}), option(options.myVessel || {}), , options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
             endpoint.myVessel.overrideTriggerPath = getOption([(option.myVessel || {}), option, (options.myVessel || {}), options], 'overrideTriggerPath', undefined);
-            endpoint.myVessel.positionReportCount = 0;
-            endpoint.myVessel.staticReportCount = 0;
             endpoint.otherVessels = {};
             endpoint.otherVessels.expiryInterval = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
             endpoint.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
             endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
             endpoint.otherVessels.overrideTriggerPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'overrideTriggerPath', undefined);
-            endpoint.otherVessels.positionReportCount = 0;
-            endpoint.otherVessels.staticReportCount = 0;
-            endpoint.lastReportTimestamp = undefined;
+            endpoint.statistics = {
+                lastReportTimestamp: undefined,
+                hour: new Array(60).fill(0),
+                day: new Array(24).fill(0),
+                position: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 },
+                static: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 }
+            };
             pluginConfiguration.endpoints.push(endpoint);
         });
         return (pluginConfiguration);
@@ -190,26 +192,29 @@ module.exports = function (app) {
             app.debug(`checking report requirement (heartbeat ${heartbeatCount})`);
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
-                    var reportCount;
+                    var reportStatistics = {};
+                    var totalBytes = 0;
                     let mvIDX = ((endpoint.myVessel.overrideTriggerPath) ? (app.getSelfPath(endpoint.myVessel.overrideTriggerPath) || 0) : 0) ? 1 : 0;
                     let ovIDX = ((endpoint.otherVessels.overrideTriggerPath) ? (app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) || 0) : 0) ? 1 : 0;
-                    let mvPUI = endpoint.myVessel.positionUpdateIntervals[mvIDX];
-                    let mvSUI = endpoint.myVessel.staticUpdateIntervals[mvIDX];
-                    let ovPUI = endpoint.otherVessels.positionUpdateIntervals[ovIDX];
-                    let ovSUI = endpoint.otherVessels.staticUpdateIntervals[ovIDX];
+                    let mvPUI = (inRange(mvIDX, 0, endpoint.myVessel.positionUpdateIntervals.length)) ? endpoint.myVessel.positionUpdateIntervals[mvIDX] : 0;
+                    let mvSUI = (inRange(mvIDX, 0, endpoint.myVessel.staticUpdateIntervals.length)) ? endpoint.myVessel.staticUpdateIntervals[mvIDX] : 0;
+                    let ovPUI = (inRange(ovIDX, 0, endpoint.otherVessels.positionUpdateIntervals.length)) ? endpoint.otherVessels.positionUpdateIntervals[ovIDX] : 0;
+                    let ovSUI = (inRange(ovIDX, 0, endpoint.otherVessels.staticUpdateIntervals.length)) ? endpoint.otherVessels.staticUpdateIntervals[ovIDX] : 0;
                     if (((mvPUI !== undefined) && (mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-                        reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined) ? false : ((mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined) ? false : ((ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0)));
-                        endpoint.myVessel.positionReportCount += (reportCount % 10);
-                        endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
+                        reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === undefined) ? false : ((mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined) ? false : ((ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0)));
+                        updateReportStatistics(endpoint.statistics.position, reportStatistics);
+                        totalBytes = (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
                     }
                     ;
                     if (((mvSUI !== undefined) && (mvSUI !== 0) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== undefined) && (ovSUI !== 0) && (heartbeatCount % ovSUI) === 0)) {
                         pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-                        reportCount = reportStatic(udpSocket, endpoint, (mvSUI === undefined) ? false : ((mvSUI === 0) ? false : ((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined) ? false : ((ovSUI === 0) ? false : ((heartbeatCount % ovSUI) === 0)));
-                        endpoint.myVessel.staticReportCount += (reportCount % 10);
-                        endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
+                        reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === undefined) ? false : ((mvSUI === 0) ? false : ((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined) ? false : ((ovSUI === 0) ? false : ((heartbeatCount % ovSUI) === 0)));
+                        updateReportStatistics(endpoint.statistics.static, reportStatistics);
+                        totalBytes += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
                     }
+                    endpoint.statistics.lastReportTimestamp = Date.now();
+                    updateByteVectors(endpoint.statistics, totalBytes, heartbeatCount);
                 }
                 catch (e) {
                     app.debug(`${e.message}`);
@@ -217,12 +222,27 @@ module.exports = function (app) {
             });
             heartbeatCount++;
         }, DEFAULT_HEARTBEAT_INTERVAL));
+        function updateReportStatistics(endpointReportStatistics, reportStatistics) {
+            endpointReportStatistics.myVesselTotalReports += reportStatistics.myVessel.count;
+            endpointReportStatistics.myVesselTotalBytes += reportStatistics.myVessel.bytes;
+            endpointReportStatistics.otherVesselsTotalReports += reportStatistics.otherVessels.count;
+            endpointReportStatistics.otherVesselsTotalBytes += reportStatistics.otherVessels.bytes;
+        }
+        function updateByteVectors(endpointStatistics, bytes, heartbeat) {
+            endpointStatistics.hour[0] += bytes;
+            if ((heartbeat % 60) == 0)
+                endpointStatistics.hour.slice(24).unshift(0);
+            endpointStatistics.day[0] += bytes;
+            if ((heartbeat % (1440)) == 0)
+                endpointStatistics.day.slice(6).unshift(0);
+        }
     }
     function reportPosition(socket, endpoint, reportSelf, reportOthers) {
-        var retval = 0;
+        var reportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 } };
         var aisClass;
         var aisProperties;
         var msg;
+        var bytesTransmitted;
         Object.values(app.getPath('vessels'))
             .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
             .filter((vessel) => (reportSelf && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 60000)))) || (reportOthers && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
@@ -258,9 +278,15 @@ module.exports = function (app) {
                 }
                 msg = new ggencoder_1.AisEncode(aisProperties);
                 if ((msg) && (msg.valid())) {
-                    sendReportMsg(socket, msg.nmea, endpoint);
-                    endpoint.lastReportTimestamp = Date.now();
-                    retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) ? 1 : 10;
+                    bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+                    if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
+                        reportStatistics.myVessel.count++;
+                        reportStatistics.myVessel.bytes += bytesTransmitted;
+                    }
+                    else {
+                        reportStatistics.otherVessels.count++;
+                        reportStatistics.otherVessels.bytes += bytesTransmitted;
+                    }
                 }
                 else
                     throw new Error('AIS encode failed');
@@ -269,13 +295,14 @@ module.exports = function (app) {
                 app.debug(`error creating AIS sentence for vessel '${vessel.mmsi}' (${e.message})`);
             }
         });
-        return (retval);
+        return (reportStatistics);
     }
     function reportStatic(socket, endpoint, reportSelf = false, reportOthers = false) {
-        var retval = 0;
+        var reportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 } };
         var aisClass;
         var aisProperties;
         var msg, msgB;
+        var bytesTransmitted;
         Object.values(app.getPath('vessels'))
             .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
             .filter((vessel) => (reportSelf && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 60000)))) || (reportOthers && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
@@ -343,11 +370,18 @@ module.exports = function (app) {
                         aisProperties['aistype'] = 5;
                         msg = new ggencoder_1.AisEncode(aisProperties);
                         if ((msg) && (msg.valid)) {
-                            sendReportMsg(socket, msg.nmea, endpoint);
+                            bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+                            if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
+                                reportStatistics.myVessel.count++;
+                                reportStatistics.myVessel.bytes += bytesTransmitted;
+                            }
+                            else {
+                                reportStatistics.otherVessels.count++;
+                                reportStatistics.otherVessels.bytes += bytesTransmitted;
+                            }
                         }
                         else
                             throw new Error('AIS encode failed');
-                        retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) ? 1 : 10;
                         break;
                     case 'B':
                         aisProperties['aistype'] = 24;
@@ -357,16 +391,22 @@ module.exports = function (app) {
                             aisProperties['part'] = 1;
                             msgB = new ggencoder_1.AisEncode(aisProperties);
                             if ((msgB) && (msgB.valid)) {
-                                sendReportMsg(socket, msg.nmea, endpoint);
-                                sendReportMsg(socket, msgB.nmea, endpoint);
+                                bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+                                bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
+                                if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
+                                    reportStatistics.myVessel.count++;
+                                    reportStatistics.myVessel.bytes += bytesTransmitted;
+                                }
+                                else {
+                                    reportStatistics.otherVessels.count++;
+                                    reportStatistics.otherVessels.bytes += bytesTransmitted;
+                                }
                             }
                             else
                                 throw new Error('AIS Part B encode failed');
                         }
                         else
                             throw new Error('AIS Part A encode failed');
-                        endpoint.lastReportTimestamp = Date.now();
-                        retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) ? 1 : 10;
                         break;
                     default:
                         break;
@@ -376,11 +416,13 @@ module.exports = function (app) {
                 app.debug(`error creating AIS sentence for '${vessel.mmsi}' (${e.message})`);
             }
         });
-        return (retval);
+        return (reportStatistics);
     }
     function sendReportMsg(socket, msg, endpoint) {
         app.debug(`sending report to endpoint '${endpoint.name}'`);
+        var retval = 0;
         if (socket) {
+            retval = (msg.length + 1);
             socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
                 if (e instanceof Error)
                     app.setPluginStatus(`send failure (${e.message})`);
@@ -389,6 +431,7 @@ module.exports = function (app) {
         else {
             app.setPluginStatus(`Stopped: UDP port is no longer available`);
         }
+        return (retval);
     }
     function inRange(x, min, max) {
         return (((x - min) * (x - max)) <= 0);
@@ -416,15 +459,7 @@ module.exports = function (app) {
                         a[endpoint.name] = {
                             ipAddress: endpoint.ipAddress,
                             port: endpoint.port,
-                            lastTransmission: (!endpoint.lastReportTimestamp) ? 'never' : (new Date(endpoint.lastReportTimestamp)).toUTCString(),
-                            myVessel: {
-                                positionReportCount: endpoint.myVessel.positionReportCount,
-                                staticReportCount: endpoint.myVessel.staticReportCount
-                            },
-                            otherVessels: {
-                                positionReportCount: endpoint.otherVessels.positionReportCount,
-                                staticReportCount: endpoint.otherVessels.staticReportCount
-                            }
+                            statistics: endpoint.statistics
                         };
                         return (a);
                     }, {});

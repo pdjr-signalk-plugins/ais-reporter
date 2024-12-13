@@ -164,16 +164,18 @@ module.exports = function(app: any) {
       endpoint.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
       endpoint.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}),option(options.myVessel || {}),,options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
       endpoint.myVessel.overrideTriggerPath = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'overrideTriggerPath', undefined);
-      endpoint.myVessel.positionReportCount = 0;
-      endpoint.myVessel.staticReportCount = 0;
       endpoint.otherVessels = <Vessel>{};
       endpoint.otherVessels.expiryInterval = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
       endpoint.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
       endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
       endpoint.otherVessels.overrideTriggerPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'overrideTriggerPath', undefined);
-      endpoint.otherVessels.positionReportCount = 0;
-      endpoint.otherVessels.staticReportCount = 0;
-      endpoint.lastReportTimestamp = undefined
+      endpoint.statistics = {
+        lastReportTimestamp: undefined,
+        hour: new Array(60).fill(0),
+        day: new Array(24).fill(0),
+        position: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 },
+        static: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 }
+      }
       pluginConfiguration.endpoints.push(endpoint);
     });
     return(pluginConfiguration);
@@ -198,41 +200,64 @@ module.exports = function(app: any) {
       app.debug(`checking report requirement (heartbeat ${heartbeatCount})`);
       pluginConfiguration.endpoints.forEach((endpoint) => {
         try {
-          var reportCount : number;
+          var reportStatistics : ReportStatistics = <ReportStatistics>{};
+          var totalBytes: number = 0;
 
           let mvIDX: number = ((endpoint.myVessel.overrideTriggerPath)?(app.getSelfPath(endpoint.myVessel.overrideTriggerPath) || 0):0)?1:0;
           let ovIDX: number = ((endpoint.otherVessels.overrideTriggerPath)?(app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) || 0):0)?1:0;
-          let mvPUI: number = endpoint.myVessel.positionUpdateIntervals[mvIDX];
-          let mvSUI: number = endpoint.myVessel.staticUpdateIntervals[mvIDX];
-          let ovPUI: number = endpoint.otherVessels.positionUpdateIntervals[ovIDX];
-          let ovSUI: number = endpoint.otherVessels.staticUpdateIntervals[ovIDX];
+          let mvPUI: number = (inRange(mvIDX,0,endpoint.myVessel.positionUpdateIntervals.length))?endpoint.myVessel.positionUpdateIntervals[mvIDX]:0;
+          let mvSUI: number = (inRange(mvIDX,0,endpoint.myVessel.staticUpdateIntervals.length))?endpoint.myVessel.staticUpdateIntervals[mvIDX]:0;
+          let ovPUI: number = (inRange(ovIDX,0,endpoint.otherVessels.positionUpdateIntervals.length))?endpoint.otherVessels.positionUpdateIntervals[ovIDX]:0;
+          let ovSUI: number = (inRange(ovIDX,0,endpoint.otherVessels.staticUpdateIntervals.length))?endpoint.otherVessels.staticUpdateIntervals[ovIDX]:0;
 
           if (((mvPUI !== undefined) && (mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== undefined) && (ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) { 
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-            reportCount = reportPosition(udpSocket, endpoint, (mvPUI === undefined)?false:((mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined)?false:((ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0)));
-            endpoint.myVessel.positionReportCount += (reportCount % 10);
-            endpoint.otherVessels.positionReportCount += Math.trunc(reportCount / 10);
+            reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === undefined)?false:((mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined)?false:((ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0)));
+            updateReportStatistics(endpoint.statistics.position, reportStatistics);
+            totalBytes = (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
           };
 
           if (((mvSUI !== undefined) && (mvSUI !== 0) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== undefined) && (ovSUI !== 0) && (heartbeatCount % ovSUI) === 0)) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-            reportCount = reportStatic(udpSocket, endpoint, (mvSUI === undefined)?false:((mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined)?false:((ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0)));
-            endpoint.myVessel.staticReportCount += (reportCount % 10);
-            endpoint.otherVessels.staticReportCount += Math.trunc(reportCount / 10);
+            reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === undefined)?false:((mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined)?false:((ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0)));
+            updateReportStatistics(endpoint.statistics.static, reportStatistics);
+            totalBytes += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
           }
+
+          endpoint.statistics.lastReportTimestamp = Date.now();
+          updateByteVectors(endpoint.statistics, totalBytes, heartbeatCount);
+
+
         } catch(e: any) {
           app.debug(`${e.message}`);
         }
       });
       heartbeatCount++;
     }, DEFAULT_HEARTBEAT_INTERVAL));
+
+    function updateReportStatistics(endpointReportStatistics: EndpointReportStatistics, reportStatistics: ReportStatistics) {
+      endpointReportStatistics.myVesselTotalReports += reportStatistics.myVessel.count;
+      endpointReportStatistics.myVesselTotalBytes += reportStatistics.myVessel.bytes;
+      endpointReportStatistics.otherVesselsTotalReports += reportStatistics.otherVessels.count;
+      endpointReportStatistics.otherVesselsTotalBytes += reportStatistics.otherVessels.bytes;
+    }
+
+    function updateByteVectors(endpointStatistics: EndpointStatistics, bytes: number, heartbeat: number) {
+      endpointStatistics.hour[0] += bytes;
+      if ((heartbeat % 60) == 0) endpointStatistics.hour.slice(24).unshift(0);
+
+      endpointStatistics.day[0] += bytes;
+      if ((heartbeat % (1440)) == 0) endpointStatistics.day.slice(6).unshift(0);
+    }
+
   }
 
-  function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): number {
-    var retval: number = 0;
+  function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): ReportStatistics {
+    var reportStatistics: ReportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 }};
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
+    var bytesTransmitted: number;
 
     Object.values(app.getPath('vessels'))
     .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
@@ -253,23 +278,30 @@ module.exports = function(app: any) {
         aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value)
         try { aisProperties['smi'] = decodeSMI(vessel.navigation.specialManeuver) } catch(e) { aisProperties['smi'] = 0 } 
         msg = new AisEncode(aisProperties);
+
         if ((msg) && (msg.valid())) {
-          sendReportMsg(socket, msg.nmea, endpoint);
-          endpoint.lastReportTimestamp = Date.now();
-          retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10;
+          bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+          if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
+            reportStatistics.myVessel.count++;
+            reportStatistics.myVessel.bytes += bytesTransmitted;
+          } else {
+            reportStatistics.otherVessels.count++;
+            reportStatistics.otherVessels.bytes += bytesTransmitted;
+          }
         } else throw new Error('AIS encode failed');
       } catch(e: any) {
         app.debug(`error creating AIS sentence for vessel '${vessel.mmsi}' (${e.message})`)
       }
     });
-    return(retval);
+    return(reportStatistics);
   }
 
-  function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): number {
-    var retval: number = 0;
+  function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): ReportStatistics {
+    var reportStatistics: ReportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 }};
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
+    var bytesTransmitted: number;
   
     Object.values(app.getPath('vessels'))
     .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
@@ -298,9 +330,15 @@ module.exports = function(app: any) {
             aisProperties['aistype'] = 5;
             msg = new AisEncode(aisProperties);
             if ((msg) && (msg.valid)) {
-              sendReportMsg(socket, msg.nmea, endpoint);
+              bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+              if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
+                reportStatistics.myVessel.count++;
+                reportStatistics.myVessel.bytes += bytesTransmitted;
+              } else {
+                reportStatistics.otherVessels.count++;
+                reportStatistics.otherVessels.bytes += bytesTransmitted;
+              }
             } else throw new Error('AIS encode failed');
-            retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
             break;
           case 'B':
             aisProperties['aistype'] = 24;
@@ -310,12 +348,17 @@ module.exports = function(app: any) {
               aisProperties['part'] = 1;
               msgB = new AisEncode(aisProperties);
               if ((msgB) && (msgB.valid)) {
-                sendReportMsg(socket, msg.nmea, endpoint);
-                sendReportMsg(socket, msgB.nmea, endpoint);
+                bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+                bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
+                if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
+                  reportStatistics.myVessel.count++;
+                  reportStatistics.myVessel.bytes += bytesTransmitted;
+                } else {
+                  reportStatistics.otherVessels.count++;
+                  reportStatistics.otherVessels.bytes += bytesTransmitted;
+                }
               } else throw new Error('AIS Part B encode failed');
             } else throw new Error('AIS Part A encode failed');
-            endpoint.lastReportTimestamp = Date.now();
-            retval += ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI))?1:10
             break;
           default:
             break;
@@ -324,19 +367,23 @@ module.exports = function(app: any) {
         app.debug(`error creating AIS sentence for '${vessel.mmsi}' (${e.message})`)
       }
     });
-    return(retval);
+    return(reportStatistics);
   }
 
-  function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint) {
+  function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint): number {
     app.debug(`sending report to endpoint '${endpoint.name}'`);
+    var retval: number = 0;
     if (socket) {
+      retval = (msg.length + 1);
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
         if (e instanceof Error) app.setPluginStatus(`send failure (${e.message})`)
       });
     } else {
       app.setPluginStatus(`Stopped: UDP port is no longer available`);
     }
+    return(retval);
   }
+
 
   function inRange(x: number, min: number, max: number): boolean {
     return(((x - min) * (x - max)) <= 0);
@@ -368,15 +415,7 @@ module.exports = function(app: any) {
             a[endpoint.name] = {
               ipAddress: endpoint.ipAddress,
               port: endpoint.port,
-              lastTransmission: (!endpoint.lastReportTimestamp)?'never':(new Date(endpoint.lastReportTimestamp)).toUTCString(),
-              myVessel: {
-                positionReportCount: endpoint.myVessel.positionReportCount,
-                staticReportCount: endpoint.myVessel.staticReportCount
-              },
-              otherVessels: {
-                positionReportCount: endpoint.otherVessels.positionReportCount,
-                staticReportCount: endpoint.otherVessels.staticReportCount
-              }
+              statistics: endpoint.statistics
             }
             return(a)
           }, {});
@@ -424,7 +463,7 @@ interface Endpoint {
   port: number,
   myVessel: Vessel,
   otherVessels: Vessel,
-  lastReportTimestamp: number | undefined
+  statistics: EndpointStatistics
 }
 
 interface Vessel {
@@ -432,22 +471,38 @@ interface Vessel {
   positionUpdateIntervals: number[],
   staticUpdateIntervals: number[],
   overrideTriggerPath: string,
-  positionReportCount: 0,
-  staticReportCount: 0
+}
+
+interface EndpointStatistics {
+  lastReportTimestamp: number | undefined,
+  hour: number[],
+  day: number[],
+  position: EndpointReportStatistics,
+  static: EndpointReportStatistics
+}
+
+interface EndpointReportStatistics {
+  myVesselTotalReports: number,
+  myVesselTotalBytes: number,
+  otherVesselsTotalReports: number,
+  otherVesselsTotalBytes: number
+}
+
+interface ReportStatistics {
+  myVessel: {
+   count: number,
+   bytes: number
+  },
+  otherVessels: {
+    count: number,
+    bytes: number
+  }
 }
 
 interface StatusResponse {
   ipAddress: string,
   port: number,
-  lastTransmission: string,
-  myVessel: {
-    positionReportCount: number,
-    staticReportCount: number
-  },
-  otherVessels: {
-    positionReportCount: number,
-    staticReportCount: number
-  }
+  statistics: EndpointStatistics
 }
 
 interface Dictionary<T> {
