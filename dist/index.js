@@ -251,33 +251,18 @@ module.exports = function (app) {
             .forEach((vessel) => {
             try {
                 aisProperties = { mmsi: vessel.mmsi };
-                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : vessel.sensors.ais.class.value;
+                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : _.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
                 aisProperties['accuracy'] = 0;
                 aisProperties['aistype'] = (aisClass == 'A') ? 1 : 18;
                 aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value);
-                try {
-                    aisProperties['hdg'] = vessel.navigation.headingTrue.value;
-                }
-                catch (e) {
-                    aisProperties['hdg'] = 511;
-                }
+                aisProperties['hdg'] = _.get(vessel, 'navigation.headingTrue.value', 511);
                 aisProperties['lat'] = vessel.navigation.position.value.latitude;
                 aisProperties['lon'] = vessel.navigation.position.value.longitude;
                 aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi) ? 1 : 0;
                 aisProperties['repeat'] = 3;
-                try {
-                    aisProperties['rot'] = vessel.navigation.rateOfTurn.value;
-                }
-                catch (e) {
-                    aisProperties['rot'] = 128;
-                }
+                aisProperties['rot'] = _.get(vessel, 'navigation.rateOfTurn.value', 128);
                 aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value);
-                try {
-                    aisProperties['smi'] = decodeSMI(vessel.navigation.specialManeuver);
-                }
-                catch (e) {
-                    aisProperties['smi'] = 0;
-                }
+                aisProperties['smi'] = decodeSMI(_.get(vessel, 'navigation.specialManeuver', 'not available'));
                 msg = new ggencoder_1.AisEncode(aisProperties);
                 if ((msg) && (msg.valid)) {
                     bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
