@@ -183,6 +183,7 @@ module.exports = function(app: any) {
 
     function getOption(objects: any[], name: string, fallback: any): any {
       objects.forEach((object: any) => {
+        app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
         if (object.name) return(object.name);
       });
       return(fallback);
@@ -190,6 +191,7 @@ module.exports = function(app: any) {
 
     function getOptionArray(objects: any[], name: string, fallback: any): any {
       objects.forEach((object: any) => {
+        app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
         if (object.name) return((Array.isArray(object.name))?object.name:[object.name]);
       });
       return(fallback);

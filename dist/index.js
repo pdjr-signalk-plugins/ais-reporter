@@ -175,6 +175,7 @@ module.exports = function (app) {
         return (pluginConfiguration);
         function getOption(objects, name, fallback) {
             objects.forEach((object) => {
+                app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
                 if (object.name)
                     return (object.name);
             });
@@ -182,6 +183,7 @@ module.exports = function (app) {
         }
         function getOptionArray(objects, name, fallback) {
             objects.forEach((object) => {
+                app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
                 if (object.name)
                     return ((Array.isArray(object.name)) ? object.name : [object.name]);
             });
