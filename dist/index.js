@@ -276,7 +276,7 @@ module.exports = function (app) {
                     aisProperties['smi'] = 0;
                 }
                 msg = new ggencoder_1.AisEncode(aisProperties);
-                if ((msg) && (msg.valid())) {
+                if ((msg) && (msg.valid)) {
                     bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
                     if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
                         reportStatistics.myVessel.count++;

@@ -278,7 +278,7 @@ module.exports = function(app: any) {
         try { aisProperties['smi'] = decodeSMI(vessel.navigation.specialManeuver) } catch(e) { aisProperties['smi'] = 0 } 
         msg = new AisEncode(aisProperties);
 
-        if ((msg) && (msg.valid())) {
+        if ((msg) && (msg.valid)) {
           bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
           if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
             reportStatistics.myVessel.count++;
