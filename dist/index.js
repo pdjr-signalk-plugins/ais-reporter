@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+const _ = require("lodash");
 const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
@@ -165,8 +166,8 @@ module.exports = function (app) {
             endpoint.otherVessels.overrideTriggerPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'overrideTriggerPath', undefined);
             endpoint.statistics = {
                 lastReportTimestamp: undefined,
-                hour: new Array(60).fill(0),
-                day: new Array(24).fill(0),
+                hour: new Array(24).fill(0),
+                day: new Array(7).fill(0),
                 position: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 },
                 static: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 }
             };
@@ -203,14 +204,14 @@ module.exports = function (app) {
                     app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
                     if (((mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-                        reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === undefined) ? false : ((mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0)), (ovPUI === undefined) ? false : ((ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0)));
+                        reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0));
                         updateReportStatistics(endpoint.statistics.position, reportStatistics);
                         totalBytes = (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
                     }
                     ;
                     if (((mvSUI !== 0) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== 0) && (heartbeatCount % ovSUI) === 0)) {
                         pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-                        reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === undefined) ? false : ((mvSUI === 0) ? false : ((heartbeatCount % mvSUI) === 0)), (ovSUI === undefined) ? false : ((ovSUI === 0) ? false : ((heartbeatCount % ovSUI) === 0)));
+                        reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === 0) ? false : ((heartbeatCount % mvSUI) === 0), (ovSUI === 0) ? false : ((heartbeatCount % ovSUI) === 0));
                         updateReportStatistics(endpoint.statistics.static, reportStatistics);
                         totalBytes += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
                     }
@@ -231,8 +232,8 @@ module.exports = function (app) {
         }
         function updateByteVectors(endpointStatistics, bytes, heartbeat) {
             endpointStatistics.hour[0] += bytes;
-            if ((heartbeat % 60) == 0)
-                endpointStatistics.hour.slice(24).unshift(0);
+            if ((heartbeat % 24) == 0)
+                endpointStatistics.hour.slice(23).unshift(0);
             endpointStatistics.day[0] += bytes;
             if ((heartbeat % (1440)) == 0)
                 endpointStatistics.day.slice(6).unshift(0);
@@ -246,7 +247,7 @@ module.exports = function (app) {
         var bytesTransmitted;
         Object.values(app.getPath('vessels'))
             .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-            .filter((vessel) => (reportSelf && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 60000)))) || (reportOthers && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
+            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
             .forEach((vessel) => {
             try {
                 aisProperties = { mmsi: vessel.mmsi };
