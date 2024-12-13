@@ -182,8 +182,9 @@ module.exports = function(app: any) {
     return(pluginConfiguration);
 
     function getOption(objects: any[], name: string, fallback: any): any {
+      app.debug('getOption()...');
       objects.forEach((object: any) => {
-        app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
+        app.debug(`checking object ${JSON.stringify(object, null, 2)} for ${name}`);
         if (object.name) { app.debug('FOUND'); return(object.name); }
       });
       return(fallback);
