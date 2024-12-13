@@ -180,12 +180,10 @@ module.exports = function (app) {
             return (retval);
         }
         function getOptionArray(objects, name, fallback) {
-            objects.forEach((object) => {
-                app.debug(`checking object ${JSON.stringify(object)} for ${name}`);
-                if (object.name)
-                    return ((Array.isArray(object.name)) ? object.name : [object.name]);
-            });
-            return (fallback);
+            var retval = fallback;
+            objects.forEach((object) => { if (object[name])
+                retval = (Array.isArray(object[name])) ? object[name] : [object[name]]; });
+            return (retval);
         }
     }
     function startReporting(pluginConfiguration, udpSocket) {
