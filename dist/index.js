@@ -193,13 +193,13 @@ module.exports = function (app) {
                 try {
                     var reportStatistics = {};
                     var totalBytes = 0;
-                    let mvIDX = ((endpoint.myVessel.overrideTriggerPath) ? (app.getSelfPath(endpoint.myVessel.overrideTriggerPath) || 0) : 0);
-                    let ovIDX = ((endpoint.otherVessels.overrideTriggerPath) ? (app.getSelfPath(endpoint.otherVessels.overrideTriggerPath) || 0) : 0);
+                    let mvIDX = ((endpoint.myVessel.overrideTriggerPath) ? (app.getSelfPath(`${endpoint.myVessel.overrideTriggerPath}.value`) || 0) : 0);
+                    let ovIDX = ((endpoint.otherVessels.overrideTriggerPath) ? (app.getSelfPath(`${endpoint.otherVessels.overrideTriggerPath}.value`) || 0) : 0);
                     let mvPUI = (inRange(mvIDX, 0, endpoint.myVessel.positionUpdateIntervals.length)) ? endpoint.myVessel.positionUpdateIntervals[mvIDX] : 0;
                     let mvSUI = (inRange(mvIDX, 0, endpoint.myVessel.staticUpdateIntervals.length)) ? endpoint.myVessel.staticUpdateIntervals[mvIDX] : 0;
                     let ovPUI = (inRange(ovIDX, 0, endpoint.otherVessels.positionUpdateIntervals.length)) ? endpoint.otherVessels.positionUpdateIntervals[ovIDX] : 0;
                     let ovSUI = (inRange(ovIDX, 0, endpoint.otherVessels.staticUpdateIntervals.length)) ? endpoint.otherVessels.staticUpdateIntervals[ovIDX] : 0;
-                    app.debug(`mvIDX = ${JSON.stringify(mvIDX)}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
+                    app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
                     app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
                     if (((mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
