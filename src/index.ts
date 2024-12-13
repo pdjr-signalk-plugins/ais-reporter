@@ -147,6 +147,7 @@ module.exports = function(app: any) {
   }
 
   function makePluginConfiguration(options: any): PluginConfiguration {
+    app.debug(`makePluginConfiguration()...`);
     let pluginConfiguration: PluginConfiguration = {
       myMMSI: app.getSelfPath('mmsi'),
       myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
