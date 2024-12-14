@@ -246,10 +246,10 @@ module.exports = function(app: any) {
 
     function updateByteVectors(endpointStatistics: EndpointStatistics, bytes: number, heartbeat: number) {
       endpointStatistics.hour[0] += bytes;
-      if ((heartbeat % 24) == 0) endpointStatistics.hour.slice(23).unshift(0);
+      if ((heartbeat % 24) == 0) { endpointStatistics.hour.slice(0,23); endpointStatistics.hour.unshift(0); }
 
       endpointStatistics.day[0] += bytes;
-      if ((heartbeat % (1440)) == 0) endpointStatistics.day.slice(6).unshift(0);
+      if ((heartbeat % (1440)) == 0) { endpointStatistics.day.slice(0,6); endpointStatistics.day.unshift(0); }
     }
 
   }
