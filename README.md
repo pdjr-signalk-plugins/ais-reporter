@@ -21,14 +21,10 @@ giving some control over Ethernet data and bandwidth use.
 
 ## Plugin configuration
 
-Configuration of the plugin is simple with much flexibility of approach.
-However, Signal K's dashboard plugin configuration interface translates
-this flexibility into complexity making it easier to discuss configuration
-in terms of the plugins's JSON configuration file.
-
+It is easier to discuss plugin configuration in the context of the
+plugin configuration JSON file.
 Once you understand the JSON structure, you should be able to navigate
-the plugin's configuration interface in the Signal K's dashboard with
-ease.
+the plugin's configuration interface in the Signal K dashboard.
 
 ### A minimal configuration
 
@@ -59,8 +55,9 @@ the plugin in action by opening a terminal window on the Signal K server and
 running the command `./udp_listen.pl 12345` from your system's plugin
 installation folder.
 
-This minimal configuration will report the position of all vessels known to
-Signal K once every 5 minutes and static data once every 15 minutes.
+This minimal configuration will report the position of all vessels
+known to Signal K once every 5 minutes and associated static data once
+every 15 minutes.
 
 ### Plugin defaults
 
@@ -83,31 +80,31 @@ get a clearer picture of how the configuration works.
 > &nbsp;&nbsp;"enabled": true  
 > }  
 
-The 'expiryInterval', 'positionUpdateInterval' and 'statusUpdateInterval'
-properties are declared at the top-level of the configuration and apply to
-all endpoints and all vessels.
+'expiryInterval', 'positionUpdateInterval' and 'staticUpdateInterval'
+properties are declared at the top-level of the configuration and apply
+to all endpoints and all vessels.
 
-All numeric values in a configuration specify a time period in minutes with a
-zero value representing an infinite time period and essentially disabling any
-associated behaviour.
+All numeric values in a configuration specify a time period in minutes
+with a zero value representing an infinite time period and essentially
+disabling any associated behaviour.
 
 The 'expiryInterval' property tells the plugin to disregard any vessel
 whose position has not been updated in the last 15 minutes.
-'positionUpdateInterval' and 'staticUpdateInterval' reporting intervals are
-specified as separate properties since, at least for class 'B' reports, we
-normally want to update position data more frequently than static data.
-If the 'staticUpdateInterval' property is ommitted, then it assumes the
-same value as the 'positionUpdateInterval' property.
+
+'positionUpdateInterval' and 'staticUpdateInterval' are specified as
+separate properties since, in line with the AIS protocol norms, we
+probably want to report position data more frequently than static data.
+If the 'staticUpdateInterval' property is ommitted, then the plugin
+assumes the same value as the 'positionUpdateInterval' property.
 
 ### Differentiate 'self' from other vessels
 
-Sometimes we want to treat host vessel reporting differently to the reporting
-of other vessels whose data had been received over AIS.
+Sometimes we want to treat host vessel reporting differently to the
+reporting of other vessels whose data had been received over AIS.
 
-One such scenario is when we want to report our own vessel but not any
-others.
-One way of achieving this is to set global default update intervals to
-0 and then to override these settings for just our own ship.
+The following example disables reporting of all vessels other than
+the host ship by setting global default update intervals to 0 and then
+override these settings for just our own ship.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
@@ -130,24 +127,26 @@ One way of achieving this is to set global default update intervals to
 
 ### Automatically modulate reporting intervals
 
-On my ship I like to modify my position reporting intervals based upon whether
-the ship is navigating or moored: a short interval when navigating so as to
-record a good track and a long interval when moored (but frequently enough
-that the reporting endpoint I use doesn't think I have gone off-line).
+On my ship I like to modify my position reporting intervals based upon
+whether the ship is navigating or moored: a short interval when
+navigating so as to record a good track and a long interval when moored
+so as to save data usage on my 4G connection.
+It's a good idea not to make this holdback too severe in case our
+reporting endpoint thinks we have gone off-line.
 
 My ship reports the main engine ignition state via an NMEA switchbank
-channel which appears in Signal K as the path `electrical.switches.bank.16.16.state`.
-This path has the value 0 when engine ignition is OFF and 1 when it is
-ON.
+channel which appears on a Signal K switch path (actually on
+`electrical.switches.bank.16.16.state`).
+This path assumes the value 0 when engine ignition is OFF and 1 when
+it is ON.
 
 The plugin supports a simple value selection mechanism which uses the
 value on a Signal K path as an index for selecting the reporting
 interval to be used at any point in time.
-To use this mechanism we need to specify our update intervals as a two
-item array and the selection path as the value of the 'overrideTriggerPath'
-property: the value at the zeroth position in the array will be used
-when the ignition is OFF and the value at the first position in the
-array will be used when the switch is ON.
+To use this mechanism we need to specify our update intervals as an
+(in this case) two item array: the value at the zeroth position in
+the array will be used when the ignition is OFF and the value at the
+first position in the array will be used when the switch is ON.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
