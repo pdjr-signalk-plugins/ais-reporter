@@ -270,14 +270,14 @@ module.exports = function(app: any) {
         aisClass = (vessel.mmsi == pluginConfiguration.myMMSI)?pluginConfiguration.myAisClass:_.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
         aisProperties['accuracy'] = 0;
         aisProperties['aistype'] = (aisClass == 'A')?1:18;
-        aisProperties['cog'] = radsToDeg(vessel.navigation.courseOverGroundTrue.value);
+        aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
         aisProperties['hdg'] = _.get(vessel, 'navigation.headingTrue.value', 511);
         aisProperties['lat'] = vessel.navigation.position.value.latitude
         aisProperties['lon'] = vessel.navigation.position.value.longitude
         aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi)?1:0
         aisProperties['repeat'] = 3
         aisProperties['rot'] = _.get(vessel, 'navigation.rateOfTurn.value', 128);
-        aisProperties['sog'] = mpsToKn(vessel.navigation.speedOverGround.value);
+        aisProperties['sog'] = mpsToKn(_.get(vessel, 'navigation.speedOverGround.value', 0));
         aisProperties['smi'] = decodeSMI(_.get(vessel, 'navigation.specialManeuver', 'not available')); 
         msg = new AisEncode(aisProperties);
 
