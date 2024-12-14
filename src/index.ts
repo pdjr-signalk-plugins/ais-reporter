@@ -189,7 +189,7 @@ module.exports = function(app: any) {
         if (objects[0][name]) {
           return(objects[0][name]);
         } else {
-          return(getOption(options.slice[1], name, fallback));
+          return(getOption(objects.slice(1), name, fallback));
         }
       }
     }
@@ -201,7 +201,7 @@ module.exports = function(app: any) {
         if (objects[0][name]) {
           return((Array.isArray(objects[0][name]))?objects[0][name]:[objects[0][name]]);
         } else {
-          return(getOptionArray(options.slice[1], name, fallback));
+          return(getOptionArray(objects.slice(1), name, fallback));
         }
       }
     }
