@@ -426,12 +426,18 @@ module.exports = function(app: any) {
             a[endpoint.name] = {
               ipAddress: endpoint.ipAddress,
               port: endpoint.port,
-              statistics: endpoint.statistics
-            }
-            return(a)
+              lastTransmission: (endpoint.statistics.lastReportTimestamp)?(new Date(endpoint.statistics.lastReportTimestamp)).toISOString():'never',
+              bytesTransmittedInTheLast24h: endpoint.statistics.hour,
+              bytesTransmittedInTheLast7d: endpoint.statistics.day,
+              positionReportTotals: endpoint.statistics.position,
+              staticReportTotals: endpoint.statistics.static
+            };
+            return(a);
           }, {});
-          expressSend(res, 200, status, req.path)
-          break
+          expressSend(res, 200, status, req.path);
+          break;
+        default:
+          break;
       }
     } catch(e: any) {
       app.debug(e.message)
@@ -513,7 +519,11 @@ interface ReportStatistics {
 interface StatusResponse {
   ipAddress: string,
   port: number,
-  statistics: EndpointStatistics
+  lastTransmission: string,
+  bytesTransmittedInTheLast24h: number[],
+  bytesTransmittedInTheLast7d: number[],
+  positionReportTotals: EndpointReportStatistics,
+  staticReportTotals: EndpointReportStatistics
 }
 
 interface Dictionary<T> {

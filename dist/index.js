@@ -421,11 +421,17 @@ module.exports = function (app) {
                         a[endpoint.name] = {
                             ipAddress: endpoint.ipAddress,
                             port: endpoint.port,
-                            statistics: endpoint.statistics
+                            lastTransmission: (endpoint.statistics.lastReportTimestamp) ? (new Date(endpoint.statistics.lastReportTimestamp)).toISOString() : 'never',
+                            bytesTransmittedInTheLast24h: endpoint.statistics.hour,
+                            bytesTransmittedInTheLast7d: endpoint.statistics.day,
+                            positionReportTotals: endpoint.statistics.position,
+                            staticReportTotals: endpoint.statistics.static
                         };
                         return (a);
                     }, {});
                     expressSend(res, 200, status, req.path);
+                    break;
+                default:
                     break;
             }
         }
