@@ -37,17 +37,17 @@ const PLUGIN_SCHEMA: object = {
         "required": ["ipaddress", "port"],
         "properties": {
           "name": {
-            "type": "string",
-            "title": "Endpoint name"
+            "title": "Endpoint name",
+            "type": "string"
           },
           "ipaddress": {
+            "title": "Endpoint IP address",
             "type": "string",
-            "title": "UDP endpoint IP address",
             "format": "ipv4"
           },
           "port": {
+            "title": "Endpoint port number",
             "type": "number",
-            "title": "Port",
             "minimum": 0
           },
           "$ref": "#/definitions/options",
@@ -70,18 +70,18 @@ const PLUGIN_SCHEMA: object = {
     },
     "options": {
       "expiryinterval": {
-        "title": "Ignore vessel data older than (s)",
+        "title": "Ignore vessel data older than this number of minutes",
         "$ref": "#/definitions/interval"
       },
       "positionUpdateInterval": {
-        "title": "Position update interval",
+        "title": "Position update interval in minutes",
         "$ref": "#/definitions/updateInterval"
       },
       "staticUpdateInterval": {
-        "title": "Static data update interval",
+        "title": "Static data update interval in minutes",
         "$ref": "#/definitions/updateInterval"
       },
-      "overrideTriggerPath": {
+      "updateIntervalIndexPath": {
         "title": "Path which selects override intervals",
         "type": "string"
       }  
@@ -164,12 +164,12 @@ module.exports = function(app: any) {
       endpoint.myVessel.expiryInterval = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
       endpoint.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
       endpoint.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),,options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
-      endpoint.myVessel.overrideTriggerPath = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'overrideTriggerPath', undefined);
+      endpoint.myVessel.updateIntervalIndexPath = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'updateIntervalIndexPath', undefined);
       endpoint.otherVessels = <Vessel>{};
       endpoint.otherVessels.expiryInterval = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
       endpoint.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
       endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
-      endpoint.otherVessels.overrideTriggerPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'overrideTriggerPath', undefined);
+      endpoint.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'updateIntervalIndexPath', undefined);
       endpoint.statistics = {
         lastReportTimestamp: undefined,
         hour: new Array(24).fill(0),
@@ -185,7 +185,6 @@ module.exports = function(app: any) {
       if (objects.length == 0) {
         return(fallback);
       } else {
-        var retval = _.get(objects[0], name);
         if (objects[0][name] !== undefined) {
           return(objects[0][name]);
         } else {
@@ -216,8 +215,8 @@ module.exports = function(app: any) {
           var reportStatistics : ReportStatistics = <ReportStatistics>{};
           var totalBytes: number = 0;
 
-          let mvIDX: number = ((endpoint.myVessel.overrideTriggerPath)?(app.getSelfPath(`${endpoint.myVessel.overrideTriggerPath}.value`) || 0):0);
-          let ovIDX: number = ((endpoint.otherVessels.overrideTriggerPath)?(app.getSelfPath(`${endpoint.otherVessels.overrideTriggerPath}.value`) || 0):0);
+          let mvIDX: number = ((endpoint.myVessel.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.myVessel.updateIntervalIndexPath}.value`) || 0):0);
+          let ovIDX: number = ((endpoint.otherVessels.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.otherVessels.updateIntervalIndexPath}.value`) || 0):0);
           let mvPUI: number = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, 0);
           let mvSUI: number = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, 0);
           let ovPUI: number = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, 0);
@@ -487,7 +486,7 @@ interface Vessel {
   expiryInterval: number,
   positionUpdateIntervals: number[],
   staticUpdateIntervals: number[],
-  overrideTriggerPath: string,
+  updateIntervalIndexPath: string,
 }
 
 interface EndpointStatistics {
