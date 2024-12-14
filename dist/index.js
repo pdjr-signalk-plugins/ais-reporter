@@ -180,7 +180,7 @@ module.exports = function (app) {
             }
             else {
                 var retval = _.get(objects[0], name);
-                if (objects[0][name]) {
+                if (objects[0][name] !== undefined) {
                     return (objects[0][name]);
                 }
                 else {
@@ -193,7 +193,7 @@ module.exports = function (app) {
                 return (fallback);
             }
             else {
-                if (objects[0][name]) {
+                if (objects[0][name] !== undefined) {
                     return ((Array.isArray(objects[0][name])) ? objects[0][name] : [objects[0][name]]);
                 }
                 else {
