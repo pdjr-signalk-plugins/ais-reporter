@@ -182,24 +182,28 @@ module.exports = function(app: any) {
     return(pluginConfiguration);
 
     function getOption(objects: any[], name: string, fallback: any): any {
-      var retval: any = undefined;
-      objects.forEach((object: any) => {
-        if ((object[name]) && (retval === undefined)) {
-          retval = object[name];
+      if (objects.length == 0) {
+        return(fallback);
+      } else {
+        var retval = _.get(objects[0], name);
+        if (objects[0][name]) {
+          return(objects[0][name]);
+        } else {
+          return(getOption(options.slice[1], name, fallback));
         }
-      });
-      return((retval !== undefined)?retval:fallback);
+      }
     }
 
     function getOptionArray(objects: any[], name: string, fallback: any): any {
-      var retval: any = undefined;
-      objects.forEach((object: any) => {
-        app.debug(`Examining ${JSON.stringify(object)} for ${name}`);
-        if ((object[name]) && (retval === undefined)) {
-          retval = (Array.isArray(object[name]))?object[name]:[object[name]];
+      if (objects.length == 0) {
+        return(fallback);
+      } else {
+        if (objects[0][name]) {
+          return((Array.isArray(objects[0][name]))?objects[0][name]:[objects[0][name]]);
+        } else {
+          return(getOptionArray(options.slice[1], name, fallback));
         }
-      });
-      return((retval !== undefined)?retval:fallback);
+      }
     }
   }
 
