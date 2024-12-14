@@ -186,7 +186,7 @@ module.exports = function (app) {
         function getOptionArray(objects, name, fallback) {
             var retval = undefined;
             objects.forEach((object) => {
-                app.debug(`Examining ${object} for ${name}`);
+                app.debug(`Examining ${JSON.stringify(object)} for ${name}`);
                 if ((object[name]) && (retval === undefined)) {
                     retval = (Array.isArray(object[name])) ? object[name] : [object[name]];
                 }
