@@ -175,16 +175,22 @@ module.exports = function (app) {
         });
         return (pluginConfiguration);
         function getOption(objects, name, fallback) {
-            var retval = fallback;
-            objects.forEach((object) => { if (object[name])
-                retval = object[name]; });
-            return (retval);
+            var retval = undefined;
+            objects.forEach((object) => {
+                if ((object[name]) && (retval === undefined)) {
+                    retval = object[name];
+                }
+            });
+            return ((retval !== undefined) ? retval : fallback);
         }
         function getOptionArray(objects, name, fallback) {
-            var retval = fallback;
-            objects.forEach((object) => { if (object[name])
-                retval = (Array.isArray(object[name])) ? object[name] : [object[name]]; });
-            return (retval);
+            var retval = undefined;
+            objects.forEach((object) => {
+                if ((object[name]) && (retval === undefined)) {
+                    retval = (Array.isArray(object[name])) ? object[name] : [object[name]];
+                }
+            });
+            return ((retval !== undefined) ? retval : fallback);
         }
     }
     function startReporting(pluginConfiguration, udpSocket) {
