@@ -213,11 +213,11 @@ module.exports = function(app: any) {
 
           let mvIDX: number = ((endpoint.myVessel.overrideTriggerPath)?(app.getSelfPath(`${endpoint.myVessel.overrideTriggerPath}.value`) || 0):0);
           let ovIDX: number = ((endpoint.otherVessels.overrideTriggerPath)?(app.getSelfPath(`${endpoint.otherVessels.overrideTriggerPath}.value`) || 0):0);
-          let mvPUI: number = (inRange(mvIDX,0,endpoint.myVessel.positionUpdateIntervals.length))?endpoint.myVessel.positionUpdateIntervals[mvIDX]:0;
-          let mvSUI: number = (inRange(mvIDX,0,endpoint.myVessel.staticUpdateIntervals.length))?endpoint.myVessel.staticUpdateIntervals[mvIDX]:0;
-          let ovPUI: number = (inRange(ovIDX,0,endpoint.otherVessels.positionUpdateIntervals.length))?endpoint.otherVessels.positionUpdateIntervals[ovIDX]:0;
-          let ovSUI: number = (inRange(ovIDX,0,endpoint.otherVessels.staticUpdateIntervals.length))?endpoint.otherVessels.staticUpdateIntervals[ovIDX]:0;
-
+          let mvPUI: number = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, 0);
+          let mvSUI: number = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, 0);
+          let ovPUI: number = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, 0);
+          let ovSUI: number = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, 0);
+          
           app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
           app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
 
@@ -393,11 +393,6 @@ module.exports = function(app: any) {
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => { });
     }
     return(retval);
-  }
-
-
-  function inRange(x: number, min: number, max: number): boolean {
-    return(((x - min) * (x - max)) <= 0);
   }
 
   function radsToDeg(radians: number): number {
