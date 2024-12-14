@@ -139,7 +139,7 @@ module.exports = function (app) {
         }
     };
     function makePluginConfiguration(options) {
-        app.debug(`makePluginConfiguration()...`);
+        app.debug(`makePluginConfiguration(${JSON.stringify(options)})...`);
         let pluginConfiguration = {
             myMMSI: app.getSelfPath('mmsi'),
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
@@ -188,8 +188,9 @@ module.exports = function (app) {
         }
     }
     function startReporting(pluginConfiguration, udpSocket) {
+        app.debug(`startReporting(pluginConfiguration, udpSocket)...`);
         return (setInterval(() => {
-            app.debug(`checking report requirement (heartbeat ${heartbeatCount})`);
+            app.debug(`reportMaybe(${heartbeatCount})...`);
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var reportStatistics = {};
@@ -200,8 +201,8 @@ module.exports = function (app) {
                     let mvSUI = (inRange(mvIDX, 0, endpoint.myVessel.staticUpdateIntervals.length)) ? endpoint.myVessel.staticUpdateIntervals[mvIDX] : 0;
                     let ovPUI = (inRange(ovIDX, 0, endpoint.otherVessels.positionUpdateIntervals.length)) ? endpoint.otherVessels.positionUpdateIntervals[ovIDX] : 0;
                     let ovSUI = (inRange(ovIDX, 0, endpoint.otherVessels.staticUpdateIntervals.length)) ? endpoint.otherVessels.staticUpdateIntervals[ovIDX] : 0;
-                    app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
-                    app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
+                    //app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
+                    //app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
                     if (((mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
                         reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0));
@@ -225,12 +226,14 @@ module.exports = function (app) {
             heartbeatCount++;
         }, DEFAULT_HEARTBEAT_INTERVAL));
         function updateReportStatistics(endpointReportStatistics, reportStatistics) {
+            app.debug(`updateReportStatistics(endpointReportStatistics, ${JSON.stringify(reportStatistics)})...`);
             endpointReportStatistics.myVesselTotalReports += reportStatistics.myVessel.count;
             endpointReportStatistics.myVesselTotalBytes += reportStatistics.myVessel.bytes;
             endpointReportStatistics.otherVesselsTotalReports += reportStatistics.otherVessels.count;
             endpointReportStatistics.otherVesselsTotalBytes += reportStatistics.otherVessels.bytes;
         }
         function updateByteVectors(endpointStatistics, bytes, heartbeat) {
+            app.debug(`updateByteVectors(endpointStatistics, ${bytes}, ${heartbeat})...`);
             endpointStatistics.hour[0] += bytes;
             if ((heartbeat % 24) == 0) {
                 endpointStatistics.hour.slice(0, 23);
@@ -244,6 +247,7 @@ module.exports = function (app) {
         }
     }
     function reportPosition(socket, endpoint, reportSelf, reportOthers) {
+        app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`);
         var reportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 } };
         var aisClass;
         var aisProperties;
@@ -283,12 +287,13 @@ module.exports = function (app) {
                     throw new Error('AIS encode failed');
             }
             catch (e) {
-                app.debug(`error creating AIS sentence for vessel '${vessel.mmsi}' (${e.message})`);
+                app.debug(`error creating position AIS sentence for vessel '${vessel.mmsi}' (${e.message})`);
             }
         });
         return (reportStatistics);
     }
     function reportStatic(socket, endpoint, reportSelf = false, reportOthers = false) {
+        app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`);
         var reportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 } };
         var aisClass;
         var aisProperties;
@@ -364,23 +369,17 @@ module.exports = function (app) {
                 }
             }
             catch (e) {
-                app.debug(`error creating AIS sentence for '${vessel.mmsi}' (${e.message})`);
+                app.debug(`error creating static AIS sentence for '${vessel.mmsi}' (${e.message})`);
             }
         });
         return (reportStatistics);
     }
     function sendReportMsg(socket, msg, endpoint) {
-        app.debug(`sending report to endpoint '${endpoint.name}'`);
+        app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
         var retval = 0;
         if (socket) {
             retval = (msg.length + 1);
-            socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
-                if (e instanceof Error)
-                    app.setPluginStatus(`send failure (${e.message})`);
-            });
-        }
-        else {
-            app.setPluginStatus(`Stopped: UDP port is no longer available`);
+            socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
         }
         return (retval);
     }
@@ -402,7 +401,7 @@ module.exports = function (app) {
         }
     }
     function handleRoutes(req, res) {
-        app.debug("processing %s request on %s", req.method, req.path);
+        app.debug(`handleRoutes(${req.method}, ${req.path})...`);
         try {
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
@@ -423,10 +422,9 @@ module.exports = function (app) {
             expressSend(res, ((/^\d+$/.test(e.message)) ? parseInt(e.message) : 500), null, req.path);
         }
         function expressSend(res, code, body, debugPrefix = null) {
+            app.debug(`expressSend(res, ${code}, ${JSON.stringify(body)}, ${debugPrefix})...`);
             const FETCH_RESPONSES = { "200": null, "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" };
             res.status(code).send((body) ? body : ((FETCH_RESPONSES['' + code]) ? FETCH_RESPONSES['' + code] : null));
-            if (debugPrefix)
-                app.debug("%s: %d %s", debugPrefix, code, ((body) ? JSON.stringify(body) : ((FETCH_RESPONSES['' + code]) ? FETCH_RESPONSES['' + code] : null)));
             return (false);
         }
     }
