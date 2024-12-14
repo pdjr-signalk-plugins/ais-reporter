@@ -127,7 +127,7 @@ module.exports = function(app: any) {
         }
       } catch(e: any) {
         pluginStatus.setDefaultStatus('Stopped: configuration error');
-        app.setPluginError(e.message);
+        app.setPluginError(`${e.lineNumber}: ${e.message}`);
       }
     },
 
@@ -210,17 +210,17 @@ module.exports = function(app: any) {
           let ovPUI: number = (inRange(ovIDX,0,endpoint.otherVessels.positionUpdateIntervals.length))?endpoint.otherVessels.positionUpdateIntervals[ovIDX]:0;
           let ovSUI: number = (inRange(ovIDX,0,endpoint.otherVessels.staticUpdateIntervals.length))?endpoint.otherVessels.staticUpdateIntervals[ovIDX]:0;
 
-          //app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
-          //app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
+          app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
+          app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
 
-          if (((mvPUI !== 0) && (heartbeatCount % mvPUI) === 0) || ((ovPUI !== 0) && (heartbeatCount % ovPUI) === 0)) { 
+          if (((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0)) || ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0))) { 
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
             reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0), (ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0));
             updateReportStatistics(endpoint.statistics.position, reportStatistics);
             totalBytes = (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
           };
 
-          if (((mvSUI !== 0) && (heartbeatCount % mvSUI) === 0) || ((ovSUI !== 0) && (heartbeatCount % ovSUI) === 0)) {
+          if (((mvSUI !== 0) && ((heartbeatCount % mvSUI) === 0)) || ((ovSUI !== 0) && ((heartbeatCount % ovSUI) === 0))) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
             reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0), (ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0));
             updateReportStatistics(endpoint.statistics.static, reportStatistics);
