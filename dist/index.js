@@ -464,7 +464,28 @@ module.exports = function (app) {
                         a[endpoint.name] = {
                             ipAddress: endpoint.ipAddress,
                             port: endpoint.port,
-                            statistics: endpoint.statistics
+                            statistics: {
+                                started: (endpoint.statistics.started) ? (new Date(endpoint.statistics.started)).toISOString() : 'never',
+                                totalBytesTransmitted: endpoint.statistics.totalBytesTransmitted,
+                                position: {
+                                    lastReportTime: (endpoint.statistics.position.lastReportTimestamp) ? (new Date(endpoint.statistics.position.lastReportTimestamp)).toISOString() : 'never',
+                                    totalReportsTransmitted: endpoint.statistics.position.totalReportsTransmitted,
+                                    totalBytesTransmitted: endpoint.statistics.position.totalBytesTransmitted,
+                                    reportsTransmittedInLastHour: (Array.isArray(endpoint.statistics.position.reportsTransmittedInLastHour)) ? endpoint.statistics.position.reportsTransmittedInLastHour.reduce((a, v) => (a + v), 0) : 0,
+                                    bytesTransmittedInLastHour: (Array.isArray(endpoint.statistics.position.bytesTransmittedInLastHour)) ? endpoint.statistics.position.bytesTransmittedInLastHour.reduce((a, v) => (a + v), 0) : 0,
+                                    reportsTransmittedInLastDay: (Array.isArray(endpoint.statistics.position.reportsTransmittedInLastDay)) ? endpoint.statistics.position.reportsTransmittedInLastDay.reduce((a, v) => (a + v), 0) : 0,
+                                    bytesTransmittedInLastDay: (Array.isArray(endpoint.statistics.position.bytesTransmittedInLastDay)) ? endpoint.statistics.position.bytesTransmittedInLastDay.reduce((a, v) => (a + v), 0) : 0
+                                },
+                                static: {
+                                    lastReportTime: (endpoint.statistics.static.lastReportTimestamp) ? (new Date(endpoint.statistics.static.lastReportTimestamp)).toISOString() : 'never',
+                                    totalReportsTransmitted: endpoint.statistics.static.totalReportsTransmitted,
+                                    totalBytesTransmitted: endpoint.statistics.static.totalBytesTransmitted,
+                                    reportsTransmittedInLastHour: (Array.isArray(endpoint.statistics.static.reportsTransmittedInLastHour)) ? endpoint.statistics.static.reportsTransmittedInLastHour.reduce((a, v) => (a + v), 0) : 0,
+                                    bytesTransmittedInLastHour: (Array.isArray(endpoint.statistics.static.bytesTransmittedInLastHour)) ? endpoint.statistics.static.bytesTransmittedInLastHour.reduce((a, v) => (a + v), 0) : 0,
+                                    reportsTransmittedInLastDay: (Array.isArray(endpoint.statistics.static.reportsTransmittedInLastDay)) ? endpoint.statistics.static.reportsTransmittedInLastDay.reduce((a, v) => (a + v), 0) : 0,
+                                    bytesTransmittedInLastDay: (Array.isArray(endpoint.statistics.static.bytesTransmittedInLastDay)) ? endpoint.statistics.static.bytesTransmittedInLastDay.reduce((a, v) => (a + v), 0) : 0
+                                }
+                            }
                         };
                         return (a);
                     }, {});
