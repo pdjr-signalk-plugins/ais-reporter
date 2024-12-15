@@ -262,18 +262,20 @@ module.exports = function (app) {
             endpointReportStatistics.lastReportTimestamp = Date.now();
             endpointReportStatistics.totalReportsTransmitted += (reportStatistics.myVessel.count + reportStatistics.otherVessels.count);
             endpointReportStatistics.totalBytesTransmitted += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
-            updateByteVectors(endpointReportStatistics.reportsTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
-            updateByteVectors(endpointReportStatistics.bytesTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
-            updateByteVectors(endpointReportStatistics.reportsTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
-            updateByteVectors(endpointReportStatistics.bytesTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
+            endpointReportStatistics.reportsTransmittedInLastHour = updateVector(endpointReportStatistics.reportsTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
+            endpointReportStatistics.bytesTransmittedInLastHour = updateVector(endpointReportStatistics.bytesTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
+            endpointReportStatistics.reportsTransmittedInLastDay = updateVector(endpointReportStatistics.reportsTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
+            endpointReportStatistics.bytesTransmittedInLastDay = updateVector(endpointReportStatistics.bytesTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
         }
-        function updateByteVectors(vector, rollover, heartbeat, value) {
+        function updateVector(vector, rollover, heartbeat, value) {
+            var retval = vector;
             app.debug(`updateByteVectors(endpointStatistics, ${rollover}, ${heartbeat}, ${value})...`);
             vector[0] += value;
             if ((heartbeat) && (heartbeat % rollover) == 0) {
-                vector.slice(0, (rollover - 1));
-                vector.unshift(0);
+                retval = vector.slice(0, (rollover - 1));
+                retval.unshift(0);
             }
+            return (retval);
         }
     }
     /**
