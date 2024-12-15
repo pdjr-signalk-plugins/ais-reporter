@@ -436,9 +436,7 @@ module.exports = function (app) {
      */
     function sendReportMsg(socket, msg, endpoint) {
         app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
-        socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
-            throw new Error(`UDP transmission failure (${e.message})`);
-        });
+        socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
         return (msg.length + 1);
     }
     function radsToDeg(radians) {

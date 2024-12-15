@@ -437,9 +437,7 @@ module.exports = function(app: any) {
    */
   function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint): number {
     app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
-    socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
-      throw new Error(`UDP transmission failure (${e.message})`);
-    });
+    socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => { });
     return(msg.length + 1);
   }
 
