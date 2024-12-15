@@ -175,11 +175,10 @@ module.exports = function (app) {
             endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
             endpoint.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'updateIntervalIndexPath', undefined);
             endpoint.statistics = {
-                lastReportTimestamp: undefined,
-                hour: new Array(24).fill(0),
-                day: new Array(7).fill(0),
-                position: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 },
-                static: { myVesselTotalReports: 0, myVesselTotalBytes: 0, otherVesselsTotalReports: 0, otherVesselsTotalBytes: 0 }
+                started: Date.now(),
+                totalBytesTransmitted: 0,
+                position: { lastReportTimestamp: undefined, totalBytesTransmitted: 0, bytesTransmittedInLastHour: (new Array(60)).fill(0), bytesTransmittedInLastDay: (new Array(24)).fill(0), totalReportsTransmitted: 0, reportsTransmittedInLastHour: (new Array(60)).fill(0), reportsTransmittedInLastDay: (new Array(24)).fill(0) },
+                static: { lastReportTimestamp: undefined, totalBytesTransmitted: 0, bytesTransmittedInLastHour: (new Array(60)).fill(0), bytesTransmittedInLastDay: (new Array(24)).fill(0), totalReportsTransmitted: 0, reportsTransmittedInLastHour: (new Array(60)).fill(0), reportsTransmittedInLastDay: (new Array(24)).fill(0) }
             };
             pluginConfiguration.endpoints.push(endpoint);
         });
@@ -251,8 +250,6 @@ module.exports = function (app) {
                         updateReportStatistics(endpoint.statistics.static, reportStatistics);
                         totalBytes += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
                     }
-                    endpoint.statistics.lastReportTimestamp = Date.now();
-                    updateByteVectors(endpoint.statistics, totalBytes, heartbeatCount);
                 }
                 catch (e) {
                     app.debug(`${e.message}`);
@@ -262,22 +259,20 @@ module.exports = function (app) {
         }, DEFAULT_HEARTBEAT_INTERVAL));
         function updateReportStatistics(endpointReportStatistics, reportStatistics) {
             app.debug(`updateReportStatistics(endpointReportStatistics, ${JSON.stringify(reportStatistics)})...`);
-            endpointReportStatistics.myVesselTotalReports += reportStatistics.myVessel.count;
-            endpointReportStatistics.myVesselTotalBytes += reportStatistics.myVessel.bytes;
-            endpointReportStatistics.otherVesselsTotalReports += reportStatistics.otherVessels.count;
-            endpointReportStatistics.otherVesselsTotalBytes += reportStatistics.otherVessels.bytes;
+            endpointReportStatistics.lastReportTimestamp = Date.now();
+            endpointReportStatistics.totalReportsTransmitted += (reportStatistics.myVessel.count + reportStatistics.otherVessels.count);
+            endpointReportStatistics.totalBytesTransmitted += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
+            updateByteVectors(endpointReportStatistics.reportsTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
+            updateByteVectors(endpointReportStatistics.bytesTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
+            updateByteVectors(endpointReportStatistics.reportsTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
+            updateByteVectors(endpointReportStatistics.bytesTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
         }
-        function updateByteVectors(endpointStatistics, bytes, heartbeat) {
-            app.debug(`updateByteVectors(endpointStatistics, ${bytes}, ${heartbeat})...`);
-            endpointStatistics.hour[0] += bytes;
-            if ((heartbeat) && (heartbeat % 24) == 0) {
-                endpointStatistics.hour.slice(0, 23);
-                endpointStatistics.hour.unshift(0);
-            }
-            endpointStatistics.day[0] += bytes;
-            if ((heartbeat) && (heartbeat % (1440)) == 0) {
-                endpointStatistics.day.slice(0, 6);
-                endpointStatistics.day.unshift(0);
+        function updateByteVectors(vector, rollover, heartbeat, value) {
+            app.debug(`updateByteVectors(endpointStatistics, ${rollover}, ${heartbeat}, ${value})...`);
+            vector[0] += value;
+            if ((heartbeat) && (heartbeat % rollover) == 0) {
+                vector.slice(0, (rollover - 1));
+                vector.unshift(0);
             }
         }
     }
@@ -469,11 +464,7 @@ module.exports = function (app) {
                         a[endpoint.name] = {
                             ipAddress: endpoint.ipAddress,
                             port: endpoint.port,
-                            lastTransmission: (endpoint.statistics.lastReportTimestamp) ? (new Date(endpoint.statistics.lastReportTimestamp)).toISOString() : 'never',
-                            bytesTransmittedInTheLast24h: endpoint.statistics.hour,
-                            bytesTransmittedInTheLast7d: endpoint.statistics.day,
-                            positionReportTotals: endpoint.statistics.position,
-                            staticReportTotals: endpoint.statistics.static
+                            statistics: endpoint.statistics
                         };
                         return (a);
                     }, {});

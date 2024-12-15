@@ -130,23 +130,18 @@ override these settings for just our own ship.
 On my ship I like to modify my position reporting intervals based upon
 whether the ship is navigating or moored: a short interval when
 navigating so as to record a good track and a long interval when moored
-so as to save data usage on my 4G connection.
-It's a good idea not to make this holdback too severe in case our
-reporting endpoint thinks we have gone off-line.
+so as to save data usage on my Internet connection.
 
-My ship reports the main engine ignition state via an NMEA switchbank
-channel which appears on a Signal K switch path (actually on
-`electrical.switches.bank.16.16.state`).
-This path assumes the value 0 when engine ignition is OFF and 1 when
-it is ON.
-
-The plugin supports a simple value selection mechanism which uses the
-value on a Signal K path as an index for selecting the reporting
-interval to be used at any point in time.
+The plugin allows this behaviour to be automated with the help of a
+Signal K binary path value whose value is used as an index to select
+ing the reporting interval to be used at any point in time.
 To use this mechanism we need to specify our update intervals as an
 (in this case) two item array: the value at the zeroth position in
 the array will be used when the ignition is OFF and the value at the
 first position in the array will be used when the switch is ON.
+
+In my case my ship reports the main engine ignition state via an NMEA
+switchbank channel at 'electrical.switches.bank.16.16.state'.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
@@ -243,24 +238,9 @@ vessel.
 
 Defaults to 900 (seconds).
 
-### Report self?
-Whether or not to report the host vessel.
 
-Defaults to yes (true).
 
-### Report others?
-Whether or not to report vessels whose data has been received over AIS.
 
-Defaults to no (false).
-
-### My AIS transceiver class
-The class of transceiver used on the host vessel (if any).
-
-Defaults to 'none', although a value of 'none' will make the plugin
-fake Class B position and status reports for the host vessel.
-
-If you do have an AIS transceiver then you can specify its type
-here.
 
 ## Author
 Paul Reeve <preeve_at_pdjr_dot_eu>
