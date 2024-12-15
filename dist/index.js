@@ -19,6 +19,11 @@ const _ = require("lodash");
 const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
+const DEFAULT_MY_AIS_CLASS = 'B';
+const DEFAULT_POSITION_UPDATE_INTERVAL = 5;
+const DEFAULT_STATIC_DATA_UPDATE_INTERVAL = 15;
+const DEFAULT_EXPIRY_INTERVAL = 15;
+const DEFAULT_HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'pdjr-ais-reporter';
 const PLUGIN_DESCRIPTION = 'Report AIS data to remote UDP services.';
@@ -37,17 +42,17 @@ const PLUGIN_SCHEMA = {
                 "required": ["ipaddress", "port"],
                 "properties": {
                     "name": {
-                        "type": "string",
-                        "title": "Endpoint name"
+                        "title": "Endpoint name",
+                        "type": "string"
                     },
                     "ipaddress": {
+                        "title": "Endpoint IP address",
                         "type": "string",
-                        "title": "UDP endpoint IP address",
                         "format": "ipv4"
                     },
                     "port": {
+                        "title": "Endpoint port number",
                         "type": "number",
-                        "title": "Port",
                         "minimum": 0
                     },
                     "$ref": "#/definitions/options",
@@ -70,18 +75,18 @@ const PLUGIN_SCHEMA = {
         },
         "options": {
             "expiryinterval": {
-                "title": "Ignore vessel data older than (s)",
+                "title": "Ignore vessel data older than this number of minutes",
                 "$ref": "#/definitions/interval"
             },
             "positionUpdateInterval": {
-                "title": "Position update interval",
+                "title": "Position update interval in minutes",
                 "$ref": "#/definitions/updateInterval"
             },
             "staticUpdateInterval": {
-                "title": "Static data update interval",
+                "title": "Static data update interval in minutes",
                 "$ref": "#/definitions/updateInterval"
             },
-            "overrideTriggerPath": {
+            "updateIntervalIndexPath": {
                 "title": "Path which selects override intervals",
                 "type": "string"
             }
@@ -92,11 +97,6 @@ const PLUGIN_SCHEMA = {
     }
 };
 const PLUGIN_UISCHEMA = {};
-const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_POSITION_UPDATE_INTERVAL = 120;
-const DEFAULT_STATIC_DATA_UPDATE_INTERVAL = 600;
-const DEFAULT_EXPIRY_INTERVAL = 900;
-const DEFAULT_HEARTBEAT_INTERVAL = 60000;
 module.exports = function (app) {
     var pluginConfiguration;
     var pluginStatus;
@@ -124,7 +124,7 @@ module.exports = function (app) {
             }
             catch (e) {
                 pluginStatus.setDefaultStatus('Stopped: configuration error');
-                app.setPluginError(`${e.lineNumber}: ${e.message}`);
+                app.debug(`${e.lineNumber}: ${e.message}`);
             }
         },
         stop: function () {
@@ -138,6 +138,16 @@ module.exports = function (app) {
             return (require('./openApi.json'));
         }
     };
+    /**
+     * Create a canonical plugin configuration from the user-supplied
+     * JSON configuration. Global and default properties are consolidated
+     * so that all properties reside within endpoint object definitions.
+     *
+     * Fatal errors cause an exception.
+     *
+     * @param options - contenf of JSON configuration file.
+     * @returns - a canonical PluginConfiguration.
+     */
     function makePluginConfiguration(options) {
         app.debug(`makePluginConfiguration(${JSON.stringify(options)})...`);
         let pluginConfiguration = {
@@ -158,12 +168,12 @@ module.exports = function (app) {
             endpoint.myVessel.expiryInterval = getOption([(option.myVessel || {}), option, (options.myVessel || {}), options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
             endpoint.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}), option, (options.myVessel || {}), options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
             endpoint.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}), option, (options.myVessel || {}), , options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
-            endpoint.myVessel.overrideTriggerPath = getOption([(option.myVessel || {}), option, (options.myVessel || {}), options], 'overrideTriggerPath', undefined);
+            endpoint.myVessel.updateIntervalIndexPath = getOption([(option.myVessel || {}), option, (options.myVessel || {}), options], 'updateIntervalIndexPath', undefined);
             endpoint.otherVessels = {};
             endpoint.otherVessels.expiryInterval = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
             endpoint.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
             endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
-            endpoint.otherVessels.overrideTriggerPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'overrideTriggerPath', undefined);
+            endpoint.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'updateIntervalIndexPath', undefined);
             endpoint.statistics = {
                 lastReportTimestamp: undefined,
                 hour: new Array(24).fill(0),
@@ -179,7 +189,6 @@ module.exports = function (app) {
                 return (fallback);
             }
             else {
-                var retval = _.get(objects[0], name);
                 if (objects[0][name] !== undefined) {
                     return (objects[0][name]);
                 }
@@ -202,6 +211,17 @@ module.exports = function (app) {
             }
         }
     }
+    /**
+     * Creates a timer and associated calback function which is executed
+     * once per minute and manages the entire reporting process by
+     * raising position and static reports for all endpoints at the
+     * intervals specified in pluginConfiguration and recording resources
+     * consumed by the activity of each endpoint.
+     *
+     * @param pluginConfiguration - a canonical PluginConfiguration.
+     * @param udpSocket - open Socket to be used for reporting over UDP.
+     * @returns - NodeJS.timeout handle of the timer control.
+     */
     function startReporting(pluginConfiguration, udpSocket) {
         app.debug(`startReporting(pluginConfiguration, udpSocket)...`);
         return (setInterval(() => {
@@ -210,8 +230,8 @@ module.exports = function (app) {
                 try {
                     var reportStatistics = {};
                     var totalBytes = 0;
-                    let mvIDX = ((endpoint.myVessel.overrideTriggerPath) ? (app.getSelfPath(`${endpoint.myVessel.overrideTriggerPath}.value`) || 0) : 0);
-                    let ovIDX = ((endpoint.otherVessels.overrideTriggerPath) ? (app.getSelfPath(`${endpoint.otherVessels.overrideTriggerPath}.value`) || 0) : 0);
+                    let mvIDX = ((endpoint.myVessel.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.myVessel.updateIntervalIndexPath}.value`) || 0) : 0);
+                    let ovIDX = ((endpoint.otherVessels.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.otherVessels.updateIntervalIndexPath}.value`) || 0) : 0);
                     let mvPUI = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, 0);
                     let mvSUI = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, 0);
                     let ovPUI = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, 0);
@@ -261,6 +281,16 @@ module.exports = function (app) {
             }
         }
     }
+    /**
+     * Generate one or more AIS position reports for transmission to a
+     * specified endpoint and forward these reports for UDP output.
+     *
+     * @param socket - Socket to be used for report transmission.
+     * @param endpoint - Endpoint to be processed.
+     * @param reportSelf - true to report 'self' vessel.
+     * @param reportOthers - true to report vessels other than 'self'.
+     * @returns - ReportStatistics for the transmission.
+     */
     function reportPosition(socket, endpoint, reportSelf, reportOthers) {
         app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`);
         var reportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 } };
@@ -302,11 +332,21 @@ module.exports = function (app) {
                     throw new Error('AIS encode failed');
             }
             catch (e) {
-                app.debug(`error creating position AIS sentence for vessel '${vessel.mmsi}' (${e.message})`);
+                app.debug(`error sending AIS position report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
             }
         });
         return (reportStatistics);
     }
+    /**
+     * Generate one or more AIS static data reports for transmission to a
+     * specified endpoint and forward these reports for UDP output.
+     *
+     * @param socket - Socket to be used for report transmission.
+     * @param endpoint - Endpoint to be processed.
+     * @param reportSelf - true to report 'self' vessel.
+     * @param reportOthers - true to report vessels other than 'self'.
+     * @returns - ReportStatistics for the transmission.
+     */
     function reportStatic(socket, endpoint, reportSelf = false, reportOthers = false) {
         app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`);
         var reportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 } };
@@ -384,19 +424,27 @@ module.exports = function (app) {
                 }
             }
             catch (e) {
-                app.debug(`error creating static AIS sentence for '${vessel.mmsi}' (${e.message})`);
+                app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
             }
         });
         return (reportStatistics);
     }
+    /**
+     * Transmits a message string over UDP.
+     *
+     * Throws an exception on transmission error.
+     *
+     * @param socket - Socket to be used for report transmission.
+     * @param msg - message string to be transmitted.
+     * @param endpoint - Endpoint specifying the transmission target.
+     * @returns - number of bytes transmitted.
+     */
     function sendReportMsg(socket, msg, endpoint) {
         app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
-        var retval = 0;
-        if (socket) {
-            retval = (msg.length + 1);
-            socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
-        }
-        return (retval);
+        socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => {
+            throw new Error(`UDP transmission failure (${e.message})`);
+        });
+        return (msg.length + 1);
     }
     function radsToDeg(radians) {
         return (radians * 180 / Math.PI);

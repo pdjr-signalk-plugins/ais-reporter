@@ -19,6 +19,12 @@ import { AisEncode, AisEncodeOptions } from 'ggencoder'
 import { Socket, createSocket } from 'dgram'
 import { PluginStatus } from 'signalk-libpluginstatus';
 
+const DEFAULT_MY_AIS_CLASS = 'B';
+const DEFAULT_POSITION_UPDATE_INTERVAL: number = 5;
+const DEFAULT_STATIC_DATA_UPDATE_INTERVAL : number = 15;
+const DEFAULT_EXPIRY_INTERVAL: number = 15;
+const DEFAULT_HEARTBEAT_INTERVAL: number = 60000;
+
 const PLUGIN_ID: string = 'ais-reporter';
 const PLUGIN_NAME: string = 'pdjr-ais-reporter';
 const PLUGIN_DESCRIPTION: string = 'Report AIS data to remote UDP services.';
@@ -93,12 +99,6 @@ const PLUGIN_SCHEMA: object = {
 };
 const PLUGIN_UISCHEMA: object = {};
 
-const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_POSITION_UPDATE_INTERVAL: number = 120;
-const DEFAULT_STATIC_DATA_UPDATE_INTERVAL : number = 600;
-const DEFAULT_EXPIRY_INTERVAL: number = 900;
-const DEFAULT_HEARTBEAT_INTERVAL: number = 60000;
-
 module.exports = function(app: any) {
   var pluginConfiguration: PluginConfiguration;
   var pluginStatus: PluginStatus;
@@ -127,7 +127,7 @@ module.exports = function(app: any) {
         }
       } catch(e: any) {
         pluginStatus.setDefaultStatus('Stopped: configuration error');
-        app.setPluginError(`${e.lineNumber}: ${e.message}`);
+        app.debug(`${e.lineNumber}: ${e.message}`);
       }
     },
 
@@ -146,6 +146,16 @@ module.exports = function(app: any) {
 
   }
 
+  /**
+   * Create a canonical plugin configuration from the user-supplied
+   * JSON configuration. Global and default properties are consolidated
+   * so that all properties reside within endpoint object definitions.
+   * 
+   * Fatal errors cause an exception.
+   * 
+   * @param options - contenf of JSON configuration file.
+   * @returns - a canonical PluginConfiguration.
+   */
   function makePluginConfiguration(options: any): PluginConfiguration {
     app.debug(`makePluginConfiguration(${JSON.stringify(options)})...`);
     let pluginConfiguration: PluginConfiguration = {
@@ -206,6 +216,17 @@ module.exports = function(app: any) {
     }
   }
 
+  /**
+   * Creates a timer and associated calback function which is executed
+   * once per minute and manages the entire reporting process by
+   * raising position and static reports for all endpoints at the
+   * intervals specified in pluginConfiguration and recording resources
+   * consumed by the activity of each endpoint.
+   * 
+   * @param pluginConfiguration - a canonical PluginConfiguration.
+   * @param udpSocket - open Socket to be used for reporting over UDP.
+   * @returns - NodeJS.timeout handle of the timer control. 
+   */
   function startReporting(pluginConfiguration: PluginConfiguration, udpSocket: Socket): NodeJS.Timeout {
     app.debug(`startReporting(pluginConfiguration, udpSocket)...`);
     return(setInterval(() => {
@@ -269,6 +290,16 @@ module.exports = function(app: any) {
 
   }
 
+  /**
+   * Generate one or more AIS position reports for transmission to a
+   * specified endpoint and forward these reports for UDP output.
+   * 
+   * @param socket - Socket to be used for report transmission. 
+   * @param endpoint - Endpoint to be processed.
+   * @param reportSelf - true to report 'self' vessel.
+   * @param reportOthers - true to report vessels other than 'self'.
+   * @returns - ReportStatistics for the transmission.
+   */
   function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): ReportStatistics {
     app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
     var reportStatistics: ReportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 }};
@@ -308,12 +339,22 @@ module.exports = function(app: any) {
           }
         } else throw new Error('AIS encode failed');
       } catch(e: any) {
-        app.debug(`error creating position AIS sentence for vessel '${vessel.mmsi}' (${e.message})`)
+        app.debug(`error sending AIS position report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
       }
     });
     return(reportStatistics);
   }
 
+  /**
+   * Generate one or more AIS static data reports for transmission to a
+   * specified endpoint and forward these reports for UDP output.
+   * 
+   * @param socket - Socket to be used for report transmission. 
+   * @param endpoint - Endpoint to be processed.
+   * @param reportSelf - true to report 'self' vessel.
+   * @param reportOthers - true to report vessels other than 'self'.
+   * @returns - ReportStatistics for the transmission.
+   */
   function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): ReportStatistics {
     app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
     var reportStatistics: ReportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 }};
@@ -383,20 +424,28 @@ module.exports = function(app: any) {
             break;
         }          
       } catch(e: any) {
-        app.debug(`error creating static AIS sentence for '${vessel.mmsi}' (${e.message})`)
+        app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
       }
     });
     return(reportStatistics);
   }
 
+  /**
+   * Transmits a message string over UDP.
+   * 
+   * Throws an exception on transmission error.
+   * 
+   * @param socket - Socket to be used for report transmission.
+   * @param msg - message string to be transmitted.
+   * @param endpoint - Endpoint specifying the transmission target.
+   * @returns - number of bytes transmitted.
+   */
   function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint): number {
     app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
-    var retval: number = 0;
-    if (socket) {
-      retval = (msg.length + 1);
-      socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => { });
-    }
-    return(retval);
+    socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => {
+      throw new Error(`UDP transmission failure (${e.message})`);
+    });
+    return(msg.length + 1);
   }
 
   function radsToDeg(radians: number): number {
