@@ -185,11 +185,11 @@ module.exports = function(app: any) {
         totalBytesTransmitted: 0,
         position: {
           self: { totalReports: 0, totalBytes: 0 },
-          other: { totalReports: 0, totalBytes: 0 }
+          others: { totalReports: 0, totalBytes: 0 }
         },
         static: {
           self: { totalReports: 0, totalBytes: 0 },
-          other: { totalReports: 0, totalBytes: 0 }
+          others: { totalReports: 0, totalBytes: 0 }
         }
       };
       pluginConfiguration.endpoints.push(endpoint);
@@ -255,14 +255,14 @@ module.exports = function(app: any) {
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
             reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0), (ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0));
             updateReportStatistics(endpoint.statistics.position, reportStatistics);
-            totalBytes = (reportStatistics.self.bytes + reportStatistics.other.bytes);
+            totalBytes = (reportStatistics.self.bytes + reportStatistics.others.bytes);
           };
 
           if (((mvSUI !== 0) && ((heartbeatCount % mvSUI) === 0)) || ((ovSUI !== 0) && ((heartbeatCount % ovSUI) === 0))) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
             reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0), (ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0));
             updateReportStatistics(endpoint.statistics.static, reportStatistics);
-            totalBytes += (reportStatistics.self.bytes + reportStatistics.other.bytes);
+            totalBytes += (reportStatistics.self.bytes + reportStatistics.others.bytes);
           }
 
           endpoint.statistics.totalBytesTransmitted += totalBytes;
@@ -278,8 +278,8 @@ module.exports = function(app: any) {
       app.debug(`updateReportStatistics(endpointReportStatistics, ${JSON.stringify(reportStatistics)})...`);
       endpointReportStatistics.self.totalReports += reportStatistics.self.count;
       endpointReportStatistics.self.totalBytes += reportStatistics.self.bytes;
-      endpointReportStatistics.other.totalReports += reportStatistics.other.count;
-      endpointReportStatistics.other.totalBytes += reportStatistics.other.bytes;
+      endpointReportStatistics.others.totalReports += reportStatistics.others.count;
+      endpointReportStatistics.others.totalBytes += reportStatistics.others.bytes;
     }
   }
 
@@ -295,7 +295,7 @@ module.exports = function(app: any) {
    */
   function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): ReportStatistics {
     app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
-    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, other: { count: 0, bytes: 0 }};
+    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, others: { count: 0, bytes: 0 }};
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
@@ -327,8 +327,8 @@ module.exports = function(app: any) {
             reportStatistics.self.count++;
             reportStatistics.self.bytes += bytesTransmitted;
           } else {
-            reportStatistics.other.count++;
-            reportStatistics.other.bytes += bytesTransmitted;
+            reportStatistics.others.count++;
+            reportStatistics.others.bytes += bytesTransmitted;
           }
         } else throw new Error('AIS encode failed');
       } catch(e: any) {
@@ -350,7 +350,7 @@ module.exports = function(app: any) {
    */
   function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): ReportStatistics {
     app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
-    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, other: { count: 0, bytes: 0 }};
+    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, others: { count: 0, bytes: 0 }};
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
@@ -388,8 +388,8 @@ module.exports = function(app: any) {
                 reportStatistics.self.count++;
                 reportStatistics.self.bytes += bytesTransmitted;
               } else {
-                reportStatistics.other.count++;
-                reportStatistics.other.bytes += bytesTransmitted;
+                reportStatistics.others.count++;
+                reportStatistics.others.bytes += bytesTransmitted;
               }
             } else throw new Error('AIS encode failed');
             break;
@@ -407,8 +407,8 @@ module.exports = function(app: any) {
                   reportStatistics.self.count++;
                   reportStatistics.self.bytes += bytesTransmitted;
                 } else {
-                  reportStatistics.other.count++;
-                  reportStatistics.other.bytes += bytesTransmitted;
+                  reportStatistics.others.count++;
+                  reportStatistics.others.bytes += bytesTransmitted;
                 }
               } else throw new Error('AIS Part B encode failed');
             } else throw new Error('AIS Part A encode failed');
@@ -469,9 +469,9 @@ module.exports = function(app: any) {
               started: (endpoint.statistics.started)?(new Date(endpoint.statistics.started)).toISOString():'never',
               totalBytesTransmitted: endpoint.statistics.totalBytesTransmitted,
               positionSelfBytesPerHour: Math.floor(endpoint.statistics.position.self.totalBytes / hours),
-              positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.other.totalBytes / hours),
+              positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.others.totalBytes / hours),
               staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.totalBytes / hours),
-              staticOtherBytesPerHour: Math.floor(endpoint.statistics.static.other.totalBytes / hours)
+              staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.totalBytes / hours)
             };
             return(a);
           }, {});
@@ -543,7 +543,7 @@ interface EndpointReportStatistics {
     totalReports: number,
     totalBytes: number
   },
-  other: {
+  others: {
     totalReports: number,
     totalBytes: number
   }
@@ -554,7 +554,7 @@ interface ReportStatistics {
    count: number,
    bytes: number
   },
-  other: {
+  others: {
     count: number,
     bytes: number
   }
@@ -568,7 +568,7 @@ interface StatusResponse {
   positionSelfBytesPerHour: number,
   positionOthersBytesPerHour: number,
   staticSelfBytesPerHour: number,
-  staticOtherBytesPerHour: number
+  staticOthersBytesPerHour: number
 }
 
 interface Dictionary<T> {
