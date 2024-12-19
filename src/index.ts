@@ -183,9 +183,15 @@ module.exports = function(app: any) {
       endpoint.statistics = {
         started: Date.now(),
         totalBytesTransmitted: 0,
-        position: { lastReportTimestamp: undefined, totalBytesTransmitted: 0, bytesTransmittedInLastHour: (new Array(60)).fill(0), bytesTransmittedInLastDay: (new Array(24)).fill(0), totalReportsTransmitted: 0, reportsTransmittedInLastHour: (new Array(60)).fill(0), reportsTransmittedInLastDay: (new Array(24)).fill(0) },
-        static: { lastReportTimestamp: undefined, totalBytesTransmitted: 0, bytesTransmittedInLastHour: (new Array(60)).fill(0), bytesTransmittedInLastDay: (new Array(24)).fill(0), totalReportsTransmitted: 0, reportsTransmittedInLastHour: (new Array(60)).fill(0), reportsTransmittedInLastDay: (new Array(24)).fill(0) }
-      }
+        position: {
+          self: { totalReports: 0, totalBytes: 0 },
+          other: { totalReports: 0, totalBytes: 0 }
+        },
+        static: {
+          self: { totalReports: 0, totalBytes: 0 },
+          other: { totalReports: 0, totalBytes: 0 }
+        }
+      };
       pluginConfiguration.endpoints.push(endpoint);
     });
     return(pluginConfiguration);
@@ -249,15 +255,17 @@ module.exports = function(app: any) {
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
             reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0), (ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0));
             updateReportStatistics(endpoint.statistics.position, reportStatistics);
-            totalBytes = (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
+            totalBytes = (reportStatistics.self.bytes + reportStatistics.other.bytes);
           };
 
           if (((mvSUI !== 0) && ((heartbeatCount % mvSUI) === 0)) || ((ovSUI !== 0) && ((heartbeatCount % ovSUI) === 0))) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
             reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0), (ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0));
             updateReportStatistics(endpoint.statistics.static, reportStatistics);
-            totalBytes += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
+            totalBytes += (reportStatistics.self.bytes + reportStatistics.other.bytes);
           }
+
+          endpoint.statistics.totalBytesTransmitted += totalBytes;
 
         } catch(e: any) {
           app.debug(`${e.message}`);
@@ -268,26 +276,11 @@ module.exports = function(app: any) {
 
     function updateReportStatistics(endpointReportStatistics: EndpointReportStatistics, reportStatistics: ReportStatistics) {
       app.debug(`updateReportStatistics(endpointReportStatistics, ${JSON.stringify(reportStatistics)})...`);
-      endpointReportStatistics.lastReportTimestamp = Date.now();
-      endpointReportStatistics.totalReportsTransmitted += (reportStatistics.myVessel.count + reportStatistics.otherVessels.count);
-      endpointReportStatistics.totalBytesTransmitted += (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes);
-      endpointReportStatistics.reportsTransmittedInLastHour = updateVector(endpointReportStatistics.reportsTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
-      endpointReportStatistics.bytesTransmittedInLastHour = updateVector(endpointReportStatistics.bytesTransmittedInLastHour, 60, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
-      endpointReportStatistics.reportsTransmittedInLastDay = updateVector(endpointReportStatistics.reportsTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.count + reportStatistics.otherVessels.count));
-      endpointReportStatistics.bytesTransmittedInLastDay = updateVector(endpointReportStatistics.bytesTransmittedInLastDay, 24, heartbeatCount, (reportStatistics.myVessel.bytes + reportStatistics.otherVessels.bytes));
+      endpointReportStatistics.self.totalReports += reportStatistics.self.count;
+      endpointReportStatistics.self.totalBytes += reportStatistics.self.bytes;
+      endpointReportStatistics.other.totalReports += reportStatistics.other.count;
+      endpointReportStatistics.other.totalBytes += reportStatistics.other.bytes;
     }
-
-    function updateVector(vector: number[], rollover: number, heartbeat: number, value: number): number[] {
-      var retval = vector;
-      app.debug(`updateByteVectors(endpointStatistics, ${rollover}, ${heartbeat}, ${value})...`);
-      vector[0] += value;
-      if ((heartbeat) && (heartbeat % rollover) == 0) {
-        retval = vector.slice(0, (rollover - 1));
-        retval.unshift(0);
-      }
-      return(retval);
-    }
-
   }
 
   /**
@@ -302,7 +295,7 @@ module.exports = function(app: any) {
    */
   function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): ReportStatistics {
     app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
-    var reportStatistics: ReportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 }};
+    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, other: { count: 0, bytes: 0 }};
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
@@ -331,11 +324,11 @@ module.exports = function(app: any) {
         if ((msg) && (msg.valid)) {
           bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
           if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
-            reportStatistics.myVessel.count++;
-            reportStatistics.myVessel.bytes += bytesTransmitted;
+            reportStatistics.self.count++;
+            reportStatistics.self.bytes += bytesTransmitted;
           } else {
-            reportStatistics.otherVessels.count++;
-            reportStatistics.otherVessels.bytes += bytesTransmitted;
+            reportStatistics.other.count++;
+            reportStatistics.other.bytes += bytesTransmitted;
           }
         } else throw new Error('AIS encode failed');
       } catch(e: any) {
@@ -357,7 +350,7 @@ module.exports = function(app: any) {
    */
   function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): ReportStatistics {
     app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
-    var reportStatistics: ReportStatistics = { myVessel: { count: 0, bytes: 0 }, otherVessels: { count: 0, bytes: 0 }};
+    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, other: { count: 0, bytes: 0 }};
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
@@ -392,11 +385,11 @@ module.exports = function(app: any) {
             if ((msg) && (msg.valid)) {
               bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
               if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
-                reportStatistics.myVessel.count++;
-                reportStatistics.myVessel.bytes += bytesTransmitted;
+                reportStatistics.self.count++;
+                reportStatistics.self.bytes += bytesTransmitted;
               } else {
-                reportStatistics.otherVessels.count++;
-                reportStatistics.otherVessels.bytes += bytesTransmitted;
+                reportStatistics.other.count++;
+                reportStatistics.other.bytes += bytesTransmitted;
               }
             } else throw new Error('AIS encode failed');
             break;
@@ -411,11 +404,11 @@ module.exports = function(app: any) {
                 bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
                 bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
                 if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
-                  reportStatistics.myVessel.count++;
-                  reportStatistics.myVessel.bytes += bytesTransmitted;
+                  reportStatistics.self.count++;
+                  reportStatistics.self.bytes += bytesTransmitted;
                 } else {
-                  reportStatistics.otherVessels.count++;
-                  reportStatistics.otherVessels.bytes += bytesTransmitted;
+                  reportStatistics.other.count++;
+                  reportStatistics.other.bytes += bytesTransmitted;
                 }
               } else throw new Error('AIS Part B encode failed');
             } else throw new Error('AIS Part A encode failed');
@@ -469,31 +462,16 @@ module.exports = function(app: any) {
       switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
         case '/status':
           const status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
+            let hours: number = (endpoint.statistics.started)?(Date.now() - endpoint.statistics.started) / 3600000:1;
             a[endpoint.name] = {
               ipAddress: endpoint.ipAddress,
               port: endpoint.port,
-              statistics: {
-                started: (endpoint.statistics.started)?(new Date(endpoint.statistics.started)).toISOString():'never',
-                totalBytesTransmitted: endpoint.statistics.totalBytesTransmitted,
-                position: {
-                  lastReportTime: (endpoint.statistics.position.lastReportTimestamp)?(new Date(endpoint.statistics.position.lastReportTimestamp)).toISOString():'never',
-                  totalReportsTransmitted: endpoint.statistics.position.totalReportsTransmitted,
-                  totalBytesTransmitted: endpoint.statistics.position.totalBytesTransmitted,
-                  reportsTransmittedInLastHour: (Array.isArray(endpoint.statistics.position.reportsTransmittedInLastHour))?endpoint.statistics.position.reportsTransmittedInLastHour.reduce((a: number, v: number) => (a + v), 0):0,
-                  bytesTransmittedInLastHour: (Array.isArray(endpoint.statistics.position.bytesTransmittedInLastHour))?endpoint.statistics.position.bytesTransmittedInLastHour.reduce((a: number, v: number) => (a + v), 0):0,
-                  reportsTransmittedInLastDay: (Array.isArray(endpoint.statistics.position.reportsTransmittedInLastDay))?endpoint.statistics.position.reportsTransmittedInLastDay.reduce((a: number, v: number) => (a + v), 0):0,
-                  bytesTransmittedInLastDay: (Array.isArray(endpoint.statistics.position.bytesTransmittedInLastDay))?endpoint.statistics.position.bytesTransmittedInLastDay.reduce((a: number, v: number) => (a + v), 0):0
-                },
-                static: {
-                  lastReportTime: (endpoint.statistics.static.lastReportTimestamp)?(new Date(endpoint.statistics.static.lastReportTimestamp)).toISOString():'never',
-                  totalReportsTransmitted: endpoint.statistics.static.totalReportsTransmitted,
-                  totalBytesTransmitted: endpoint.statistics.static.totalBytesTransmitted,
-                  reportsTransmittedInLastHour: (Array.isArray(endpoint.statistics.static.reportsTransmittedInLastHour))?endpoint.statistics.static.reportsTransmittedInLastHour.reduce((a: number, v: number) => (a + v), 0):0,
-                  bytesTransmittedInLastHour: (Array.isArray(endpoint.statistics.static.bytesTransmittedInLastHour))?endpoint.statistics.static.bytesTransmittedInLastHour.reduce((a: number, v: number) => (a + v), 0):0,
-                  reportsTransmittedInLastDay: (Array.isArray(endpoint.statistics.static.reportsTransmittedInLastDay))?endpoint.statistics.static.reportsTransmittedInLastDay.reduce((a: number, v: number) => (a + v), 0):0,
-                  bytesTransmittedInLastDay: (Array.isArray(endpoint.statistics.static.bytesTransmittedInLastDay))?endpoint.statistics.static.bytesTransmittedInLastDay.reduce((a: number, v: number) => (a + v), 0):0
-                }
-              }
+              started: (endpoint.statistics.started)?(new Date(endpoint.statistics.started)).toISOString():'never',
+              totalBytesTransmitted: endpoint.statistics.totalBytesTransmitted,
+              positionSelfBytesPerHour: endpoint.statistics.position.self.totalBytes / hours,
+              positionOthersBytesPerHour: endpoint.statistics.position.other.totalBytes / hours,
+              staticSelfBytesPerHour: endpoint.statistics.static.self.totalBytes / hours,
+              staticOtherBytesPerHour: endpoint.statistics.static.other.totalBytes / hours
             };
             return(a);
           }, {});
@@ -555,27 +533,28 @@ interface Vessel {
 
 interface EndpointStatistics {
   started: number | undefined,
-  totalBytesTransmitted: number,
+  totalBytesTransmitted: number,  
   position: EndpointReportStatistics,
   static: EndpointReportStatistics
 }
 
 interface EndpointReportStatistics {
-    lastReportTimestamp: number | undefined,
-    totalBytesTransmitted: number,
-    bytesTransmittedInLastHour: number[],
-    bytesTransmittedInLastDay: number[],
-    totalReportsTransmitted: number,
-    reportsTransmittedInLastHour: number[],
-    reportsTransmittedInLastDay: number[]
+  self: {
+    totalReports: number,
+    totalBytes: number
+  },
+  other: {
+    totalReports: number,
+    totalBytes: number
+  }
 }
 
 interface ReportStatistics {
-  myVessel: {
+  self: {
    count: number,
    bytes: number
   },
-  otherVessels: {
+  other: {
     count: number,
     bytes: number
   }
@@ -584,28 +563,12 @@ interface ReportStatistics {
 interface StatusResponse {
   ipAddress: string,
   port: number,
-  statistics: {
-    started: string,
-    totalBytesTransmitted: number,
-    position: {
-      lastReportTime: string,
-      totalBytesTransmitted: number,
-      bytesTransmittedInLastHour: number,
-      bytesTransmittedInLastDay: number,
-      totalReportsTransmitted: number,
-      reportsTransmittedInLastHour: number,
-      reportsTransmittedInLastDay: number
-    },
-    static:{
-      lastReportTime: string,
-      totalBytesTransmitted: number,
-      bytesTransmittedInLastHour: number,
-      bytesTransmittedInLastDay: number,
-      totalReportsTransmitted: number,
-      reportsTransmittedInLastHour: number,
-      reportsTransmittedInLastDay: number
-    }
-  }    
+  started: string,
+  totalBytesTransmitted: number,
+  positionSelfBytesPerHour: number,
+  positionOthersBytesPerHour: number,
+  staticSelfBytesPerHour: number,
+  staticOtherBytesPerHour: number
 }
 
 interface Dictionary<T> {
