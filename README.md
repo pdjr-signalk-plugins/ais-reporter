@@ -193,54 +193,24 @@ switchbank channel at 'electrical.switches.bank.16.16.state'.
 > &nbsp;&nbsp;"enabled": true  
 > }  
 
+## Plugin API
 
-## Required configuration properties
-
-### UDP endpoints to report to (```endpoints```)
-A list of service endpoints to which the plugin should send AIS
-reports.
-Each service endpoint is specified by the following required its IP address and the
-number of its listening port.
-
-Defaults to an empty list.
-
-###
-
-### Position update interval (s)
-Optional array property whuch
-The frequency at which position updates for active vessels should
-be sent to endpoints, expressed as an interval in seconds.
-A value of 0 disables all position and static reporting.
-
-At the end of an update interval the most recent position report
-received from each active vessel is transmitted to every endpoint.
-
-Increasing this value will reduce the amount of data transmitted
-over the host Internet connection at the cost of temporal accuracy
-in position reporting.
-
-Defaults to 120 (seconds).
-
-### Static update interval (s)
-The frequency at which static data updates for active vessels should
-be sent to endpoints, expressed as an interval in seconds.
-A value of 0 disables static data reporting.
-A value less than **Position update interval** will be treated as
-**Position update interval**.
-
-Defaults to 300 (seconds).
-
-### Ignore data older than (s)
-The interval after which a vessel's data reports cease to be transmitted
-after SignalK stops receiving AIS updates for the vessel.
-This value determines what constitutes an 'active' vs. an 'inactive'
-vessel.
-
-Defaults to 900 (seconds).
-
-
-
-
+The plugin presents an API on `/plugins/ais-reporter/status` which
+returns some data on resources consumed by each endpoint.
+```
+{
+  "MarineTraffic": {
+    "ipAddress": "-.-.--.---",
+    "port": -----,
+    "started": "2024-12-19T11:34:30.184Z",
+    "totalBytesTransmitted": 382,
+    "positionSelfBytesPerHour": 52,
+    "positionOthersBytesPerHour": 0,
+    "staticSelfBytesPerHour": 52,
+    "staticOthersBytesPerHour": 0
+  }
+}
+```
 
 ## Author
 Paul Reeve <preeve_at_pdjr_dot_eu>
