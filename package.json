@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "signalk-plugin-enabled-by-default": false,
   "scripts": {
-    "clean": "rm -rf node_modules package-lock.json",
+    "clean": "rm -rf node_modules package-lock.json *.tgz",
     "make": "yq -o=json -I=2 src/openApi.yaml > dist/openApi.json && npm install && tsc",
     "pack": "npm pack"
   },

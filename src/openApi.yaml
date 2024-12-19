@@ -11,7 +11,7 @@ info:
     [Signal K node server](https://github.com/SignalK/signalk-server).
 
     A Signal K server hosting the plugin will present this API under
-    the root https://*server_ip*:*server_port*/plugins/interfacewatchdog.
+    the root https://*server_ip*:*server_port*/plugins/ais-reporter.
 externalDocs:
   description: Plugin README document
   url: https://github.com/pdjr-signalk/pdjr-ais-reporter#readme 
@@ -42,34 +42,30 @@ paths:
                         description: Port number of the report endpoint.
                         type: number
                         example: 12345
-                      lastTransmission:
-                        description: UTC date of the most recent report transmission.
+                      started:
+                        description: Time (UTC) at which the plugin commenced operation.
                         type: string
-                        example: Fri, 06 Dec 2024 11:09:46 GMT
-                      myVessel:
-                        description: Report statistics for the host vessel.
-                        type: object
-                        properties:
-                          positionReportCount:
-                            description: Total number of position reports sent to this endpoint this session.
-                            type: number
-                            example: 134
-                          staticReportCount:
-                            description: Total number of static data reports sent to this endpoint this session.
-                            type: number
-                            example: 11
-                      otherVessels:
-                        description: Report statistics for AIS target data.
-                        type: object
-                        properties:
-                          positionReportCount:
-                            description: Total number of position reports sent to this endpoint this session.
-                            type: number
-                            example: 134
-                          staticReportCount:
-                            description: Total number of static data reports sent to this endpoint this session.
-                            type: number
-                            example: 11
+                        example: 2024-12-19T09:31:26.774Z
+                      totalBytesTransmitted:
+                        description: Number of bytes transmitted to the endpoint since the plugin started.
+                        type: number
+                        example: 457683
+                      positionSelfBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.
+                        type: number
+                        example: 456
+                      positionOthersBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.
+                        type: number
+                        example: 912
+                      staticSelfBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.
+                        type: number
+                        example: 456
+                      staticOthersBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.
+                        type: number
+                        example: 912
         500:
           description: |
             Error.
