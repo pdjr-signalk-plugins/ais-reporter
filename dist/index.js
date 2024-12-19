@@ -461,10 +461,10 @@ module.exports = function (app) {
                             port: endpoint.port,
                             started: (endpoint.statistics.started) ? (new Date(endpoint.statistics.started)).toISOString() : 'never',
                             totalBytesTransmitted: endpoint.statistics.totalBytesTransmitted,
-                            positionSelfBytesPerHour: endpoint.statistics.position.self.totalBytes / hours,
-                            positionOthersBytesPerHour: endpoint.statistics.position.other.totalBytes / hours,
-                            staticSelfBytesPerHour: endpoint.statistics.static.self.totalBytes / hours,
-                            staticOtherBytesPerHour: endpoint.statistics.static.other.totalBytes / hours
+                            positionSelfBytesPerHour: Math.floor(endpoint.statistics.position.self.totalBytes / hours),
+                            positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.other.totalBytes / hours),
+                            staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.totalBytes / hours),
+                            staticOtherBytesPerHour: Math.floor(endpoint.statistics.static.other.totalBytes / hours)
                         };
                         return (a);
                     }, {});
