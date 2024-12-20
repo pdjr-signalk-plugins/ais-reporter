@@ -2,9 +2,10 @@
 
 **pdjr-ais-reporter** is a
 [Signal K](https://www.signalk.org/)
-plugin which forwards AIS data on known vessels to one or more remote
-UDP endpoints.
-The plugin can be used to send AIS data to consolidation services like
+plugin which forwards AIS data on known vessels to one or more UDP
+endpoints.
+The plugin will typically be used to send AIS data to consolidation
+services like
 [MarineTraffic](https://www.marinetraffic.com).
 
 The plugin can issue AIS compliant reports for the 'self' vessel even
@@ -15,7 +16,9 @@ On a ship with an AIS receiver the plugin can be configured to report
 data on all vessels known to Signal K.
 
 Reports are issued at a user configured rate to each defined endpoint
-giving some control over the plugin's Ethernet resource consumption.
+and reporting of the 'self' vessel can be configured differently to
+that of other vessels giving some control over resource consumption on
+host vessel'st Ethernet connection.
 
 ## Plugin configuration
 
@@ -47,15 +50,14 @@ To use this simple configuration you must supply appropriate values for
 *target_ip_address* and *target_port_number* and you may want to give the
 'name' property a more meaningful value.
 
-In fact, if you supply the values 'Local test endpoint', '127.0.0.1' and
-12345 for the 'name', 'ipAddress' and 'port' properties then you can observe
-the plugin in action by opening a terminal window on the Signal K server and
-running the command `./udp_listen.pl 12345` from your system's plugin
-installation folder.
-
 This minimal configuration will report the position of all vessels
 known to Signal K once every 5 minutes and associated static data once
 every 15 minutes.
+
+If you supply the values 'Local test endpoint', '127.0.0.1' and 12345 for the
+'name', 'ipAddress' and 'port' properties then you can observe the plugin in
+action by opening a terminal window on the Signal K server and running the
+command `./udp_listen.pl 12345` from your system's plugin installation folder.
 
 ### Plugin defaults
 
@@ -79,15 +81,17 @@ get a clearer picture of how the configuration works.
 > }  
 
 'expiryInterval', 'positionUpdateInterval' and 'staticUpdateInterval'
-properties are declared at the top-level of the configuration and apply
-to all endpoints and all vessels.
+properties are declared at the top-level of the configuration and
+will be applied to all endpoint and vessel configurations which do
+not explicityly override them.
 
 All numeric values in a configuration specify a time period in minutes
 with a zero value representing an infinite time period and essentially
 disabling any associated behaviour.
 
 The 'expiryInterval' property tells the plugin to disregard any vessel
-whose position has not been updated in the last 15 minutes.
+from which an AIS position update has not been received in the last 15
+minutes.
 
 'positionUpdateInterval' and 'staticUpdateInterval' are specified as
 separate properties since, in line with the AIS protocol norms, we
@@ -97,7 +101,7 @@ assumes the same value as the 'positionUpdateInterval' property.
 
 ### Differentiate 'self' from other vessels
 
-Sometimes we want to treat host vessel reporting differently to the
+Sometimes we want to report our host vessel differently to the
 reporting of other vessels whose data had been received over AIS.
 
 The following example disables reporting of all vessels other than
@@ -130,16 +134,15 @@ whether the ship is navigating or moored: a short interval when
 navigating so as to record a good track and a long interval when moored
 so as to save data usage on my Internet connection.
 
-The plugin allows this behaviour to be automated with the help of a
-Signal K binary path value whose value is used as an index to select
-ing the reporting interval to be used at any point in time.
+The plugin allows this behaviour to be automated by using the value of a
+Signal K path as an index to select the required reporting interval at
+any point in time.
 To use this mechanism we need to specify our update intervals as an
-(in this case) two item array: the value at the zeroth position in
-the array will be used when the ignition is OFF and the value at the
-first position in the array will be used when the switch is ON.
+array with as many items as distinct values returned by the selector.
 
 In my case my ship reports the main engine ignition state via an NMEA
-switchbank channel at 'electrical.switches.bank.16.16.state'.
+switchbank channel at 'electrical.switches.bank.16.16.state' and so
+operates with index values 0 (ignition OFF) and 1 (ignition ON).
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
@@ -169,11 +172,11 @@ switchbank channel at 'electrical.switches.bank.16.16.state'.
 > &nbsp;&nbsp;&nbsp;&nbsp;"updateIntervalSelector": "electrical.switches.bank.16.16.state",  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myVessel": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": [15,1],  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": [55,55]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 55  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"otherVessels": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": [15,15],  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": [15,15]  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateIntervals": 15  
 > &nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
@@ -211,4 +214,5 @@ returns some data on resources consumed by each endpoint.
 ```
 
 ## Author
+
 Paul Reeve <*preeve_at_pdjr_dot_eu*>
