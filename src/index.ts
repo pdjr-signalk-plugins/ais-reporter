@@ -15,15 +15,14 @@
  */
 
 import * as _ from 'lodash';
-import { AisEncode, AisEncodeOptions } from 'ggencoder'
-import { Socket, createSocket } from 'dgram'
+import { Endpoint } from './Endpoint';
+import { AisEncode, AisEncodeOptions } from 'ggencoder';
+import { Socket, createSocket } from 'dgram';
 import { PluginStatus } from 'signalk-libpluginstatus';
 
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_POSITION_UPDATE_INTERVAL: number = 5;
-const DEFAULT_STATIC_DATA_UPDATE_INTERVAL : number = 15;
-const DEFAULT_EXPIRY_INTERVAL: number = 15;
-const DEFAULT_HEARTBEAT_INTERVAL: number = 60000;
+const DEFAULT_ENDPOINT_OPTIONS: any = { POSITION_UPDATE_INTERVAL: 5, STATIC_DATA_UPDATE_INTERVAL: 15, EXPIRY_INTERVAL: 15 };
+const HEARTBEAT_INTERVAL: number = 60000;
 
 const PLUGIN_ID: string = 'ais-reporter';
 const PLUGIN_NAME: string = 'pdjr-ais-reporter';
@@ -116,12 +115,12 @@ module.exports = function(app: any) {
     start: function(options: any) {
       pluginStatus = new PluginStatus(app, 'started');
       try {
-        pluginConfiguration = makePluginConfiguration(options);
+        pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
         app.debug(`using configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
 
         if (pluginConfiguration.endpoints.length > 0) {
           pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
-          heartbeatInterval = startReporting(pluginConfiguration, udpSocket = createSocket('udp4'));
+          heartbeatInterval = startReporting(pluginConfiguration, udpSocket = createSocket('udp4'), HEARTBEAT_INTERVAL);
         } else {
           pluginStatus.setDefaultStatus('Stopped: no configured endpoints');
         }
@@ -156,69 +155,13 @@ module.exports = function(app: any) {
    * @param options - contenf of JSON configuration file.
    * @returns - a canonical PluginConfiguration.
    */
-  function makePluginConfiguration(options: any): PluginConfiguration {
+  function makePluginConfiguration(options: any, defaults: any): PluginConfiguration {
     app.debug(`makePluginConfiguration(${JSON.stringify(options)})...`);
-    let pluginConfiguration: PluginConfiguration = {
+    return({
       myMMSI: app.getSelfPath('mmsi'),
       myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
-      endpoints: []
-    };
-    options.endpoints.forEach((option: any) => {
-      if (!option.ipAddress) throw new Error('endpoint has missing \'ipAddress\' property');
-      if (!option.port) throw new Error('endpoint has missing \'port\' property');
-      let endpoint: Endpoint = <Endpoint>{};
-      endpoint.name = option.name || option.ipAddress;
-      endpoint.ipAddress = option.ipAddress;
-      endpoint.port = option.port;
-      endpoint.myVessel = <Vessel>{};
-      endpoint.myVessel.expiryInterval = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
-      endpoint.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
-      endpoint.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),,options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
-      endpoint.myVessel.updateIntervalIndexPath = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'updateIntervalIndexPath', undefined);
-      endpoint.otherVessels = <Vessel>{};
-      endpoint.otherVessels.expiryInterval = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'expiryInterval', DEFAULT_EXPIRY_INTERVAL);
-      endpoint.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'positionUpdateInterval', [DEFAULT_POSITION_UPDATE_INTERVAL]);
-      endpoint.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'staticUpdateInterval', [DEFAULT_STATIC_DATA_UPDATE_INTERVAL]);
-      endpoint.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'updateIntervalIndexPath', undefined);
-      endpoint.statistics = {
-        started: Date.now(),
-        totalBytesTransmitted: 0,
-        position: {
-          self: { totalReports: 0, totalBytes: 0 },
-          others: { totalReports: 0, totalBytes: 0 }
-        },
-        static: {
-          self: { totalReports: 0, totalBytes: 0 },
-          others: { totalReports: 0, totalBytes: 0 }
-        }
-      };
-      pluginConfiguration.endpoints.push(endpoint);
+      endpoints: options.endpoints.map((option: any) => new Endpoint(option, options, defaults))
     });
-    return(pluginConfiguration);
-
-    function getOption(objects: any[], name: string, fallback: any): any {
-      if (objects.length == 0) {
-        return(fallback);
-      } else {
-        if (objects[0][name] !== undefined) {
-          return(objects[0][name]);
-        } else {
-          return(getOption(objects.slice(1), name, fallback));
-        }
-      }
-    }
-
-    function getOptionArray(objects: any[], name: string, fallback: any): any {
-      if (objects.length == 0) {
-        return(fallback);
-      } else {
-        if (objects[0][name] !== undefined) {
-          return((Array.isArray(objects[0][name]))?objects[0][name]:[objects[0][name]]);
-        } else {
-          return(getOptionArray(objects.slice(1), name, fallback));
-        }
-      }
-    }
   }
 
   /**
@@ -232,7 +175,7 @@ module.exports = function(app: any) {
    * @param udpSocket - open Socket to be used for reporting over UDP.
    * @returns - NodeJS.timeout handle of the timer control. 
    */
-  function startReporting(pluginConfiguration: PluginConfiguration, udpSocket: Socket): NodeJS.Timeout {
+  function startReporting(pluginConfiguration: PluginConfiguration, udpSocket: Socket, heartbeat: number): NodeJS.Timeout {
     app.debug(`startReporting(pluginConfiguration, udpSocket)...`);
     return(setInterval(() => {
       app.debug(`reportMaybe(${heartbeatCount})...`);
@@ -272,7 +215,7 @@ module.exports = function(app: any) {
         }
       });
       heartbeatCount++;
-    }, DEFAULT_HEARTBEAT_INTERVAL));
+    }, heartbeat));
 
     function updateReportStatistics(endpointReportStatistics: EndpointReportStatistics, reportStatistics: ReportStatistics) {
       app.debug(`updateReportStatistics(endpointReportStatistics, ${JSON.stringify(reportStatistics)})...`);
@@ -513,29 +456,6 @@ interface PluginConfiguration {
   myMMSI: string,
   myAisClass: string,
   endpoints: Endpoint[]
-}
-
-interface Endpoint {
-  name: string,
-  ipAddress: string,
-  port: number,
-  myVessel: Vessel,
-  otherVessels: Vessel,
-  statistics: EndpointStatistics
-}
-
-interface Vessel {
-  expiryInterval: number,
-  positionUpdateIntervals: number[],
-  staticUpdateIntervals: number[],
-  updateIntervalIndexPath: string,
-}
-
-interface EndpointStatistics {
-  started: number | undefined,
-  totalBytesTransmitted: number,  
-  position: EndpointReportStatistics,
-  static: EndpointReportStatistics
 }
 
 interface EndpointReportStatistics {
