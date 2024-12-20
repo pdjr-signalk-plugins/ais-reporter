@@ -8,22 +8,22 @@ The plugin will typically be used to send AIS data to consolidation
 services like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The plugin can issue AIS compliant reports for the 'self' vessel even
-if the ship has no AIS equipment, requiring only that MMSI and vessel
-position are available on their default Signal K paths of ```mmsi```
-and ```navigation.position``` repectively.
+The plugin can issue AIS reports for the 'self' vessel even if the ship
+has no AIS equipment, requiring only that MMSI and vessel position are
+available on the Signal K paths `mmsi` and `navigation.position`
+repectively.
 On a ship with an AIS receiver the plugin can be configured to report
 data on all vessels known to Signal K.
 
 Reports are issued at a user configured rate to each defined endpoint
 and reporting of the 'self' vessel can be configured differently to
 that of other vessels giving some control over resource consumption on
-host vessel'st Ethernet connection.
+the host vessel's Ethernet connection.
 
 ## Plugin configuration
 
-It is easier to discuss plugin configuration in the context of the
-plugin configuration JSON file.
+It is easier to discuss plugin configuration by considering the format
+of the plugin configuration JSON file.
 Once you understand the JSON structure, you should be able to navigate
 the plugin's configuration interface in the Signal K dashboard.
 
