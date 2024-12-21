@@ -6,7 +6,9 @@ export declare class Endpoint {
     otherVessels: Vessel;
     statistics: Statistics;
     constructor(option: any, options: any, defaults: any);
+    updateStatistics(reportType: string, update: ReportStatistics): void;
 }
+export type { ReportStatistics };
 interface Vessel {
     expiryInterval: number;
     positionUpdateIntervals: number[];
@@ -15,18 +17,17 @@ interface Vessel {
 }
 interface Statistics {
     started: number | undefined;
-    totalBytesTransmitted: number;
+    totalBytes: number;
     position: ReportStatistics;
     static: ReportStatistics;
 }
 interface ReportStatistics {
     self: {
-        totalReports: number;
-        totalBytes: number;
+        reports: number;
+        bytes: number;
     };
     others: {
-        totalReports: number;
-        totalBytes: number;
+        reports: number;
+        bytes: number;
     };
 }
-export {};

@@ -16,6 +16,7 @@
 
 import * as _ from 'lodash';
 import { Endpoint } from './Endpoint';
+import type { ReportStatistics } from './Endpoint';
 import { AisEncode, AisEncodeOptions } from 'ggencoder';
 import { Socket, createSocket } from 'dgram';
 import { PluginStatus } from 'signalk-libpluginstatus';
@@ -197,18 +198,14 @@ module.exports = function(app: any) {
           if (((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0)) || ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0))) { 
             pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
             reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0)?false:((heartbeatCount % mvPUI) === 0), (ovPUI === 0)?false:((heartbeatCount % ovPUI) === 0));
-            updateReportStatistics(endpoint.statistics.position, reportStatistics);
-            totalBytes = (reportStatistics.self.bytes + reportStatistics.others.bytes);
+            endpoint.updateStatistics('position', reportStatistics);
           };
 
           if (((mvSUI !== 0) && ((heartbeatCount % mvSUI) === 0)) || ((ovSUI !== 0) && ((heartbeatCount % ovSUI) === 0))) {
             pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
             reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === 0)?false:((heartbeatCount % mvSUI) === 0), (ovSUI === 0)?false:((heartbeatCount % ovSUI) === 0));
-            updateReportStatistics(endpoint.statistics.static, reportStatistics);
-            totalBytes += (reportStatistics.self.bytes + reportStatistics.others.bytes);
+            endpoint.updateStatistics('static', reportStatistics);
           }
-
-          endpoint.statistics.totalBytesTransmitted += totalBytes;
 
         } catch(e: any) {
           app.debug(`${e.message}`);
@@ -216,14 +213,6 @@ module.exports = function(app: any) {
       });
       heartbeatCount++;
     }, heartbeat));
-
-    function updateReportStatistics(endpointReportStatistics: EndpointReportStatistics, reportStatistics: ReportStatistics) {
-      app.debug(`updateReportStatistics(endpointReportStatistics, ${JSON.stringify(reportStatistics)})...`);
-      endpointReportStatistics.self.totalReports += reportStatistics.self.count;
-      endpointReportStatistics.self.totalBytes += reportStatistics.self.bytes;
-      endpointReportStatistics.others.totalReports += reportStatistics.others.count;
-      endpointReportStatistics.others.totalBytes += reportStatistics.others.bytes;
-    }
   }
 
   /**
@@ -238,7 +227,7 @@ module.exports = function(app: any) {
    */
   function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): ReportStatistics {
     app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
-    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, others: { count: 0, bytes: 0 }};
+    var reportStatistics: ReportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 }};
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
     var msg: any;
@@ -267,10 +256,10 @@ module.exports = function(app: any) {
         if ((msg) && (msg.valid)) {
           bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
           if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
-            reportStatistics.self.count++;
+            reportStatistics.self.reports++;
             reportStatistics.self.bytes += bytesTransmitted;
           } else {
-            reportStatistics.others.count++;
+            reportStatistics.others.reports++;
             reportStatistics.others.bytes += bytesTransmitted;
           }
         } else throw new Error('AIS encode failed');
@@ -293,7 +282,7 @@ module.exports = function(app: any) {
    */
   function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): ReportStatistics {
     app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
-    var reportStatistics: ReportStatistics = { self: { count: 0, bytes: 0 }, others: { count: 0, bytes: 0 }};
+    var reportStatistics: ReportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 }};
     var aisClass: string
     var aisProperties: any
     var msg: any, msgB: any
@@ -328,10 +317,10 @@ module.exports = function(app: any) {
             if ((msg) && (msg.valid)) {
               bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
               if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
-                reportStatistics.self.count++;
+                reportStatistics.self.reports++;
                 reportStatistics.self.bytes += bytesTransmitted;
               } else {
-                reportStatistics.others.count++;
+                reportStatistics.others.reports++;
                 reportStatistics.others.bytes += bytesTransmitted;
               }
             } else throw new Error('AIS encode failed');
@@ -347,10 +336,10 @@ module.exports = function(app: any) {
                 bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
                 bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
                 if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
-                  reportStatistics.self.count++;
+                  reportStatistics.self.reports++;
                   reportStatistics.self.bytes += bytesTransmitted;
                 } else {
-                  reportStatistics.others.count++;
+                  reportStatistics.others.reports++;
                   reportStatistics.others.bytes += bytesTransmitted;
                 }
               } else throw new Error('AIS Part B encode failed');
@@ -410,11 +399,11 @@ module.exports = function(app: any) {
               ipAddress: endpoint.ipAddress,
               port: endpoint.port,
               started: (endpoint.statistics.started)?(new Date(endpoint.statistics.started)).toISOString():'never',
-              totalBytesTransmitted: endpoint.statistics.totalBytesTransmitted,
-              positionSelfBytesPerHour: Math.floor(endpoint.statistics.position.self.totalBytes / hours),
-              positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.others.totalBytes / hours),
-              staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.totalBytes / hours),
-              staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.totalBytes / hours)
+              totalBytesTransmitted: endpoint.statistics.totalBytes,
+              positionSelfBytesPerHour: Math.floor(endpoint.statistics.position.self.bytes / hours),
+              positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.others.bytes / hours),
+              staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
+              staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
             };
             return(a);
           }, {});
@@ -456,28 +445,6 @@ interface PluginConfiguration {
   myMMSI: string,
   myAisClass: string,
   endpoints: Endpoint[]
-}
-
-interface EndpointReportStatistics {
-  self: {
-    totalReports: number,
-    totalBytes: number
-  },
-  others: {
-    totalReports: number,
-    totalBytes: number
-  }
-}
-
-interface ReportStatistics {
-  self: {
-   count: number,
-   bytes: number
-  },
-  others: {
-    count: number,
-    bytes: number
-  }
 }
 
 interface StatusResponse {

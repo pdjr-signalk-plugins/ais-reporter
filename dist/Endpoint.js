@@ -28,11 +28,11 @@ class Endpoint {
         this.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'updateIntervalIndexPath', undefined);
         this.statistics = {};
         this.statistics.started = Date.now();
-        this.statistics.totalBytesTransmitted = 0;
-        this.statistics.position.self = { totalReports: 0, totalBytes: 0 };
-        this.statistics.position.others = { totalReports: 0, totalBytes: 0 };
-        this.statistics.static.self = { totalReports: 0, totalBytes: 0 };
-        this.statistics.static.others = { totalReports: 0, totalBytes: 0 };
+        this.statistics.totalBytes = 0;
+        this.statistics.position.self = { reports: 0, bytes: 0 };
+        this.statistics.position.others = { reports: 0, bytes: 0 };
+        this.statistics.static.self = { reports: 0, bytes: 0 };
+        this.statistics.static.others = { reports: 0, bytes: 0 };
         function getOption(objects, name, fallback) {
             if (objects.length == 0) {
                 return (fallback);
@@ -58,6 +58,25 @@ class Endpoint {
                     return (getOptionArray(objects.slice(1), name, fallback));
                 }
             }
+        }
+    }
+    updateStatistics(reportType, update) {
+        this.statistics.totalBytes += (update.self.bytes + update.others.bytes);
+        switch (reportType) {
+            case 'position':
+                this.statistics.position.self.reports += update.self.reports;
+                this.statistics.position.self.bytes += update.self.bytes;
+                this.statistics.position.others.reports += update.others.reports;
+                this.statistics.position.others.bytes += update.others.bytes;
+                break;
+            case 'static':
+                this.statistics.static.self.reports += update.self.reports;
+                this.statistics.static.self.bytes += update.self.bytes;
+                this.statistics.static.others.reports += update.others.reports;
+                this.statistics.static.others.bytes += update.others.bytes;
+                break;
+            default:
+                break;
         }
     }
 }
