@@ -10,8 +10,8 @@ services like
 
 The plugin can issue AIS reports for the 'self' vessel even if the ship
 has no AIS equipment, requiring only that MMSI and vessel position are
-available on the Signal K paths `mmsi` and `navigation.position`
-repectively.
+available on their default Signal K paths (`mmsi` and `navigation.position`
+repectively).
 On a ship with an AIS receiver the plugin can be configured to report
 data on all vessels known to Signal K.
 
