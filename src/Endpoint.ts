@@ -24,13 +24,30 @@ export class Endpoint {
     this.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
     this.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
     this.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'updateIntervalIndexPath', undefined);
-    this.statistics = <Statistics>{};
-    this.statistics.started = Date.now();
-    this.statistics.totalBytes = 0;
-    this.statistics.position.self = { reports: 0, bytes: 0 };
-    this.statistics.position.others = { reports: 0, bytes: 0 };
-    this.statistics.static.self = { reports: 0, bytes: 0 };
-    this.statistics.static.others = { reports: 0, bytes: 0 };
+    this.statistics = {
+      started: Date.now(),
+      totalBytes: 0,
+      position: {
+        self: {
+          reports: 0,
+          bytes: 0
+        },
+        others: {
+          reports: 0,
+          bytes: 0
+        }
+      },
+      static: {
+        self: {
+          reports: 0,
+          bytes: 0
+        },
+        others: {
+          reports: 0,
+          bytes: 0
+        }
+      }
+    }
   
     function getOption(objects: any[], name: string, fallback: any): any {
       if (objects.length == 0) {
