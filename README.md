@@ -22,10 +22,10 @@ the host vessel's Ethernet connection.
 
 ## Plugin configuration
 
-It is easier to discuss plugin configuration by considering the format
-of the plugin configuration JSON file.
-Once you understand the JSON structure, you should be able to navigate
-the plugin's configuration interface in the Signal K dashboard.
+This section discusses plugin configuration by considering the format of the
+plugin's JSON configuration file.
+Once you understand the JSON structure, you should be able to manage
+the plugin's configuration using Signal K's dashboard interface.
 
 ### A minimal configuration
 
