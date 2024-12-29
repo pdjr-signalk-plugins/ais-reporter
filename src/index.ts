@@ -26,7 +26,7 @@ const DEFAULT_ENDPOINT_OPTIONS: any = { POSITION_UPDATE_INTERVAL: 5, STATIC_DATA
 const HEARTBEAT_INTERVAL: number = 60000;
 
 const PLUGIN_ID: string = 'ais-reporter';
-const PLUGIN_NAME: string = 'pdjr-ais-reporter';
+const PLUGIN_NAME: string = 'ais-reporter';
 const PLUGIN_DESCRIPTION: string = 'Report AIS data to remote UDP services.';
 const PLUGIN_SCHEMA: object = {
   "type": "object",

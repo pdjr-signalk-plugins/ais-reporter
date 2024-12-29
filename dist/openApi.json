@@ -7,11 +7,11 @@
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
     },
-    "description": "[pdjr-ais-reporter](https://github.com/pdjr-signalk/pdjr-ais-reporter)\nis a plugin for the\n[Signal K node server](https://github.com/SignalK/signalk-server).\n\nA Signal K server hosting the plugin will present this API under\nthe root https://*server_ip*:*server_port*/plugins/ais-reporter.\n"
+    "description": "[ais-reporter](https://github.com/pdjr-signalk-plugins/ais-reporter)\nis a plugin for the\n[Signal K node server](https://github.com/SignalK/signalk-server).\n\nA Signal K server hosting the plugin will present this API under\nthe root https://*server_ip*:*server_port*/plugins/ais-reporter.\n"
   },
   "externalDocs": {
     "description": "Plugin README document",
-    "url": "https://github.com/pdjr-signalk/pdjr-ais-reporter#readme"
+    "url": "https://github.com/pdjr-signalk-plugins/ais-reporter#readme"
   },
   "paths": {
     "/status": {

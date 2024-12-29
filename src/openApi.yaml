@@ -6,7 +6,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   description: |
-    [pdjr-ais-reporter](https://github.com/pdjr-signalk/pdjr-ais-reporter)
+    [ais-reporter](https://github.com/pdjr-signalk-plugins/ais-reporter)
     is a plugin for the
     [Signal K node server](https://github.com/SignalK/signalk-server).
 
@@ -14,7 +14,7 @@ info:
     the root https://*server_ip*:*server_port*/plugins/ais-reporter.
 externalDocs:
   description: Plugin README document
-  url: https://github.com/pdjr-signalk/pdjr-ais-reporter#readme 
+  url: https://github.com/pdjr-signalk-plugins/ais-reporter#readme 
 paths:
   /status:
     get:

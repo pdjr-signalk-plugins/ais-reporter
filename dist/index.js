@@ -24,7 +24,7 @@ const DEFAULT_MY_AIS_CLASS = 'B';
 const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 5, STATIC_DATA_UPDATE_INTERVAL: 15, EXPIRY_INTERVAL: 15 };
 const HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
-const PLUGIN_NAME = 'pdjr-ais-reporter';
+const PLUGIN_NAME = 'ais-reporter';
 const PLUGIN_DESCRIPTION = 'Report AIS data to remote UDP services.';
 const PLUGIN_SCHEMA = {
     "type": "object",

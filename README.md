@@ -1,6 +1,6 @@
-# pdjr-ais-reporter
+# ais-reporter
 
-**pdjr-ais-reporter** is a
+**ais-reporter** is a
 [Signal K](https://www.signalk.org/)
 plugin which forwards AIS data on known vessels to one or more UDP
 endpoints.
