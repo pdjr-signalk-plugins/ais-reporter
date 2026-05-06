@@ -13,7 +13,7 @@ has no AIS equipment, requiring only that MMSI and vessel position are
 available on their default Signal K paths (`mmsi` and `navigation.position`
 repectively).
 On a ship with an AIS receiver the plugin can be configured to report
-data on all vessels known to Signal K.
+data on all vessels whose broadcasts are logged by Signal K.
 
 Reports are issued at a user configured rate to each defined endpoint
 and reporting of the 'self' vessel can be configured differently to
