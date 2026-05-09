@@ -25,11 +25,11 @@ the host vessel's Internet connection.
 ## Plugin configuration
 
 This section discusses plugin configuration by considering the format of
-the plugin's JSON configuration file.
-Some of the JSON features used in the configuration are not supported by
-Signal K's plugin configuration GUI and you must create and/or update the
-configuration by using your favourite text editor to create or modify the
-plugin configuration file at `~/.signalk/plugin-configuration-data/ais-reporter.json`.
+the plugin's JSON configuration file `~/.signalk/plugin-configuration-data/ais-reporter.json`.
+
+Some of the JSON features used in the configuration file are not supported
+by Signal K's plugin configuration GUI and you must therefore create and/or
+update the configuration using your favourite text editor.
 
 ### A minimal configuration
 
