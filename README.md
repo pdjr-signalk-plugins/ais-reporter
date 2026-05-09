@@ -50,28 +50,32 @@ For example:
 > }
 
 To use this simple configuration you must supply appropriate values for
-*target_ip_address* and *target_port_number* and you may want to give the
-'name' property a more meaningful value.
-
-This minimal configuration will report the position of all vessels
-known to Signal K once every 5 minutes and associated static data once
-every 15 minutes.
+*ip_address* and *port* and you may want to give the *name* property a
+more meaningful value.
+These values are typically supplied by a consolidation service when you
+subscribe as a service user.
 
 If you supply the values 'Local test endpoint', '127.0.0.1' and 12345 for the
-'name', 'ipAddress' and 'port' properties then you can observe the plugin in
-action by opening a terminal window on the Signal K server and running the
-command `./udp_listen.pl 12345` from your system's plugin installation folder.
+*name*, *ipAddress* and *port* then you can observe the plugin in action by
+opening a terminal window on the Signal K server and running the command
+`./udp_listen.pl 12345` from your system's plugin installation folder.
 
 ### Plugin defaults
 
-As mentioned, the plugin uses some default property values and if we elaborate
-the minimal configuration discussed above with these defaults then we can
-get a clearer picture of how the configuration works.
+The minimal configuration described above will report the position of all
+vessels known to Signal K once every 5 minutes and associated static data
+once every 15 minutes.
+Received AIS data is expired after 15 minutes and no longer transmitted to
+the upstream host.
+
+These default timings can be overriden by specifying one or more of the
+*expiryInterval*, *positionUpdateInterval* and *staticUpdateInterval*.
+For example:
 > {  
 > &nbsp;&nbsp;"configuration": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 15,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 10,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 10,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Local test endpoint",  
