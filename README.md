@@ -25,9 +25,11 @@ the host vessel's Ethernet connection.
 ## Plugin configuration
 
 This section discusses plugin configuration by considering the format of the
-plugin's JSON configuration file.
-Once you understand the JSON structure, you should be able to manage
-the plugin's configuration using Signal K's dashboard interface.
+plugin's JSON configuration file which uses some JSON features that are not
+supported by Signal K's plugin configuration GUI.
+You can update the configuration by using your favourite text editor to
+create or modify the `ais-reporter.json` file in Signal K's
+`plugin-configuration-data` directory.
 
 ### A minimal configuration
 
@@ -51,8 +53,8 @@ For example:
 To use this simple configuration you must supply appropriate values for
 *ip_address* and *port* and you may want to give the *name* property a
 more meaningful value.
-These values are typically supplied by a consolidation service when you
-subscribe as a service user.
+Usually you will be told what values to use when you subscribe with a
+consolidation service provider.
 
 If you supply the values 'Local test endpoint', '127.0.0.1' and 12345 for the
 *name*, *ipAddress* and *port* then you can observe the plugin in action by
@@ -67,7 +69,7 @@ once every 15 minutes.
 Received AIS data is expired after 15 minutes and no longer transmitted to
 the upstream host.
 
-These default timings can be overriden by specifying one or more of the
+These default timings can be overriden by specifying one or more of
 *expiryInterval*, *positionUpdateInterval* and *staticUpdateInterval*.
 For example:
 > {  
@@ -96,13 +98,13 @@ with a zero value representing an infinite time period and essentially
 disabling any associated behaviour.
 
 The 'expiryInterval' property tells the plugin to disregard any vessel
-from which an AIS position update has not been received in the last 15
-minutes.
+from which an AIS position update has not been received in the specified
+number of minutes.
 
 'positionUpdateInterval' and 'staticUpdateInterval' are specified as
 separate properties since, in line with the AIS protocol norms, we
 probably want to report position data more frequently than static data.
-If the 'staticUpdateInterval' property is ommitted, then the plugin
+If the 'staticUpdateInterval' property is omitted, then the plugin
 assumes the same value as the 'positionUpdateInterval' property.
 
 ### Differentiate 'self' from other vessels
