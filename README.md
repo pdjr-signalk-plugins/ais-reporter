@@ -3,21 +3,20 @@
 **ais-reporter** is a
 [Signal K](https://www.signalk.org/)
 plugin which forwards AIS data on *known vessels* to one or more
-user-defined UDP *endpoints*.
+user specified UDP *endpoints*.
 Known vessels in this context means the 'self' ship and all vessels
-from which AIS data is currently being received (Signal K uses the
-term *context* in a broadly similar sense).
+from which AIS data is currently being received.
 An endpoint is any remote service capable of receiving AIS data
 over UDP, typically this will include consolidation
 services like
 [MarineTraffic](https://www.marinetraffic.com).
 
 The plugin can issue AIS reports for the 'self' vessel even if the ship
-has no AIS equipment, requiring only that MMSI and vessel position are
-available on their default Signal K paths (`mmsi` and `navigation.position`
-repectively).
+has no AIS equipment: it is sufficient that the vessel MMSI and position
+are available on their default Signal K paths (`mmsi` and `navigation.position`).
+
 On a ship with an AIS receiver the plugin can be configured to report
-data on all vessels whose broadcasts are logged by Signal K.
+data on all vessels whose broadcasts are received and logged by Signal K.
 
 Reports are issued at a user configured rate to each defined endpoint
 and reporting of the 'self' vessel can be configured differently to
