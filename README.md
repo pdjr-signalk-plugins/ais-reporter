@@ -24,18 +24,29 @@ the host vessel's Ethernet connection.
 
 ## Plugin configuration
 
-This section discusses plugin configuration by considering the format of the
-plugin's JSON configuration file which uses some JSON features that are not
-supported by Signal K's plugin configuration GUI.
-You can update the configuration by using your favourite text editor to
-create or modify the `ais-reporter.json` file in Signal K's
-`plugin-configuration-data` directory.
+This section discusses plugin configuration by considering the format of
+the plugin's JSON configuration file.
+Some of the JSON features used in the configuration are not supported by
+Signal K's plugin configuration GUI and you must create and/or update the
+configuration by using your favourite text editor to create or modify the
+plugin configuration file at `~/.signalk/plugin-configuration-data/ais-reporter.json`.
 
 ### A minimal configuration
 
 The plugin includes built-in defaults for most configuration properties
 and a minimal plugin configuration just requires the specification of at least
 one reporting endpoint in terms of its IP address and service port.
+
+If you subscribe with a consolidation service provider (like Marine Traffic),
+then they will provide you with an IP address and service port number.
+
+For testing purposes you can use the values '127.0.0.1' and 12345 to
+send reports to a local UDP port and you can then observe the plugin
+in action by monitoring this port.
+A simple way to do this is to open a terminal window on the Signal K
+server and run the command
+`/.signalk/node_modules/ais-reporter/udp_listen.pl 12345`.
+
 For example:
 > {  
 > &nbsp;&nbsp;"configuration": {  
@@ -56,10 +67,6 @@ more meaningful value.
 Usually you will be told what values to use when you subscribe with a
 consolidation service provider.
 
-If you supply the values 'Local test endpoint', '127.0.0.1' and 12345 for the
-*name*, *ipAddress* and *port* then you can observe the plugin in action by
-opening a terminal window on the Signal K server and running the command
-`./udp_listen.pl 12345` from your system's plugin installation folder.
 
 ### Plugin defaults
 
