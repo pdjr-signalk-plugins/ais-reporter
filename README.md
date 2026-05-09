@@ -37,15 +37,15 @@ The plugin includes built-in defaults for most configuration properties
 and a minimal plugin configuration just requires the specification of at
 least one reporting endpoint in terms of its *ipAddress* and service *port*.
 
-If you subscribe with a consolidation service provider (like Marine Traffic),
-then they will provide you with values for *ipAddress* and service *port*
-number.
+To report AIS data to a consolidation service provider (like Marine Traffic),
+you must subscribe with the provider and use the IP address and service port
+number that they supply.
 
-For testing purposes you can use the values '127.0.0.1' and 12345 to
-send reports to a local UDP port and you can then observe the plugin
-in action by monitoring this port.
-A simple way to do this is to open a terminal window on the Signal K
-server and run the command
+To report AIS data to a local UDP socket for testing purposes you can use the
+values '127.0.0.1' and 12345 and you can then observe the plugin in action by
+monitoring this port.
+A simple way to monitor port 12345 on the host computer is to open a terminal
+window on the Signal K server and run the command
 `/.signalk/node_modules/ais-reporter/udp_listen.pl 12345`.
 
 For example:
@@ -71,7 +71,8 @@ Received AIS data is expired after 15 minutes and no longer transmitted to
 the upstream host.
 
 These default timings can be overriden by specifying one or more of
-*expiryInterval*, *positionUpdateInterval* and *staticUpdateInterval*.
+*expiryInterval*, *positionUpdateInterval* and *staticUpdateInterval* at
+the top-level of the plugin configuration.
 For example:
 > {  
 > &nbsp;&nbsp;"configuration": {  
@@ -88,11 +89,6 @@ For example:
 > &nbsp;&nbsp;},  
 > &nbsp;&nbsp;"enabled": true  
 > }  
-
-'expiryInterval', 'positionUpdateInterval' and 'staticUpdateInterval'
-properties are declared at the top-level of the configuration and
-will be applied to all endpoint and vessel configurations which do
-not explicityly override them.
 
 All numeric values in a configuration specify a time period in minutes
 with a zero value representing an infinite time period and essentially
@@ -115,7 +111,7 @@ reporting of other vessels whose data had been received over AIS.
 
 The following example disables reporting of all vessels other than
 the host ship by setting global default update intervals to 0 and then
-override these settings for just our own ship.
+overriding these settings for just our own ship.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
@@ -136,7 +132,7 @@ override these settings for just our own ship.
 > &nbsp;&nbsp;"enabled": true  
 > }
 
-### Automatically modulate reporting intervals
+### Automatically modulating reporting intervals
 
 On my ship I like to modify my position reporting intervals based upon
 whether the ship is navigating or moored: a short interval when
