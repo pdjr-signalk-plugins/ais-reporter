@@ -34,11 +34,12 @@ plugin configuration file at `~/.signalk/plugin-configuration-data/ais-reporter.
 ### A minimal configuration
 
 The plugin includes built-in defaults for most configuration properties
-and a minimal plugin configuration just requires the specification of at least
-one reporting endpoint in terms of its IP address and service port.
+and a minimal plugin configuration just requires the specification of at
+least one reporting endpoint in terms of its *ipAddress* and service *port*.
 
 If you subscribe with a consolidation service provider (like Marine Traffic),
-then they will provide you with an IP address and service port number.
+then they will provide you with values for *ipAddress* and service *port*
+number.
 
 For testing purposes you can use the values '127.0.0.1' and 12345 to
 send reports to a local UDP port and you can then observe the plugin
@@ -60,13 +61,6 @@ For example:
 > &nbsp;&nbsp;},  
 > &nbsp;&nbsp;"enabled": true  
 > }
-
-To use this simple configuration you must supply appropriate values for
-*ip_address* and *port* and you may want to give the *name* property a
-more meaningful value.
-Usually you will be told what values to use when you subscribe with a
-consolidation service provider.
-
 
 ### Plugin defaults
 
