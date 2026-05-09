@@ -4,15 +4,14 @@
 [Signal K](https://www.signalk.org/)
 plugin which forwards AIS data on *known vessels* to one or more
 user specified UDP *endpoints*.
-Known vessels in this context means the 'self' ship and all vessels
-from which AIS data is currently being received.
+Known vessels in this context means the 'self' ship and/or all
+vessels from which AIS data is currently being received.
 An endpoint is any remote service capable of receiving AIS data
-over UDP, typically this will include consolidation
-services like
+over UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
 The plugin can issue AIS reports for the 'self' vessel even if the ship
-has no AIS equipment: it is sufficient that the vessel MMSI and position
+has no AIS equipment: it is sufficient that the vessel's MMSI and position
 are available on their default Signal K paths (`mmsi` and `navigation.position`).
 
 On a ship with an AIS receiver the plugin can be configured to report
@@ -33,16 +32,16 @@ the plugin's configuration using Signal K's dashboard interface.
 ### A minimal configuration
 
 The plugin includes built-in defaults for most configuration properties
-and a minimal plugin configuration just requires the definition of at least
+and a minimal plugin configuration just requires the specification of at least
 one reporting endpoint in terms of its IP address and service port.
 For example:
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "My Endpoint",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*target_ip_address*",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *target_port_number*  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test Endpoint",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
 > &nbsp;&nbsp;&nbsp;&nbsp;]  
 > &nbsp;&nbsp;},  
