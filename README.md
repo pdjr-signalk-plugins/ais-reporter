@@ -20,7 +20,7 @@ data on all vessels whose broadcasts are received and logged by Signal K.
 Reports are issued at a user configured rate to each defined endpoint
 and reporting of the 'self' vessel can be configured differently to
 that of other vessels giving some control over resource consumption on
-the host vessel's Ethernet connection.
+the host vessel's Internet connection.
 
 ## Plugin configuration
 
