@@ -67,8 +67,8 @@ For example:
 The minimal configuration described above will report the position of all
 vessels known to Signal K once every 5 minutes and associated static data
 once every 15 minutes.
-Received AIS data is expired after 15 minutes and no longer transmitted to
-the upstream host.
+Received AIS data is expired after 15 minutes and after expiry will no
+longer transmitted to the upstream host.
 
 These default timings can be overriden by specifying one or more of
 *expiryInterval*, *positionUpdateInterval* and *staticUpdateInterval* at
@@ -136,18 +136,19 @@ overriding these settings for just our own ship.
 
 On my ship I like to modify my position reporting intervals based upon
 whether the ship is navigating or moored: a short interval when
-navigating so as to record a good track and a long interval when moored
+navigating so as to report a good track and a long interval when moored
 so as to save data usage on my Internet connection.
 
 The plugin allows this behaviour to be automated by using the value of a
 Signal K path as an index to select the required reporting interval at
 any point in time.
 To use this mechanism we need to specify our update intervals as an
-array with as many items as distinct values returned by the selector.
+array with as many items as distinct values returned by the index.
 
 In my case my ship reports the main engine ignition state via an NMEA
-switchbank channel at 'electrical.switches.bank.16.16.state' and so
-operates with index values 0 (ignition OFF) and 1 (ignition ON).
+switchbank channel at 'electrical.switches.bank.16.16.state' and the
+plugin uses this value to select an appropriate *positionUpdateInterval*
+using index value 0 when the ignition is OFF and 1 when the ignition is ON.
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
