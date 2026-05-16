@@ -104,6 +104,11 @@ probably want to report position data more frequently than static data.
 If the 'staticUpdateInterval' property is omitted, then the plugin
 assumes the same value as the 'positionUpdateInterval' property.
 
+Be aware that consolidation services like MarineTraffic use frequency
+of reporting as an indicator that a client is working and if no AIS
+reports are received in some time window then an error is raised.
+MarineTraffice seems to use a time window of around one hour.
+
 ### Differentiate 'self' from other vessels
 
 Sometimes we want to report our host vessel differently to the
