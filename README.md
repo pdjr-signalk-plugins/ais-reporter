@@ -2,12 +2,12 @@
 
 **ais-reporter** is a
 [Signal K](https://www.signalk.org/)
-plugin which forwards AIS data on *known vessels* to one or more
-user specified UDP *endpoints*.
-Known vessels in this context means the 'self' ship and/or all
-vessels from which AIS data is currently being received.
-An endpoint is any remote service capable of receiving AIS data
-over UDP, typically a consolidation service like
+plugin which pushes AIS data on *known vessels* to one or more user
+specified UDP *endpoints*.
+Known vessels in this context means the 'self' ship and all vessels
+from which AIS data is currently being received.
+An endpoint is any remote service capable of receiving AIS data over
+UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
 The plugin can issue AIS reports for the 'self' vessel even if the ship
