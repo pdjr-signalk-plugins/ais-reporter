@@ -31,8 +31,12 @@ const PLUGIN_SCHEMA = {
     "required": ["endpoints"],
     "properties": {
         "$ref": "#/definitions/options",
-        "myVessel": { "$ref": "#/definitions/options" },
-        "otherVessels": { "$ref": "#/definitions/options" },
+        "myVessel": {
+            "$ref": "#/definitions/options"
+        },
+        "otherVessels": {
+            "$ref": "#/definitions/options"
+        },
         "endpoints": {
             "type": "array",
             "title": "UDP endpoints to report to",
