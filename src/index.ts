@@ -33,8 +33,8 @@ const PLUGIN_SCHEMA: object = {
   "required": [ "endpoints" ],
   "properties": {
     "$ref": "#/definitions/options",
-    "myVessel": { "$ref": "#/definitions/vessel" },
-    "otherVessels": { "$ref": "#/definitions/vessel" },  
+    "myVessel": { "$ref": "#/definitions/options" },
+    "otherVessels": { "$ref": "#/definitions/options" },  
     "endpoints": {
       "type": "array",
       "title": "UDP endpoints to report to",
@@ -91,9 +91,6 @@ const PLUGIN_SCHEMA: object = {
         "title": "Path which selects override intervals",
         "type": "string"
       }  
-    },
-    "vessel": {
-      "$ref": "#/definitions/options"
     }
   }
 };
