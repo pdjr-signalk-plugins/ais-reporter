@@ -34,15 +34,22 @@ const PLUGIN_SCHEMA: object = {
   "properties": {
     "expiryinterval": {
       "title": "Ignore vessel data older than this number of minutes",
-      "$ref": "#/definitions/interval"
+      "type": "integer",
+      "minimum": 0
     },
     "positionUpdateInterval": {
       "title": "Position update interval in minutes",
-      "$ref": "#/definitions/updateInterval"
-    },
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      ]
+  },
     "staticUpdateInterval": {
       "title": "Static data update interval in minutes",
-      "$ref": "#/definitions/updateInterval"
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      ]
     },
     "updateIntervalIndexPath": {
       "title": "Path which selects override intervals",
@@ -53,15 +60,22 @@ const PLUGIN_SCHEMA: object = {
       "properties": {
         "expiryinterval": {
           "title": "Ignore vessel data older than this number of minutes",
-          "$ref": "#/definitions/interval"
+          "type": "integer",
+          "minimum": 0
         },
         "positionUpdateInterval": {
           "title": "Position update interval in minutes",
-          "$ref": "#/definitions/updateInterval"
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+          ]
         },
         "staticUpdateInterval": {
           "title": "Static data update interval in minutes",
-          "$ref": "#/definitions/updateInterval"
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+          ]
         },
         "updateIntervalIndexPath": {
           "title": "Path which selects override intervals",
@@ -74,15 +88,22 @@ const PLUGIN_SCHEMA: object = {
       "properties": {
         "expiryinterval": {
           "title": "Ignore vessel data older than this number of minutes",
-          "$ref": "#/definitions/interval"
+          "type": "integer",
+          "minimum": 0
         },
         "positionUpdateInterval": {
           "title": "Position update interval in minutes",
-          "$ref": "#/definitions/updateInterval"
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+          ]
         },
         "staticUpdateInterval": {
           "title": "Static data update interval in minutes",
-          "$ref": "#/definitions/updateInterval"
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+          ]
         },
         "updateIntervalIndexPath": {
           "title": "Path which selects override intervals",
@@ -111,23 +132,81 @@ const PLUGIN_SCHEMA: object = {
             "type": "number",
             "minimum": 0
           },
-          "$ref": "#/definitions/options",
-          "myVessel": { "$ref": "#/definitions/vessel" },
-          "otherVessels": { "$ref": "#/definitions/vessel" }
+          "expiryinterval": {
+            "title": "Ignore vessel data older than this number of minutes",
+            "type": "integer",
+            "minimum": 0
+          },
+          "positionUpdateInterval": {
+            "title": "Position update interval in minutes",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+            ]
+          },
+          "staticUpdateInterval": {
+            "title": "Static data update interval in minutes",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+            ]
+          },
+          "updateIntervalIndexPath": {
+            "title": "Path which selects override intervals",
+            "type": "string"
+          },
+          "myVessel": {
+            "expiryinterval": {
+              "title": "Ignore vessel data older than this number of minutes",
+              "type": "integer",
+              "minimum": 0
+            },
+            "positionUpdateInterval": {
+              "title": "Position update interval in minutes",
+              "oneOf": [
+                { "type": "integer", "minimum": 0 },
+                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+              ]
+            },
+            "staticUpdateInterval": {
+              "title": "Static data update interval in minutes",
+              "oneOf": [
+                { "type": "integer", "minimum": 0 },
+                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+              ]
+            },
+            "updateIntervalIndexPath": {
+              "title": "Path which selects override intervals",
+              "type": "string"
+            }
+          },
+          "otherVessels": { 
+            "expiryinterval": {
+              "title": "Ignore vessel data older than this number of minutes",
+              "type": "integer",
+              "minimum": 0
+            },
+            "positionUpdateInterval": {
+              "title": "Position update interval in minutes",
+              "oneOf": [
+                { "type": "integer", "minimum": 0 },
+                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+              ]
+            },
+            "staticUpdateInterval": {
+              "title": "Static data update interval in minutes",
+              "oneOf": [
+                { "type": "integer", "minimum": 0 },
+                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+              ]
+            },
+            "updateIntervalIndexPath": {
+              "title": "Path which selects override intervals",
+              "type": "string"
+            }
+          }
         }        
       }
-    }
-  },
-  "definitions": {
-    "updateInterval": {
-      "oneOf": [
-        { "$ref": "#/definitions/interval" },
-        { "type": "array", "items": { "$ref": "#/$defs/interval" }}
-      ]
-    },
-    "interval": {
-      "type": "integer",
-      "minimum": 0
     }
   }
 };
