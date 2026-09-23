@@ -75,21 +75,24 @@ const PLUGIN_SCHEMA: object = {
       "minimum": 0
     },
     "options": {
-      "expiryinterval": {
-        "title": "Ignore vessel data older than this number of minutes",
-        "$ref": "#/definitions/interval"
-      },
-      "positionUpdateInterval": {
-        "title": "Position update interval in minutes",
-        "$ref": "#/definitions/updateInterval"
-      },
-      "staticUpdateInterval": {
-        "title": "Static data update interval in minutes",
-        "$ref": "#/definitions/updateInterval"
-      },
-      "updateIntervalIndexPath": {
-        "title": "Path which selects override intervals",
-        "type": "string"
+      "type": "object",
+      "properties": { 
+        "expiryinterval": {
+          "title": "Ignore vessel data older than this number of minutes",
+          "$ref": "#/definitions/interval"
+        },
+        "positionUpdateInterval": {
+          "title": "Position update interval in minutes",
+          "$ref": "#/definitions/updateInterval"
+        },
+        "staticUpdateInterval": {
+          "title": "Static data update interval in minutes",
+          "$ref": "#/definitions/updateInterval"
+        },
+        "updateIntervalIndexPath": {
+          "title": "Path which selects override intervals",
+          "type": "string"
+        }
       }  
     }
   }
