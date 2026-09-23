@@ -66,7 +66,7 @@ const PLUGIN_SCHEMA: object = {
   "definitions": {
     "updateInterval": {
       "oneOf": [
-        { "$ref": "#/$defs/interval" },
+        { "$ref": "#/definitions/interval" },
         { "type": "array", "items": { "$ref": "#/$defs/interval" }}
       ]
     },
