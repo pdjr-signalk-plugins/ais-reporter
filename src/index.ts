@@ -34,10 +34,16 @@ const PLUGIN_SCHEMA: object = {
   "properties": {
     "$ref": "#/definitions/options",
     "myVessel": {
-      "$ref": "#/definitions/options"
+      "type": "object",
+      "properties": {
+        "$ref": "#/definitions/options"
+      }
     },
     "otherVessels": {
-      "$ref": "#/definitions/options"
+      "type": "object",
+      "properties": {
+        "$ref": "#/definitions/options"
+      }
     },  
     "endpoints": {
       "type": "array",
