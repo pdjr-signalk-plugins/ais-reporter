@@ -32,37 +32,9 @@ const PLUGIN_SCHEMA: object = {
   "type": "object",
   "required": [ "endpoints" ],
   "properties": {
-    "expiryinterval": {
-      "title": "Ignore vessel data older than this number of minutes",
-      "type": "integer",
-      "minimum": 0
-    },
-    "positionUpdateInterval": {
-      "title": "Position update interval in minutes",
-      "oneOf": [
-        { "type": "integer", "minimum": 0 },
-        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-      ]
-  },
-    "staticUpdateInterval": {
-      "title": "Static data update interval in minutes",
-      "oneOf": [
-        { "type": "integer", "minimum": 0 },
-        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-      ]
-    },
-    "updateIntervalIndexPath": {
-      "title": "Path which selects override intervals",
-      "type": "string"
-    },
     "myVessel": {
       "type": "object",
       "properties": {
-        "expiryinterval": {
-          "title": "Ignore vessel data older than this number of minutes",
-          "type": "integer",
-          "minimum": 0
-        },
         "positionUpdateInterval": {
           "title": "Position update interval in minutes",
           "oneOf": [
@@ -132,35 +104,7 @@ const PLUGIN_SCHEMA: object = {
             "type": "number",
             "minimum": 0
           },
-          "expiryinterval": {
-            "title": "Ignore vessel data older than this number of minutes",
-            "type": "integer",
-            "minimum": 0
-          },
-          "positionUpdateInterval": {
-            "title": "Position update interval in minutes",
-            "oneOf": [
-              { "type": "integer", "minimum": 0 },
-              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-          },
-          "staticUpdateInterval": {
-            "title": "Static data update interval in minutes",
-            "oneOf": [
-              { "type": "integer", "minimum": 0 },
-              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-          },
-          "updateIntervalIndexPath": {
-            "title": "Path which selects override intervals",
-            "type": "string"
-          },
           "myVessel": {
-            "expiryinterval": {
-              "title": "Ignore vessel data older than this number of minutes",
-              "type": "integer",
-              "minimum": 0
-            },
             "positionUpdateInterval": {
               "title": "Position update interval in minutes",
               "oneOf": [
