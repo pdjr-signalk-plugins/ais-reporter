@@ -10,16 +10,18 @@ An endpoint is any remote service capable of receiving AIS data over
 UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The plugin can issue AIS reports for the 'self' vessel even if the ship
-has no AIS equipment: it is sufficient that the vessel's MMSI and position
-are available on their default Signal K paths (`mmsi` and `navigation.position`).
+The plugin can issue AIS reports for the 'self' vessel even if the
+ship has no AIS equipment: it is sufficient that the vessel's MMSI and
+position are available on their default Signal K paths (`mmsi` and
+`navigation.position`).
 
 On a ship with an AIS receiver the plugin can be configured to report
-data on all vessels whose broadcasts are received and logged by Signal K.
+data on all vessels whose broadcasts are received and logged by Signal
+K.
 
 The rates at which reports are issued is user configurable by vessel
-type and endpoint and can be dynamically adjusted in response to values
-on arbitrart Signal K paths.
+type (i.e. 'self' and 'other') and endpoint and can be dynamically
+adjusted in response to values on arbitrart Signal K paths.
 Together these measures give fine control over the granularity of the
 data push and resource consumption on the host vessel's Internet
 connection.
@@ -32,13 +34,13 @@ must be initialised using either Signal K's plugin configuration GUI
 or a text editor.
 
 Some features of the configuration file are poorly supported by Signal
-K's plugin configuration GUI and the following discussion ssumes that
+K's plugin configuration GUI and the following discussion assumes that
 a text editor is being used to directly edit the JSON configuration.
 
 ### A minimal configuration
 
 The plugin includes built-in defaults for most configuration properties
-and a minimal plugin configuration requires an *endpoints* array
+so a minimal plugin configuration requires only an *endpoints* array
 containing at least one reporting endpoint specified in terms of its
 *ipAddress* and service *port* (with maybe an optional descriptive
 *name*).
@@ -73,17 +75,10 @@ The minimal configuration described above uses built in, global,
 defaults to report the position of all vessels known to Signal K once
 every 5 minutes and associated static data once every 15 minutes.
 
-If a vessel moves out of AIS range for more than 15 minutes then its
-AIS data will be expired and no longer be transmitted to the upstream
-host.
-
 #### Overriding default reporting intervals
 
 The reporting intervals described above can be overriden using the
 properties described below.
-
-*expiryInterval* specifies the time in minutes after which data from
-lost AIS targets will be discarded.
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
@@ -100,7 +95,10 @@ minutes.
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
 
-These overrides can be applied anywhere in the configuration file and
+*updateIntervalIndexPath* may be used to specify a Signal K path which
+returns a value that can be used to index an interval array value.
+
+These properties can be applied anywhere in the configuration file and
 operate over the context in which they are defined.
 
 ### Configuration examples
@@ -147,26 +145,23 @@ operate over the context in which they are defined.
 ### Automatically modulate reporting intervals
 
 On my ship I like to modify my position reporting intervals based upon
-whether the ship is navigating or moored: a short interval when
+whether the ship is navigating or moored: using a short interval when
 navigating so as to report a good track and a long interval when moored
 so as to save data usage on my Internet connection.
 
-The plugin allows this behaviour to be automated by using the value of a
-Signal K path as an index to select the required reporting interval at
-any point in time from an array of configured values.
-
 In my case my ship reports the main engine ignition state via an NMEA
-switchbank channel at 'electrical.switches.bank.16.16.state' and the
-plugin uses this value to select an appropriate *positionUpdateInterval*
-using index value 0 when the ignition is OFF and 1 when the ignition is ON.
+binary switchbank channel at 'electrical.switches.bank.16.16.state'
+(0 says ignition off, 1 says ignition on) and the plugin uses this
+value to select an appropriate value from the
+*myPositionUpdateInterval* array.
+
 > {  
 > &nbsp;&nbsp;"configuration": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;"expiryInterval": 15,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20,  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myPositionUpdateInterval": [55,1],  
 > &nbsp;&nbsp;&nbsp;&nbsp;"myStaticUpdateInterval": 55,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"upateIntervalSelector": "electrical.switches.bank.16.16.state",  
+> &nbsp;&nbsp;&nbsp;&nbsp;"upateIntervalIndexPath": "electrical.switches.bank.16.16.state",  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",  
