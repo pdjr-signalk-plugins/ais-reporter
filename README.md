@@ -104,43 +104,44 @@ operate over the context in which they are defined.
 ### Configuration examples
 
 #### Report 'self' vessel at different rate to AIS targets
+
 > {  
-> &nbsp;&nbsp;"configuration": {
-> &nbsp;&nbsp;&nbsp;&nbsp;"myPositionUpdateInterval": 1,
-> &nbsp;&nbsp;&nbsp;&nbsp;"myStaticUpdateInterval": 55
-> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
-> &nbsp;&nbsp;&nbsp;&nbsp;]
-> &nbsp;&nbsp;},
-> &nbsp;&nbsp;"enabled": true
-> }
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"myPositionUpdateInterval": 1,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"myStaticUpdateInterval": 55,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
+> }  
 
 #### Report to two endpoints at different rates
 > {  
-> &nbsp;&nbsp;"configuration": {
-> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",
-> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,
-> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 1
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",
-> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,
-> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*my-marine-traffic-ip*",
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *my-marine-traffic-port*
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},
-> &nbsp;&nbsp;&nbsp;&nbsp;]
-> &nbsp;&nbsp;},
-> &nbsp;&nbsp;"enabled": true
-> }
+> &nbsp;&nbsp;"configuration": {  
+> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",  
+> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 1,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",  
+> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
+> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*my-marine-traffic-ip*",  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *my-marine-traffic-port*  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
+> &nbsp;&nbsp;&nbsp;&nbsp;]  
+> &nbsp;&nbsp;},  
+> &nbsp;&nbsp;"enabled": true  
+> }  
 
 ### Automatically modulate reporting intervals
 
