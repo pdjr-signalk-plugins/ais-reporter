@@ -179,7 +179,6 @@ module.exports = function (app) {
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
             endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint(option, options, defaults))
         };
-        app.debug(JSON.stringify(retval));
         return (retval);
     }
     /**
@@ -203,10 +202,10 @@ module.exports = function (app) {
                     var totalBytes = 0;
                     let mvIDX = ((endpoint.intervals.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0) : 0);
                     let ovIDX = ((endpoint.intervals.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0) : 0);
-                    let mvPUI = _.get(endpoint, `myPositionUpdateIntervals[${mvIDX}]`, 0);
-                    let mvSUI = _.get(endpoint, `myStaticUpdateIntervals[${mvIDX}]`, 0);
-                    let ovPUI = _.get(endpoint, `positionUpdateIntervals[${ovIDX}]`, 0);
-                    let ovSUI = _.get(endpoint, `staticUpdateIntervals[${ovIDX}]`, 0);
+                    let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
+                    let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
+                    let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);
+                    let ovSUI = _.get(endpoint.intervals, `staticUpdateIntervals[${ovIDX}]`, 0);
                     app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
                     app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
                     if (((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0)) || ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0))) {
