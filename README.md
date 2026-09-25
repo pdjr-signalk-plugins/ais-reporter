@@ -126,15 +126,15 @@ operate over the context in which they are defined.
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",  
-> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 1,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 1,  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",  
-> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
+> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*my-marine-traffic-ip*",  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *my-marine-traffic-port*  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
