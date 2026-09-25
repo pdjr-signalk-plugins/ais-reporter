@@ -21,7 +21,7 @@ const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 5, STATIC_UPDATE_INTERVAL: 15, EXPIRY_INTERVAL: 15 };
+const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 5, STATIC_UPDATE_INTERVAL: 15 };
 const HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'ais-reporter';
@@ -30,11 +30,6 @@ const PLUGIN_SCHEMA = {
     "type": "object",
     "required": ["endpoints"],
     "properties": {
-        "expiryinterval": {
-            "title": "Ignore vessel data older than this number of minutes",
-            "type": "integer",
-            "minimum": 0
-        },
         "positionUpdateInterval": {
             "title": "Position update interval in minutes",
             "oneOf": [
@@ -250,7 +245,7 @@ module.exports = function (app) {
         var bytesTransmitted;
         Object.values(app.getPath('vessels'))
             .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 60000)))))
+            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)))))
             .forEach((vessel) => {
             try {
                 aisProperties = { mmsi: vessel.mmsi };
@@ -306,7 +301,7 @@ module.exports = function (app) {
         var bytesTransmitted;
         Object.values(app.getPath('vessels'))
             .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 60000)))))
+            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)))))
             .forEach((vessel) => {
             try {
                 aisProperties = { mmsi: vessel.mmsi };

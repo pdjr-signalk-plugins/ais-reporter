@@ -9,7 +9,6 @@ export declare class Endpoint {
 }
 export type { ReportStatistics };
 interface Intervals {
-    expiryInterval: number;
     positionUpdateIntervals: number[];
     staticUpdateIntervals: number[];
     myPositionUpdateIntervals: number[];

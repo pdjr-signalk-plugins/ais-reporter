@@ -15,7 +15,6 @@ class Endpoint {
         this.name = option.name || option.ipAddress;
         this.ipAddress = option.ipAddress;
         this.port = option.port;
-        this.intervals.expiryInterval = getOption([option, options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
         this.intervals.positionUpdateIntervals = getOptionArray([option, options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
         this.intervals.staticUpdateIntervals = getOptionArray([option, options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
         this.intervals.myPositionUpdateIntervals = getOptionArray([option, options], 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
