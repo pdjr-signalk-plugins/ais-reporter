@@ -183,11 +183,13 @@ module.exports = function(app: any) {
    */
   function makePluginConfiguration(options: any, defaults: any): PluginConfiguration {
     app.debug(`makePluginConfiguration(${JSON.stringify(options)})...`);
-    return({
+    var retval: PluginConfiguration = {
       myMMSI: app.getSelfPath('mmsi'),
       myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
       endpoints: options.endpoints.map((option: any) => new Endpoint(option, options, defaults))
-    });
+    };
+    app.debug(JSON.stringify(retval));
+    return(retval);
   }
 
   /**
