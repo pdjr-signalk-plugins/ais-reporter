@@ -22,7 +22,7 @@ import { Socket, createSocket } from 'dgram';
 import { PluginStatus } from 'signalk-libpluginstatus';
 
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_ENDPOINT_OPTIONS: any = { POSITION_UPDATE_INTERVAL: 5, STATIC_DATA_UPDATE_INTERVAL: 15, EXPIRY_INTERVAL: 15 };
+const DEFAULT_ENDPOINT_OPTIONS: any = { POSITION_UPDATE_INTERVAL: 5, STATIC_UPDATE_INTERVAL: 15, EXPIRY_INTERVAL: 15 };
 const HEARTBEAT_INTERVAL: number = 60000;
 
 const PLUGIN_ID: string = 'ais-reporter';
@@ -32,57 +32,43 @@ const PLUGIN_SCHEMA: object = {
   "type": "object",
   "required": [ "endpoints" ],
   "properties": {
-    "myVessel": {
-      "type": "object",
-      "properties": {
-        "positionUpdateInterval": {
-          "title": "Position update interval in minutes",
-          "oneOf": [
-            { "type": "integer", "minimum": 0 },
-            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-          ]
-        },
-        "staticUpdateInterval": {
-          "title": "Static data update interval in minutes",
-          "oneOf": [
-            { "type": "integer", "minimum": 0 },
-            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-          ]
-        },
-        "updateIntervalIndexPath": {
-          "title": "Path which selects override intervals",
-          "type": "string"
-        }
-      }
+    "expiryinterval": {
+      "title": "Ignore vessel data older than this number of minutes",
+      "type": "integer",
+      "minimum": 0
     },
-    "otherVessels": {
-      "type": "object",
-      "properties": {
-        "expiryinterval": {
-          "title": "Ignore vessel data older than this number of minutes",
-          "type": "integer",
-          "minimum": 0
-        },
-        "positionUpdateInterval": {
-          "title": "Position update interval in minutes",
-          "oneOf": [
-            { "type": "integer", "minimum": 0 },
-            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-          ]
-        },
-        "staticUpdateInterval": {
-          "title": "Static data update interval in minutes",
-          "oneOf": [
-            { "type": "integer", "minimum": 0 },
-            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-          ]
-        },
-        "updateIntervalIndexPath": {
-          "title": "Path which selects override intervals",
-          "type": "string"
-        }
-      }
-    },  
+    "positionUpdateInterval": {
+      "title": "Position update interval in minutes",
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      ]
+    },
+    "staticUpdateInterval": {
+      "title": "Static data update interval in minutes",
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      ]
+    },
+    "myPositionUpdateInterval": {
+      "title": "Position update interval in minutes",
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      ]
+    },
+    "myStaticUpdateInterval": {
+      "title": "Static data update interval in minutes",
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+      ]
+    },
+    "updateIntervalIndexPath": {
+      "title": "Path which selects override intervals",
+      "type": "string"
+    },
     "endpoints": {
       "type": "array",
       "title": "UDP endpoints to report to",
@@ -104,50 +90,37 @@ const PLUGIN_SCHEMA: object = {
             "type": "number",
             "minimum": 0
           },
-          "myVessel": {
-            "positionUpdateInterval": {
-              "title": "Position update interval in minutes",
-              "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-              ]
-            },
-            "staticUpdateInterval": {
-              "title": "Static data update interval in minutes",
-              "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-              ]
-            },
-            "updateIntervalIndexPath": {
-              "title": "Path which selects override intervals",
-              "type": "string"
-            }
+          "positionUpdateInterval": {
+            "title": "Position update interval in minutes",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+            ]
           },
-          "otherVessels": { 
-            "expiryinterval": {
-              "title": "Ignore vessel data older than this number of minutes",
-              "type": "integer",
-              "minimum": 0
-            },
-            "positionUpdateInterval": {
-              "title": "Position update interval in minutes",
-              "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-              ]
-            },
-            "staticUpdateInterval": {
-              "title": "Static data update interval in minutes",
-              "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-              ]
-            },
-            "updateIntervalIndexPath": {
-              "title": "Path which selects override intervals",
-              "type": "string"
-            }
+          "staticUpdateInterval": {
+            "title": "Static data update interval in minutes",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+            ]
+          },
+          "myPositionUpdateInterval": {
+            "title": "Position update interval in minutes",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+            ]
+          },
+          "myStaticUpdateInterval": {
+            "title": "Static data update interval in minutes",
+            "oneOf": [
+              { "type": "integer", "minimum": 0 },
+              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+            ]
+          },
+          "updateIntervalIndexPath": {
+            "title": "Path which selects override intervals",
+            "type": "string"
           }
         }        
       }
@@ -242,12 +215,12 @@ module.exports = function(app: any) {
           var reportStatistics : ReportStatistics = <ReportStatistics>{};
           var totalBytes: number = 0;
 
-          let mvIDX: number = ((endpoint.myVessel.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.myVessel.updateIntervalIndexPath}.value`) || 0):0);
-          let ovIDX: number = ((endpoint.otherVessels.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.otherVessels.updateIntervalIndexPath}.value`) || 0):0);
-          let mvPUI: number = _.get(endpoint, `myVessel.positionUpdateIntervals[${mvIDX}]`, 0);
-          let mvSUI: number = _.get(endpoint, `myVessel.staticUpdateIntervals[${mvIDX}]`, 0);
-          let ovPUI: number = _.get(endpoint, `otherVessels.positionUpdateIntervals[${ovIDX}]`, 0);
-          let ovSUI: number = _.get(endpoint, `otherVessels.staticUpdateIntervals[${ovIDX}]`, 0);
+          let mvIDX: number = ((endpoint.intervals.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0):0);
+          let ovIDX: number = ((endpoint.intervals.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0):0);
+          let mvPUI: number = _.get(endpoint, `myPositionUpdateIntervals[${mvIDX}]`, 0);
+          let mvSUI: number = _.get(endpoint, `myStaticUpdateIntervals[${mvIDX}]`, 0);
+          let ovPUI: number = _.get(endpoint, `positionUpdateIntervals[${ovIDX}]`, 0);
+          let ovSUI: number = _.get(endpoint, `staticUpdateIntervals[${ovIDX}]`, 0);
           
           app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
           app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
@@ -292,7 +265,7 @@ module.exports = function(app: any) {
 
     Object.values(app.getPath('vessels'))
     .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-    .filter((vessel: any) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
+    .filter((vessel: any) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 60000)))))
     .forEach((vessel: any) => {
       try {  
         aisProperties = { mmsi: vessel.mmsi };
@@ -347,7 +320,7 @@ module.exports = function(app: any) {
   
     Object.values(app.getPath('vessels'))
     .filter((vessel: any) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-    .filter((vessel: any) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.myVessel.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.otherVessels.expiryInterval * 60000)))))
+    .filter((vessel: any) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 6000)))) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)) && ((new Date(vessel.navigation.position.timestamp)).getTime() > (Date.now() - (endpoint.intervals.expiryInterval * 60000)))))
     .forEach((vessel: any) => {
       try {
         aisProperties = { mmsi: vessel.mmsi };

@@ -2,17 +2,18 @@ export declare class Endpoint {
     name: string;
     ipAddress: string;
     port: number;
-    myVessel: Vessel;
-    otherVessels: Vessel;
+    intervals: Intervals;
     statistics: Statistics;
     constructor(option: any, options: any, defaults: any);
     updateStatistics(reportType: string, update: ReportStatistics): void;
 }
 export type { ReportStatistics };
-interface Vessel {
+interface Intervals {
     expiryInterval: number;
     positionUpdateIntervals: number[];
     staticUpdateIntervals: number[];
+    myPositionUpdateIntervals: number[];
+    myStaticUpdateIntervals: number[];
     updateIntervalIndexPath: string;
 }
 interface Statistics {

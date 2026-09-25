@@ -3,8 +3,7 @@ export class Endpoint {
   public name: string = '';
   public ipAddress: string = '';
   public port: number = 0;
-  public myVessel: Vessel = <Vessel>{};
-  public otherVessels: Vessel = <Vessel>{};
+  public intervals: Intervals = <Intervals>{};
   public statistics: Statistics = <Statistics>{};
 
   constructor(option: any, options: any, defaults: any) {
@@ -14,16 +13,13 @@ export class Endpoint {
     this.name = option.name || option.ipAddress;
     this.ipAddress = option.ipAddress;
     this.port = option.port;
-    this.myVessel = <Vessel>{};
-    this.myVessel.expiryInterval = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
-    this.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-    this.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}),option,(options.myVessel || {}),,options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
-    this.myVessel.updateIntervalIndexPath = getOption([(option.myVessel || {}),option,(options.myVessel || {}),options], 'updateIntervalIndexPath', undefined);
-    this.otherVessels = <Vessel>{};
-    this.otherVessels.expiryInterval = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
-    this.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-    this.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
-    this.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}),option,(options.otherVessels || {}),options], 'updateIntervalIndexPath', undefined);
+    this.intervals.expiryInterval = getOption([option, options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
+    this.intervals.positionUpdateIntervals = getOptionArray([option, options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
+    this.intervals.staticUpdateIntervals = getOptionArray([option, options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
+    this.intervals.myPositionUpdateIntervals = getOptionArray([option, options], 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
+    this.intervals.myStaticUpdateIntervals = getOptionArray([option, options], 'myStaticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
+    this.intervals.updateIntervalIndexPath = getOption([option, options], 'updateIntervalIndexPath', undefined);
+
     this.statistics = {
       started: Date.now(),
       totalBytes: 0,
@@ -49,6 +45,13 @@ export class Endpoint {
       }
     }
   
+    /**
+     * 
+     * @param objects - an array of arbitrary objects which may contain 'name'
+     * @param name - the identifier of a property that may be contained in 'objects'
+     * @param fallback - the value to be returned if 'name' is not found in any object.
+     * @returns 
+     */
     function getOption(objects: any[], name: string, fallback: any): any {
       if (objects.length == 0) {
         return(fallback);
@@ -98,11 +101,13 @@ export class Endpoint {
 
 export type { ReportStatistics };
 
-interface Vessel {
+interface Intervals {
   expiryInterval: number,
   positionUpdateIntervals: number[],
   staticUpdateIntervals: number[],
-  updateIntervalIndexPath: string,
+  myPositionUpdateIntervals: number[],
+  myStaticUpdateIntervals: number[],
+  updateIntervalIndexPath: string
 }
 
 interface Statistics {

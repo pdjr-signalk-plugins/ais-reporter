@@ -6,8 +6,7 @@ class Endpoint {
         this.name = '';
         this.ipAddress = '';
         this.port = 0;
-        this.myVessel = {};
-        this.otherVessels = {};
+        this.intervals = {};
         this.statistics = {};
         if (!option.ipAddress)
             throw new Error('missing \'ipAddress\' property');
@@ -16,16 +15,12 @@ class Endpoint {
         this.name = option.name || option.ipAddress;
         this.ipAddress = option.ipAddress;
         this.port = option.port;
-        this.myVessel = {};
-        this.myVessel.expiryInterval = getOption([(option.myVessel || {}), option, (options.myVessel || {}), options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
-        this.myVessel.positionUpdateIntervals = getOptionArray([(option.myVessel || {}), option, (options.myVessel || {}), options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-        this.myVessel.staticUpdateIntervals = getOptionArray([(option.myVessel || {}), option, (options.myVessel || {}), , options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
-        this.myVessel.updateIntervalIndexPath = getOption([(option.myVessel || {}), option, (options.myVessel || {}), options], 'updateIntervalIndexPath', undefined);
-        this.otherVessels = {};
-        this.otherVessels.expiryInterval = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
-        this.otherVessels.positionUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-        this.otherVessels.staticUpdateIntervals = getOptionArray([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
-        this.otherVessels.updateIntervalIndexPath = getOption([(option.otherVessels || {}), option, (options.otherVessels || {}), options], 'updateIntervalIndexPath', undefined);
+        this.intervals.expiryInterval = getOption([option, options], 'expiryInterval', defaults.EXPIRY_INTERVAL);
+        this.intervals.positionUpdateIntervals = getOptionArray([option, options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
+        this.intervals.staticUpdateIntervals = getOptionArray([option, options], 'staticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
+        this.intervals.myPositionUpdateIntervals = getOptionArray([option, options], 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
+        this.intervals.myStaticUpdateIntervals = getOptionArray([option, options], 'myStaticUpdateInterval', [defaults.STATIC_DATA_UPDATE_INTERVAL]);
+        this.intervals.updateIntervalIndexPath = getOption([option, options], 'updateIntervalIndexPath', undefined);
         this.statistics = {
             started: Date.now(),
             totalBytes: 0,
@@ -50,6 +45,13 @@ class Endpoint {
                 }
             }
         };
+        /**
+         *
+         * @param objects - an array of arbitrary objects which may contain 'name'
+         * @param name - the identifier of a property that may be contained in 'objects'
+         * @param fallback - the value to be returned if 'name' is not found in any object.
+         * @returns
+         */
         function getOption(objects, name, fallback) {
             if (objects.length == 0) {
                 return (fallback);
