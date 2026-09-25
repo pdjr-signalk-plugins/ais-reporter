@@ -121,6 +121,7 @@ operate over the context in which they are defined.
 > }  
 
 #### Report to two endpoints at different rates
+
 > {  
 > &nbsp;&nbsp;"configuration": {  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
@@ -178,7 +179,8 @@ value to select an appropriate value from the
 
 The plugin presents an API on `/plugins/ais-reporter/status` which
 returns some data on resources consumed by each endpoint.
-```
+
+```json
 {
   "MarineTraffic": {
     "ipAddress": "-.-.--.---",
