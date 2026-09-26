@@ -21,7 +21,8 @@ K.
 
 The rates at which reports are issued is user configurable by vessel
 type (i.e. 'self' and 'other') and endpoint and can be dynamically
-adjusted in response to values on arbitrart Signal K paths.
+adjusted in response to values on one or more arbitrary Signal K
+paths.
 Together these measures give fine control over the granularity of the
 data push and resource consumption on the host vessel's Internet
 connection.
@@ -100,6 +101,10 @@ returns a value that can be used to index an interval array value.
 
 These properties can be applied anywhere in the configuration file and
 operate over the context in which they are defined.
+
+Note that consolidation services use the frequency of reporting as an
+indicator of vessel presence; Marine Traffic for example seems to
+expect reporting intervals of less than an hour or so.
 
 ### Configuration examples
 
