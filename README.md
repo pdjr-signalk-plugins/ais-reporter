@@ -126,27 +126,29 @@ expect reporting intervals of less than an hour or so.
 
 #### Report to two endpoints at different rates
 
-> {  
-> &nbsp;&nbsp;"configuration": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 1,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 1,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*my-marine-traffic-ip*",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *my-marine-traffic-port*  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},  
-> &nbsp;&nbsp;&nbsp;&nbsp;]  
-> &nbsp;&nbsp;},  
-> &nbsp;&nbsp;"enabled": true  
-> }  
+```json
+{  
+  "configuration": {  
+    "endpoints": [  
+      {  
+        "name": "Test endpoint",  
+        "ipAddress": "127.0.0.1",  
+        "port": 12345,  
+        "positionUpdateInterval": 1,  
+        "staticUpdateInterval": 1  
+      },  
+      {  
+        "name": "Marine Traffic",  
+        "ipAddress": "*my-marine-traffic-ip*",  
+        "port": *my-marine-traffic-port*,  
+        "positionUpdateInterval": 5,  
+        "staticUpdateInterval": 20  
+      }  
+    ]  
+  },  
+  "enabled": true  
+}
+```  
 
 ### Automatically modulate reporting intervals
 
