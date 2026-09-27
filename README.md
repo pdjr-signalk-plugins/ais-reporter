@@ -41,18 +41,20 @@ containing at least one reporting endpoint specified in terms of its
 *ipAddress* and service *port* (with maybe an optional descriptive
 *name*).
 
-> {  
-> &nbsp;&nbsp;"configuration": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
-> &nbsp;&nbsp;&nbsp;&nbsp;]  
-> &nbsp;&nbsp;},  
-> &nbsp;&nbsp;"enabled": true  
-> }
+```json
+{  
+  "configuration": {  
+    "endpoints": [  
+      {  
+        "name": "Test endpoint",  
+        "ipAddress": "127.0.0.1",  
+        "port": 12345  
+      }  
+    ]  
+  },  
+  "enabled": true  
+}
+```
 
 This example will push AIS data to port 12345 on the Signal K host and
 may be useful for checking and testing plugin operation.
