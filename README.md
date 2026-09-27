@@ -46,7 +46,7 @@ containing at least one reporting endpoint specified in terms of its
   "configuration": {  
     "endpoints": [  
       {  
-        "name": "Test endpoint",  
+        "name": "Test",  
         "ipAddress": "127.0.0.1",  
         "port": 12345  
       }  
@@ -114,7 +114,7 @@ expect reporting intervals of less than an hour or so.
     "myStaticUpdateInterval": 55,  
     "endpoints": [  
       {  
-        "name": "Test endpoint",  
+        "name": "Test",  
         "ipAddress": "127.0.0.1",  
         "port": 12345  
       }  
@@ -131,7 +131,7 @@ expect reporting intervals of less than an hour or so.
   "configuration": {  
     "endpoints": [  
       {  
-        "name": "Test endpoint",  
+        "name": "Test",  
         "ipAddress": "127.0.0.1",  
         "port": 12345,  
         "positionUpdateInterval": 1,  
