@@ -174,8 +174,8 @@ value to select an appropriate value from the
     "endpoints": [  
       {  
         "name": "Marine Traffic",  
-        "ipAddress": "*my-marine-traffic-ip*",  
-        "port": *my-marine-traffic-port*  
+        "ipAddress": "203.0.113.1",  
+        "port": 32123
       }  
     ]  
   },  
