@@ -171,16 +171,17 @@ value to select an appropriate value from the
     "myPositionUpdateInterval": [55,1],  
     "myStaticUpdateInterval": 55,  
     "upateIntervalIndexPath": "electrical.switches.bank.16.16.state",  
-> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "*my-marine-traffic-ip*",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": *my-marine-traffic-port*  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
-> &nbsp;&nbsp;&nbsp;&nbsp;]  
-> &nbsp;&nbsp;},  
-> &nbsp;&nbsp;"enabled": true  
-> }
+    "endpoints": [  
+      {  
+        "name": "Marine Traffic",  
+        "ipAddress": "*my-marine-traffic-ip*",  
+        "port": *my-marine-traffic-port*  
+      }  
+    ]  
+  },  
+  "enabled": true  
+}
+```
 
 ## Plugin API
 
