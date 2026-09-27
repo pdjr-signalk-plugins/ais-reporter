@@ -107,20 +107,22 @@ expect reporting intervals of less than an hour or so.
 
 #### Report 'self' vessel at different rate to AIS targets
 
-> {  
-> &nbsp;&nbsp;"configuration": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;"myPositionUpdateInterval": 1,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"myStaticUpdateInterval": 55,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Test endpoint",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"ipAddress": "127.0.0.1",  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"port": 12345  
-> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}  
-> &nbsp;&nbsp;&nbsp;&nbsp;]  
-> &nbsp;&nbsp;},  
-> &nbsp;&nbsp;"enabled": true  
-> }  
+```json
+{  
+  "configuration": {  
+    "myPositionUpdateInterval": 1,  
+    "myStaticUpdateInterval": 55,  
+    "endpoints": [  
+      {  
+        "name": "Test endpoint",  
+        "ipAddress": "127.0.0.1",  
+        "port": 12345  
+      }  
+    ]  
+  },  
+  "enabled": true  
+}
+```  
 
 #### Report to two endpoints at different rates
 
