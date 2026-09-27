@@ -4,20 +4,19 @@
 [Signal K](https://www.signalk.org/)
 plugin which pushes AIS data on *known vessels* to one or more user
 specified UDP *endpoints*.
-Known vessels in this context means the 'self' ship and all vessels
-from which AIS data is currently being received.
+Known vessels in this context means the host ship and all AIS targets
+from which data is currently being received.
 An endpoint is any remote service capable of receiving AIS data over
 UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The plugin can issue AIS reports for the 'self' vessel even if the
-ship has no AIS equipment: it is sufficient that the vessel's MMSI and
-position are available on their default Signal K paths (`mmsi` and
+The plugin treats the host ship as a special case and allows its
+reporting characteristics to be differentiated from those of received
+AIS targets.
+AIS reports for the host vessel can be issued even if the ship has no
+AIS equipment: it is sufficient that the vessel's MMSI and position
+are available on their default Signal K paths (`mmsi` and
 `navigation.position`).
-
-On a ship with an AIS receiver the plugin can be configured to report
-data on all vessels whose broadcasts are received and logged by Signal
-K.
 
 The rates at which reports are issued is user configurable by vessel
 type (i.e. 'self' and 'other') and endpoint and can be dynamically
