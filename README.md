@@ -10,15 +10,12 @@ An endpoint is any remote service capable of receiving AIS data over
 UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The plugin treats the host ship as a special case and allows its
-reporting characteristics to be differentiated from those of received
-AIS targets.
-The rates at which reports are issued for host, targets and enpoints
-can be independently configured and can be dynamically adjusted in
-response to values on one or more arbitrary Signal K paths.
-Together these measures give fine control over the granularity of the
-data push and resource consumption on the host vessel's Internet
-connection.
+The rates at which reports are issued for the host ship, AIS targets
+and UDP enpoints can be independently configured and can be dynamically
+adjusted in response to values on one or more arbitrary Signal K paths.
+Together these measures may be used to give fine control over the
+granularity of data reporting and resource consumption on the host
+vessel's Internet connection.
 
 AIS reports for the host vessel can be issued even if the ship has no
 AIS equipment: it is sufficient that the vessel's MMSI and position
@@ -39,7 +36,7 @@ a text editor is being used to directly edit the JSON configuration.
 ### A minimal configuration
 
 The plugin includes built-in defaults for most configuration properties
-so a minimal plugin configuration requires only an *endpoints* array
+so a minimal working configuration requires only an *endpoints* array
 containing at least one reporting endpoint specified in terms of its
 *ipAddress* and service *port* (with maybe an optional descriptive
 *name*).
