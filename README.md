@@ -163,13 +163,14 @@ binary switchbank channel at 'electrical.switches.bank.16.16.state'
 value to select an appropriate value from the
 *myPositionUpdateInterval* array.
 
-> {  
-> &nbsp;&nbsp;"configuration": {  
-> &nbsp;&nbsp;&nbsp;&nbsp;"positionUpdateInterval": 5,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"staticUpdateInterval": 20,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"myPositionUpdateInterval": [55,1],  
-> &nbsp;&nbsp;&nbsp;&nbsp;"myStaticUpdateInterval": 55,  
-> &nbsp;&nbsp;&nbsp;&nbsp;"upateIntervalIndexPath": "electrical.switches.bank.16.16.state",  
+```json
+{  
+  "configuration": {  
+    "positionUpdateInterval": 5,  
+    "staticUpdateInterval": 20,  
+    "myPositionUpdateInterval": [55,1],  
+    "myStaticUpdateInterval": 55,  
+    "upateIntervalIndexPath": "electrical.switches.bank.16.16.state",  
 > &nbsp;&nbsp;&nbsp;&nbsp;"endpoints": [  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{  
 > &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"name": "Marine Traffic",  
