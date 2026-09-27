@@ -139,8 +139,8 @@ expect reporting intervals of less than an hour or so.
       },  
       {  
         "name": "Marine Traffic",  
-        "ipAddress": "*my-marine-traffic-ip*",  
-        "port": *my-marine-traffic-port*,  
+        "ipAddress": "203.0.113.1",  
+        "port": 32123,  
         "positionUpdateInterval": 5,  
         "staticUpdateInterval": 20  
       }  
