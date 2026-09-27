@@ -13,18 +13,17 @@ UDP, typically a consolidation service like
 The plugin treats the host ship as a special case and allows its
 reporting characteristics to be differentiated from those of received
 AIS targets.
+The rates at which reports are issued for host, targets and enpoints
+can be independently configured and can be dynamically adjusted in
+response to values on one or more arbitrary Signal K paths.
+Together these measures give fine control over the granularity of the
+data push and resource consumption on the host vessel's Internet
+connection.
+
 AIS reports for the host vessel can be issued even if the ship has no
 AIS equipment: it is sufficient that the vessel's MMSI and position
 are available on their default Signal K paths (`mmsi` and
 `navigation.position`).
-
-The rates at which reports are issued is user configurable by vessel
-type (i.e. 'self' and 'other') and endpoint and can be dynamically
-adjusted in response to values on one or more arbitrary Signal K
-paths.
-Together these measures give fine control over the granularity of the
-data push and resource consumption on the host vessel's Internet
-connection.
 
 ## Plugin configuration
 
