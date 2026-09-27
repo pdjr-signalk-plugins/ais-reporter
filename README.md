@@ -191,8 +191,8 @@ returns some data on resources consumed by each endpoint.
 ```json
 {
   "MarineTraffic": {
-    "ipAddress": "-.-.--.---",
-    "port": -----,
+    "ipAddress": "127.0.0.1",
+    "port": 12345,
     "started": "2024-12-19T11:34:30.184Z",
     "totalBytesTransmitted": 382,
     "positionSelfBytesPerHour": 52,
