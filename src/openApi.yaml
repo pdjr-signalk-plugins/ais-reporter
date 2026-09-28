@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: AIS Reporter API
-  version: 1.0.0
+  version: 2.0.0
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -21,7 +21,7 @@ paths:
       description: |
         Get a digest reporting the status of all configured endpoints.
       responses:
-        200:
+        '200':
           description: |
             Success.
             The response body is an object containing a status report
@@ -30,43 +30,43 @@ paths:
             application/json:
               schema:
                 type: object
-                properties:
-                  endpoint:
-                    type: object
-                    properties:
-                      ipAddress:
-                        description: IP address of the report endpoint.
-                        type: string
-                        example: 192.168.1.12
-                      port:
-                        description: Port number of the report endpoint.
-                        type: number
-                        example: 12345
-                      started:
-                        description: Time (UTC) at which the plugin commenced operation.
-                        type: string
-                        example: 2024-12-19T09:31:26.774Z
-                      totalBytesTransmitted:
-                        description: Number of bytes transmitted to the endpoint since the plugin started.
-                        type: number
-                        example: 457683
-                      positionSelfBytesPerHour:
-                        description: Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.
-                        type: number
-                        example: 456
-                      positionOthersBytesPerHour:
-                        description: Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.
-                        type: number
-                        example: 912
-                      staticSelfBytesPerHour:
-                        description: Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.
-                        type: number
-                        example: 456
-                      staticOthersBytesPerHour:
-                        description: Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.
-                        type: number
-                        example: 912
-        500:
+                additionalProperties:
+                  type: object
+                  properties:
+                    ipAddress:
+                      description: IP address of the report endpoint.
+                      type: string
+                      example: 192.168.1.12
+                    port:
+                      description: Port number of the report endpoint.
+                      type: integer
+                      example: 12345
+                    started:
+                      description: Time (UTC) at which the plugin commenced operation.
+                      type: string
+                      format: date-time
+                      example: 2024-12-19T09:31:26.774Z
+                    totalBytesTransmitted:
+                      description: Number of bytes transmitted to the endpoint since the plugin started.
+                      type: integer
+                      example: 457683
+                    positionSelfBytesPerHour:
+                      description: Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.
+                      type: integer
+                      example: 456
+                    positionOthersBytesPerHour:
+                      description: Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.
+                      type: integer
+                      example: 912
+                    staticSelfBytesPerHour:
+                      description: Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.
+                      type: integer
+                      example: 456
+                    staticOthersBytesPerHour:
+                      description: Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.
+                      type: integer
+                      example: 912
+        '500':
           description: |
             Error.
-            The server was unable to service the request.       
+            The server was unable to service the request.
