@@ -182,12 +182,12 @@ module.exports = function(app: any) {
    * @returns - a canonical PluginConfiguration.
    */
   function makePluginConfiguration(options: any, defaults: any): PluginConfiguration {
-    app.debug(`makePluginConfiguration(${JSON.stringify(options)})...`);
     var retval: PluginConfiguration = {
       myMMSI: app.getSelfPath('mmsi'),
       myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
       endpoints: options.endpoints.map((option: any) => new Endpoint(option, options, defaults))
     };
+    app.debug(`using configuration:\n${JSON.stringify(options, null, 2)}`);
     return(retval);
   }
 
