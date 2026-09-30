@@ -65,6 +65,7 @@ class Endpoint {
                 retval = (Array.isArray(globalConfig[name])) ? globalConfig[name] : [globalConfig[name]];
             if (endpointConfig.hasOwnProperty(name))
                 retval = (Array.isArray(endpointConfig[name])) ? endpointConfig[name] : [endpointConfig[name]];
+            return (retval);
         }
     }
     updateStatistics(reportType, update) {

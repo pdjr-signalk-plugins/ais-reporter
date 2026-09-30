@@ -65,6 +65,7 @@ export class Endpoint {
       var retval: any = fallback;
       if (globalConfig.hasOwnProperty(name)) retval = (Array.isArray(globalConfig[name]))?globalConfig[name]:[globalConfig[name]];
       if (endpointConfig.hasOwnProperty(name)) retval = (Array.isArray(endpointConfig[name]))?endpointConfig[name]:[endpointConfig[name]];
+      return(retval);
     }
   }
 
