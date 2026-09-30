@@ -178,7 +178,7 @@ module.exports = function (app) {
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
             endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint(option, options, defaults))
         };
-        app.debug(`using configuration:\n${JSON.stringify(options, null, 2)}`);
+        app.debug(`using configuration:\n${JSON.stringify(retval, null, 2)}`);
         return (retval);
     }
     /**
