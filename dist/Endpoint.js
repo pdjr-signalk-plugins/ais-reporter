@@ -2,24 +2,24 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Endpoint = void 0;
 class Endpoint {
-    constructor(option, options, defaults) {
+    constructor(endpointConfig, globalConfig, defaults) {
         this.name = '';
         this.ipAddress = '';
         this.port = 0;
         this.intervals = {};
         this.statistics = {};
-        if (!option.ipAddress)
+        if (!endpointConfig.ipAddress)
             throw new Error('missing \'ipAddress\' property');
-        if (!option.port)
+        if (!endpointConfig.port)
             throw new Error('missing \'port\' property');
-        this.name = option.name || option.ipAddress;
-        this.ipAddress = option.ipAddress;
-        this.port = option.port;
-        this.intervals.positionUpdateIntervals = getOptionArray([option, options], 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-        this.intervals.staticUpdateIntervals = getOptionArray([option, options], 'staticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
-        this.intervals.myPositionUpdateIntervals = getOptionArray([option, options], 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-        this.intervals.myStaticUpdateIntervals = getOptionArray([option, options], 'myStaticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
-        this.intervals.updateIntervalIndexPath = getOption([option, options], 'updateIntervalIndexPath', undefined);
+        this.name = endpointConfig.name || endpointConfig.ipAddress;
+        this.ipAddress = endpointConfig.ipAddress;
+        this.port = endpointConfig.port;
+        this.intervals.positionUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
+        this.intervals.staticUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'staticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
+        this.intervals.myPositionUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
+        this.intervals.myStaticUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'myStaticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
+        this.intervals.updateIntervalIndexPath = getOption(endpointConfig, globalConfig, 'updateIntervalIndexPath', undefined);
         this.statistics = {
             started: Date.now(),
             totalBytes: 0,
@@ -51,31 +51,20 @@ class Endpoint {
          * @param fallback - the value to be returned if 'name' is not found in any object.
          * @returns
          */
-        function getOption(objects, name, fallback) {
-            if (objects.length == 0) {
-                return (fallback);
-            }
-            else {
-                if (objects[0][name] !== undefined) {
-                    return (objects[0][name]);
-                }
-                else {
-                    return (getOption(objects.slice(1), name, fallback));
-                }
-            }
+        function getOption(endpointConfig, globalConfig, name, fallback) {
+            var retval = fallback;
+            if (globalConfig.hasOwnProperty(name))
+                retval = globalConfig[name];
+            if (endpointConfig.hasOwnProperty(name))
+                retval = endpointConfig[name];
+            return (retval);
         }
-        function getOptionArray(objects, name, fallback) {
-            if (objects.length == 0) {
-                return (fallback);
-            }
-            else {
-                if (objects[0][name] !== undefined) {
-                    return ((Array.isArray(objects[0][name])) ? objects[0][name] : [objects[0][name]]);
-                }
-                else {
-                    return (getOptionArray(objects.slice(1), name, fallback));
-                }
-            }
+        function getOptionArray(endpointConfig, globalConfig, name, fallback) {
+            var retval = fallback;
+            if (globalConfig.hasOwnProperty(name))
+                retval = (Array.isArray(globalConfig[name])) ? globalConfig[name] : [globalConfig[name]];
+            if (endpointConfig.hasOwnProperty(name))
+                retval = (Array.isArray(endpointConfig[name])) ? endpointConfig[name] : [endpointConfig[name]];
         }
     }
     updateStatistics(reportType, update) {

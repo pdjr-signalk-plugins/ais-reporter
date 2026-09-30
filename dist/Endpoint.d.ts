@@ -4,7 +4,7 @@ export declare class Endpoint {
     port: number;
     intervals: Intervals;
     statistics: Statistics;
-    constructor(option: any, options: any, defaults: any);
+    constructor(endpointConfig: any, globalConfig: any, defaults: any);
     updateStatistics(reportType: string, update: ReportStatistics): void;
 }
 export type { ReportStatistics };
