@@ -193,7 +193,7 @@ module.exports = function (app) {
      * @returns - NodeJS.timeout handle of the timer control.
      */
     function startReporting(pluginConfiguration, udpSocket, heartbeat) {
-        app.debug(`startReporting(pluginConfiguration, udpSocket)...`);
+        app.debug(`startReporting(${JSON.stringify(pluginConfiguration, null, 2)}, udpSocket)...`);
         return (setInterval(() => {
             app.debug(`reportMaybe(${heartbeatCount})...`);
             pluginConfiguration.endpoints.forEach((endpoint) => {
