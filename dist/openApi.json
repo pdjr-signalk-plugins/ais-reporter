@@ -14,6 +14,34 @@
     "url": "https://github.com/pdjr-signalk-plugins/ais-reporter#readme"
   },
   "paths": {
+    "/stop": {
+      "get": {
+        "description": "Stop all data transmission.\n",
+        "responses": {
+          "200": {
+            "description": "Success.\nThe response body is an object containing a status.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "transmitting": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error.\nThe server was unable to service the request.\n"
+          }
+        }
+      }
+    },
     "/status": {
       "get": {
         "description": "Get a digest reporting the status of all configured endpoints.\n",

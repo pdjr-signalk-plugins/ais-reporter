@@ -16,6 +16,28 @@ externalDocs:
   description: Plugin README document
   url: https://github.com/pdjr-signalk-plugins/ais-reporter#readme 
 paths:
+  /stop:
+    get:
+      description: |
+        Stop all data transmission.
+      responses:
+        '200':
+          description: |
+            Success.
+            The response body is an object containing a status.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+                  properties:
+                    transmitting:
+                      type: boolean
+        '500':
+          description: |
+            Error.
+            The server was unable to service the request.
   /status:
     get:
       description: |
