@@ -127,7 +127,6 @@ module.exports = function (app) {
     var udpSocket;
     var heartbeatInterval;
     var heartbeatCount = 0;
-    var TRANSMIT = true;
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
@@ -159,6 +158,7 @@ module.exports = function (app) {
         registerWithRouter: function (router) {
             router.get('/status', handleRoutes);
             router.get('/stop', handleRoutes);
+            router.get('/start', handleRoutes);
         },
         getOpenApi: function () {
             return (require('./openApi.json'));
@@ -388,7 +388,7 @@ module.exports = function (app) {
      */
     function sendReportMsg(socket, msg, endpoint) {
         var retval = 0;
-        if (TRANSMIT) {
+        if (endpoint.enabled) {
             app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
             socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
             retval = (msg.length + 1);
@@ -431,10 +431,22 @@ module.exports = function (app) {
                     }, {});
                     expressSend(res, 200, status, req.path);
                     break;
-                case "/stop":
-                    TRANSMIT = false;
+                case "/start":
                     status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
-                        a[endpoint.name] = {};
+                        endpoint.enabled = true;
+                        a[endpoint.name] = {
+                            "enabled": true
+                        };
+                        return (a);
+                    }, {});
+                    expressSend(res, 200, status, req.path);
+                    break;
+                case "/stop":
+                    status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
+                        endpoint.enabled = false;
+                        a[endpoint.name] = {
+                            "enabled": false
+                        };
                         return (a);
                     }, {});
                     expressSend(res, 200, status, req.path);

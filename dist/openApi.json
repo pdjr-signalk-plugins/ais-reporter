@@ -14,12 +14,40 @@
     "url": "https://github.com/pdjr-signalk-plugins/ais-reporter#readme"
   },
   "paths": {
-    "/stop": {
+    "/start": {
       "get": {
-        "description": "Stop all data transmission.\n",
+        "description": "Start transmitting to all endpoints.\n",
         "responses": {
           "200": {
-            "description": "Success.\nThe response body is an object containing a status.\n",
+            "description": "Success.\nTransmission is enabled for all endpoints.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "transmitting": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error.\nThe server was unable to service the request.\n"
+          }
+        }
+      }
+    },
+    "/stop": {
+      "get": {
+        "description": "Stop transmitting to all endpoints.\n",
+        "responses": {
+          "200": {
+            "description": "Success.\nTransmission is disabled for all endpoints.\n",
             "content": {
               "application/json": {
                 "schema": {

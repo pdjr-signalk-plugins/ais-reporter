@@ -5,6 +5,7 @@ export class Endpoint {
   public name: string = '';
   public ipAddress: string = '';
   public port: number = 0;
+  public enabled: boolean = true;
   public intervals: Intervals = <Intervals>{};
   public statistics: Statistics = <Statistics>{};
 

@@ -6,6 +6,7 @@ class Endpoint {
         this.name = '';
         this.ipAddress = '';
         this.port = 0;
+        this.enabled = true;
         this.intervals = {};
         this.statistics = {};
         if (!endpointConfig.ipAddress)

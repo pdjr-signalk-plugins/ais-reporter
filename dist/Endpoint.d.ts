@@ -2,6 +2,7 @@ export declare class Endpoint {
     name: string;
     ipAddress: string;
     port: number;
+    enabled: boolean;
     intervals: Intervals;
     statistics: Statistics;
     constructor(endpointConfig: any, globalConfig: any, defaults: any);

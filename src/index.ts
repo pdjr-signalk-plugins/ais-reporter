@@ -130,7 +130,6 @@ module.exports = function(app: any) {
   var udpSocket: Socket;
   var heartbeatInterval: NodeJS.Timeout;
   var heartbeatCount: number = 0;
-  var TRANSMIT: boolean = true;
 
 
   const plugin: SKPlugin = {
@@ -166,6 +165,7 @@ module.exports = function(app: any) {
     registerWithRouter: function(router) {
       router.get('/status', handleRoutes);
       router.get('/stop', handleRoutes);
+      router.get('/start', handleRoutes);
     },
 
     getOpenApi: function() {
@@ -395,7 +395,7 @@ module.exports = function(app: any) {
    */
   function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint): number {
     var retval: number = 0;
-    if (TRANSMIT) {
+    if (endpoint.enabled) {
       app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => { });
       retval = (msg.length + 1);
@@ -442,10 +442,21 @@ module.exports = function(app: any) {
           }, {});
           expressSend(res, 200, status, req.path);
           break;
-        case "/stop":
-          TRANSMIT = false;
+        case "/start":
           status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
+            endpoint.enabled = true;
             a[endpoint.name] = {
+              "enabled": true
+            };
+            return(a);
+          }, {});
+          expressSend(res, 200, status, req.path);
+          break;
+        case "/stop":
+          status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
+            endpoint.enabled = false;
+            a[endpoint.name] = {
+              "enabled": false
             };
             return(a);
           }, {});
@@ -491,6 +502,7 @@ interface PluginConfiguration {
 
 interface StatusResponse {
   ipAddress?: string,
+  enabled?: boolean,
   port?: number,
   started?: string,
   totalBytesTransmitted?: number,
