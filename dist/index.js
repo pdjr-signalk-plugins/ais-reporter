@@ -158,6 +158,7 @@ module.exports = function (app) {
         },
         registerWithRouter: function (router) {
             router.get('/status', handleRoutes);
+            router.get('/stop', handleRoutes);
         },
         getOpenApi: function () {
             return (require('./openApi.json'));

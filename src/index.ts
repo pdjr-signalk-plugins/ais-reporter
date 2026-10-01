@@ -165,6 +165,7 @@ module.exports = function(app: any) {
 
     registerWithRouter: function(router) {
       router.get('/status', handleRoutes);
+      router.get('/stop', handleRoutes);
     },
 
     getOpenApi: function() {
