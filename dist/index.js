@@ -127,6 +127,7 @@ module.exports = function (app) {
     var udpSocket;
     var heartbeatInterval;
     var heartbeatCount = 0;
+    var TRANSMIT = true;
     const plugin = {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
@@ -178,7 +179,6 @@ module.exports = function (app) {
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
             endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint(option, options, defaults))
         };
-        app.debug(`using configuration:\n${JSON.stringify(retval, null, 2)}`);
         return (retval);
     }
     /**
@@ -386,9 +386,13 @@ module.exports = function (app) {
      * @returns - number of bytes transmitted.
      */
     function sendReportMsg(socket, msg, endpoint) {
-        app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
-        socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
-        return (msg.length + 1);
+        var retval = 0;
+        if (TRANSMIT) {
+            app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
+            socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
+            retval = (msg.length + 1);
+        }
+        return (retval);
     }
     function radsToDeg(radians) {
         return (radians * 180 / Math.PI);
@@ -406,10 +410,11 @@ module.exports = function (app) {
     }
     function handleRoutes(req, res) {
         app.debug(`handleRoutes(${req.method}, ${req.path})...`);
+        var status;
         try {
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
-                    const status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
+                    status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
                         let hours = (endpoint.statistics.started) ? (Date.now() - endpoint.statistics.started) / 3600000 : 1;
                         a[endpoint.name] = {
                             ipAddress: endpoint.ipAddress,
@@ -421,6 +426,14 @@ module.exports = function (app) {
                             staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
                             staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
                         };
+                        return (a);
+                    }, {});
+                    expressSend(res, 200, status, req.path);
+                    break;
+                case "/stop":
+                    TRANSMIT = false;
+                    status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
+                        a[endpoint.name] = {};
                         return (a);
                     }, {});
                     expressSend(res, 200, status, req.path);
