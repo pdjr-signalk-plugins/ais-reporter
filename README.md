@@ -93,8 +93,9 @@ minutes.
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
 
-*navigationStatesMap* may be used to specify how specific states on the
-Signal K `navigation.state` path map into update interval array values.
+*navigationStateMap* used to specify which states on the Signal K's
+`navigation.state` path select which values from an array of update
+intervals.
 
 These properties can be applied anywhere in the configuration file and
 operate over the context in which they are defined.

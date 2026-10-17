@@ -60,7 +60,7 @@ const PLUGIN_SCHEMA: object = {
         { "type": "array", "items": { "type": "integer", "minimum": 0 } }
       ]
     },
-    "navigationStatesMap": {
+    "navigationStateMap": {
       "title": "Select different intervals based upon navigation state",
       "type": "array",
       "items": {
