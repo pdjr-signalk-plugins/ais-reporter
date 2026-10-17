@@ -219,8 +219,8 @@ module.exports = function(app: any) {
           var reportStatistics : ReportStatistics = <ReportStatistics>{};
           var totalBytes: number = 0;
 
-          let mvIDX: number = ((endpoint.intervals.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0):0);
-          let ovIDX: number = ((endpoint.intervals.updateIntervalIndexPath)?(app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0):0);
+          let mvIDX: number = getUpdateIndex(endpoint.intervals.navigationStateMap);
+          let ovIDX: number = getUpdateIndex(endpoint.intervals.navigationStateMap)
           let mvPUI: number = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
           let mvSUI: number = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
           let ovPUI: number = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);
@@ -247,6 +247,17 @@ module.exports = function(app: any) {
       });
       heartbeatCount++;
     }, heartbeat));
+
+    function getUpdateIndex(stateMap: string[][]) {
+      var retval: number = 0;
+      var navigationState: any = app.getSelfPath(`navigation.state.value`);
+      if (navigationState) {
+        for (var index: number = 0; index < stateMap.length; index++) {
+          if (stateMap[index].includes(navigationState)) retval = index;
+        }
+      }
+      return(retval);
+    }
   }
 
   /**
