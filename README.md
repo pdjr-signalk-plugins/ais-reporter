@@ -152,9 +152,9 @@ expect reporting intervals of less than an hour or so.
 
 ### Automatically modulate reporting intervals
 
-On my ship I like to modify my position reporting intervals based upon
-the ship's navigation state (reported on the Signal K path
-`navigation.state`).
+On my ship I like to modify position reporting intervals so that when
+my ship is moving reports are made more frequently.
+Values on the Signal K `navigation.state` path support this behaviour.
 
 ```json
 {  
@@ -163,7 +163,7 @@ the ship's navigation state (reported on the Signal K path
     "staticUpdateInterval": 20,  
     "myPositionUpdateInterval": [55,1],  
     "myStaticUpdateInterval": 55,  
-    "navigationStatesMap": [ [ ], ["sailing", "motoring"] ],  
+    "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],  
     "endpoints": [  
       {  
         "name": "Marine Traffic",  
