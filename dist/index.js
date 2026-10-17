@@ -206,6 +206,7 @@ module.exports = function (app) {
                     var totalBytes = 0;
                     let mvIDX = getUpdateIndex(endpoint.intervals.navigationStateMap);
                     let ovIDX = getUpdateIndex(endpoint.intervals.navigationStateMap);
+                    console.log(`>>>>> ${mvIDX}, ${ovIDX}`);
                     let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
                     let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
                     let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);

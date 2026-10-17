@@ -217,7 +217,8 @@ module.exports = function(app: any) {
           var totalBytes: number = 0;
 
           let mvIDX: number = getUpdateIndex(endpoint.intervals.navigationStateMap);
-          let ovIDX: number = getUpdateIndex(endpoint.intervals.navigationStateMap)
+          let ovIDX: number = getUpdateIndex(endpoint.intervals.navigationStateMap);
+          console.log(`>>>>> ${mvIDX}, ${ovIDX}`);
           let mvPUI: number = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
           let mvSUI: number = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
           let ovPUI: number = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);
