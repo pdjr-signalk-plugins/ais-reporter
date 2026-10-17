@@ -199,20 +199,17 @@ module.exports = function (app) {
      * @returns - NodeJS.timeout handle of the timer control.
      */
     function startReporting(pluginConfiguration, udpSocket, heartbeat) {
+        app.debug(`startReporting()...`);
         return (setInterval(() => {
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var reportStatistics = {};
                     var totalBytes = 0;
-                    let mvIDX = getUpdateIndex(endpoint.intervals.navigationStateMap);
-                    let ovIDX = getUpdateIndex(endpoint.intervals.navigationStateMap);
-                    console.log(`>>>>> ${mvIDX}, ${ovIDX}`);
-                    let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
-                    let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
-                    let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);
-                    let ovSUI = _.get(endpoint.intervals, `staticUpdateIntervals[${ovIDX}]`, 0);
-                    app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
-                    app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
+                    let updateIndex = getUpdateIndex(endpoint.intervals.navigationStateMap);
+                    let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${updateIndex}]`, 0);
+                    let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${updateIndex}]`, 0);
+                    let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${updateIndex}]`, 0);
+                    let ovSUI = _.get(endpoint.intervals, `staticUpdateIntervals[${updateIndex}]`, 0);
                     if (((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0)) || ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0))) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
                         reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0));
@@ -231,6 +228,12 @@ module.exports = function (app) {
             });
             heartbeatCount++;
         }, heartbeat));
+        /**
+         * Uses a supplied stateMap to translate the current 'self'
+         * 'navigation.state' into a numeric array index.
+         * @param stateMap
+         * @returns
+         */
         function getUpdateIndex(stateMap) {
             var retval = 0;
             var navigationState = app.getSelfPath(`navigation.state.value`);
