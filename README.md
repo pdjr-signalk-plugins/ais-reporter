@@ -12,7 +12,7 @@ UDP, typically a consolidation service like
 
 The rates at which reports are issued for the host ship, AIS targets
 and UDP enpoints can be independently configured and can be dynamically
-adjusted in response to values on one or more arbitrary Signal K paths.
+adjusted in response to the navigation state of the host vessel.
 Together these measures may be used to give fine control over the
 granularity of data reporting and resource consumption on the host
 vessel's Internet connection.
@@ -93,8 +93,8 @@ minutes.
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
 
-*updateIntervalIndexPath* may be used to specify a Signal K path which
-returns a value that can be used to index an interval array value.
+*navigationStatesMap* may be used to specify how specific states on the
+Signal K `navigation.state` path map into update interval array values.
 
 These properties can be applied anywhere in the configuration file and
 operate over the context in which they are defined.
@@ -153,15 +153,8 @@ expect reporting intervals of less than an hour or so.
 ### Automatically modulate reporting intervals
 
 On my ship I like to modify my position reporting intervals based upon
-whether the ship is navigating or moored: using a short interval when
-navigating so as to report a good track and a long interval when moored
-so as to save data usage on my Internet connection.
-
-In my case my ship reports the main engine ignition state via an NMEA
-binary switchbank channel at 'electrical.switches.bank.16.16.state'
-(0 says ignition off, 1 says ignition on) and the plugin uses this
-value to select an appropriate value from the
-*myPositionUpdateInterval* array.
+the ship's navigation state (reported on the Signal K path
+`navigation.state`).
 
 ```json
 {  
@@ -170,7 +163,7 @@ value to select an appropriate value from the
     "staticUpdateInterval": 20,  
     "myPositionUpdateInterval": [55,1],  
     "myStaticUpdateInterval": 55,  
-    "upateIntervalIndexPath": "electrical.switches.bank.16.16.state",  
+    "navigationStatesMap": [ [ ], ["sailing", "motoring"] ],  
     "endpoints": [  
       {  
         "name": "Marine Traffic",  

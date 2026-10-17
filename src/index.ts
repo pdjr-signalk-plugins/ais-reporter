@@ -60,9 +60,15 @@ const PLUGIN_SCHEMA: object = {
         { "type": "array", "items": { "type": "integer", "minimum": 0 } }
       ]
     },
-    "updateIntervalIndexPath": {
-      "title": "Path which selects override intervals",
-      "type": "string"
+    "navigationStatesMap": {
+      "title": "Select different intervals based upon navigation state",
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string",
+        }
+      }
     },
     "endpoints": {
       "type": "array",
