@@ -25,6 +25,7 @@ export declare class Endpoint {
      */
     statistics: Statistics;
     constructor(options: any[], app: any);
+    dump(): void;
     updateStatistics(reportType: string, update: ReportStatistics): void;
 }
 export type { ReportStatistics };

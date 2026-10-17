@@ -95,6 +95,14 @@ export class Endpoint {
     }
   }
 
+  dump() {
+    this.app.debug(`name: ${this.name}`);
+    this.app.debug(`ipAddress: ${this.ipAddress}`);
+    this.app.debug(`port: ${this.port}`);
+    this.app.debug(`intervals: ${JSON.stringify(this.intervals)}`);
+    this.app.debug(`statistics: ${JSON.stringify(this.statistics)}`);
+  }
+
   updateStatistics(reportType: string, update: ReportStatistics) {
     this.statistics.totalBytes += (update.self.bytes + update.others.bytes);
     switch (reportType) {
