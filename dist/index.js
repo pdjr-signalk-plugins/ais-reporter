@@ -181,6 +181,7 @@ module.exports = function (app) {
      * @returns - a canonical PluginConfiguration.
      */
     function makePluginConfiguration(options, defaults) {
+        app.debug(`makePluginConfiguration(${JSON.stringify(options)}, ${JSON.stringify(defaults)})`);
         var retval = {
             myMMSI: app.getSelfPath('mmsi'),
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
