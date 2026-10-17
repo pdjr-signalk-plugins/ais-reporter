@@ -143,8 +143,6 @@ module.exports = function (app) {
             pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, 'started');
             try {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
-                app.debug('>>>>>>>>>>>>>>>>>>>');
-                //app.debug(`using canonical configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
                 if (pluginConfiguration.endpoints.length > 0) {
                     pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
                     heartbeatInterval = startReporting(pluginConfiguration, udpSocket = (0, dgram_1.createSocket)('udp4'), HEARTBEAT_INTERVAL);
@@ -182,13 +180,11 @@ module.exports = function (app) {
      * @returns - a canonical PluginConfiguration.
      */
     function makePluginConfiguration(options, defaults) {
-        app.debug(`makePluginConfiguration(${JSON.stringify(options)}, ${JSON.stringify(defaults)})`);
         var retval = {
             myMMSI: app.getSelfPath('mmsi'),
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
             endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint([option, options, defaults], app))
         };
-        retval.endpoints.forEach((ep) => ep.dump());
         return (retval);
     }
     /**
@@ -203,9 +199,7 @@ module.exports = function (app) {
      * @returns - NodeJS.timeout handle of the timer control.
      */
     function startReporting(pluginConfiguration, udpSocket, heartbeat) {
-        app.debug(`startReporting(${JSON.stringify(pluginConfiguration, null, 2)}, udpSocket)...`);
         return (setInterval(() => {
-            app.debug(`reportMaybe(${heartbeatCount})...`);
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var reportStatistics = {};
