@@ -184,7 +184,7 @@ module.exports = function (app) {
         var retval = {
             myMMSI: app.getSelfPath('mmsi'),
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
-            endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint(option, options, defaults))
+            endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint([option, options, defaults], app))
         };
         return (retval);
     }
