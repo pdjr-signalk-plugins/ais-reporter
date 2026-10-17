@@ -58,9 +58,15 @@ const PLUGIN_SCHEMA = {
                 { "type": "array", "items": { "type": "integer", "minimum": 0 } }
             ]
         },
-        "updateIntervalIndexPath": {
-            "title": "Path which selects override intervals",
-            "type": "string"
+        "navigationStateMap": {
+            "title": "Select different intervals based upon navigation state",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                }
+            }
         },
         "endpoints": {
             "type": "array",
@@ -201,8 +207,8 @@ module.exports = function (app) {
                 try {
                     var reportStatistics = {};
                     var totalBytes = 0;
-                    let mvIDX = ((endpoint.intervals.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0) : 0);
-                    let ovIDX = ((endpoint.intervals.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0) : 0);
+                    let mvIDX = getUpdateIndex(endpoint.intervals.navigationStateMap);
+                    let ovIDX = getUpdateIndex(endpoint.intervals.navigationStateMap);
                     let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
                     let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
                     let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);
@@ -227,6 +233,17 @@ module.exports = function (app) {
             });
             heartbeatCount++;
         }, heartbeat));
+        function getUpdateIndex(stateMap) {
+            var retval = 0;
+            var navigationState = app.getSelfPath(`navigation.state.value`);
+            if (navigationState) {
+                for (var index = 0; index < stateMap.length; index++) {
+                    if (stateMap[index].includes(navigationState))
+                        retval = index;
+                }
+            }
+            return (retval);
+        }
     }
     /**
      * Generate one or more AIS position reports for transmission to a
