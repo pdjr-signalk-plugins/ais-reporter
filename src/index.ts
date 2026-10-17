@@ -149,6 +149,7 @@ module.exports = function(app: any) {
       pluginStatus = new PluginStatus(app, 'started');
       try {
         pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
+        app.debug('>>>>>>>>>>>>>>>>>>>');
         //app.debug(`using canonical configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`)
 
         if (pluginConfiguration.endpoints.length > 0) {
