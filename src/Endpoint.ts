@@ -21,7 +21,7 @@ export class Endpoint {
     this.intervals.staticUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'staticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
     this.intervals.myPositionUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
     this.intervals.myStaticUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'myStaticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
-    this.intervals.updateIntervalIndexPath = getOption(endpointConfig, globalConfig, 'updateIntervalIndexPath', undefined);
+    this.intervals.navigationStateMap = getOption(endpointConfig, globalConfig, 'navigationStateMap', []);
 
     this.statistics = {
       started: Date.now(),
@@ -99,7 +99,7 @@ interface Intervals {
   staticUpdateIntervals: number[],
   myPositionUpdateIntervals: number[],
   myStaticUpdateIntervals: number[],
-  updateIntervalIndexPath: string
+  navigationStateMap: string[][]
 }
 
 interface Statistics {
