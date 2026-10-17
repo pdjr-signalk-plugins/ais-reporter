@@ -187,6 +187,7 @@ module.exports = function (app) {
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
             endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint([option, options, defaults], app))
         };
+        retval.endpoints.forEach((ep) => ep.dump());
         return (retval);
     }
     /**
