@@ -69,8 +69,6 @@ export class Endpoint {
       }
     }
 
-    this.app.debug(`Endpoint[${this.ipAddress}:${this.port}]: creating endpoint "${this.name}"`);
-  
     /**
      * 
      * @param objects - an array of arbitrary objects which may contain 'name'
