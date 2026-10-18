@@ -10,21 +10,17 @@ An endpoint is any remote service capable of receiving AIS data over
 UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The rates at which reports are issued for the host ship, AIS targets
-and UDP enpoints can be independently configured and can be dynamically
-adjusted in response to the navigation state of the host vessel.
-Together these measures may be used to give fine control over the
-granularity of data reporting and resource consumption on the host
-vessel's Internet connection.
-
 AIS reports for the host vessel can be issued even if the ship has no
 AIS equipment: it is sufficient that the vessel's MMSI and position
 are available on their default Signal K paths (`mmsi` and
 `navigation.position`).
 
-## Signal K paths used by the plugin
-
-`design.aisShipType`, `design.beam`, `design.draft`, `design.length`, `*mmsi*`, `name`, `navigation.courseOverGroundTrue`, `navigation.destination.commonName`, `navigation.headingTrue`, `*navigation.position*`, `navigation.rateOfTurn`, `navigation.specialManeuver`, `navigation.speedOverGround`, `navigation.state`, `sensors.ais.class`, `sensors.ais.fromBow`
+The rates at which reports are issued for the host ship, AIS targets
+and UDP enpoints can be independently configured and can be dynamically
+adjusted in response to the navigation state of the host vessel as
+reported on the Signal K `navigation.state` path.
+The [signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)
+plugin is a useful way of automatically setting `navigation.state`.
 
 ## Plugin configuration
 
