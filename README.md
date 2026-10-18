@@ -22,6 +22,10 @@ AIS equipment: it is sufficient that the vessel's MMSI and position
 are available on their default Signal K paths (`mmsi` and
 `navigation.position`).
 
+## Signal K paths used by the plugin
+
+`design.aisShipType`, `design.beam`, `design.draft`, `design.length`, `*mmsi*`, `name`, `navigation.courseOverGroundTrue`, `navigation.destination.commonName`, `navigation.headingTrue`, `*navigation.position*`, `navigation.rateOfTurn`, `navigation.specialManeuver`, `navigation.speedOverGround`, `navigation.state`, `sensors.ais.class`, `sensors.ais.fromBow`
+
 ## Plugin configuration
 
 To operate at all the plugin's JSON configuration file
