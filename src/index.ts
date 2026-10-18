@@ -151,7 +151,7 @@ module.exports = function(app: any) {
         pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
 
         if (pluginConfiguration.endpoints.length > 0) {
-          pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
+          pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'}`);
           heartbeatInterval = startReporting(pluginConfiguration, udpSocket = createSocket('udp4'), HEARTBEAT_INTERVAL);
         } else {
           pluginStatus.setDefaultStatus('Stopped: no configured endpoints');
@@ -210,7 +210,6 @@ module.exports = function(app: any) {
    * @returns - NodeJS.timeout handle of the timer control. 
    */
   function startReporting(pluginConfiguration: PluginConfiguration, udpSocket: Socket, heartbeat: number): NodeJS.Timeout {
-    app.debug(`startReporting()...`);
     return(setInterval(() => {
       pluginConfiguration.endpoints.forEach((endpoint) => {
         try {
@@ -271,7 +270,6 @@ module.exports = function(app: any) {
    * @returns - ReportStatistics for the transmission.
    */
   function reportPosition(socket: Socket, endpoint: Endpoint, reportSelf: boolean, reportOthers: boolean): ReportStatistics {
-    app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
     var reportStatistics: ReportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 }};
     var aisClass: string;
     var aisProperties: AisEncodeOptions;
@@ -326,7 +324,6 @@ module.exports = function(app: any) {
    * @returns - ReportStatistics for the transmission.
    */
   function reportStatic(socket: Socket, endpoint: Endpoint, reportSelf: boolean = false, reportOthers: boolean = false): ReportStatistics {
-    app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`)
     var reportStatistics: ReportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 }};
     var aisClass: string
     var aisProperties: any
@@ -413,7 +410,7 @@ module.exports = function(app: any) {
   function sendReportMsg(socket: Socket, msg: string, endpoint: Endpoint): number {
     var retval: number = 0;
     if (endpoint.enabled) {
-      app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
+      app.debug(`sending "${msg}" to '${endpoint.name}'`);
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => { });
       retval = (msg.length + 1);
     }
