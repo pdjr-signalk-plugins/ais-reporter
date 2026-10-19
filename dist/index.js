@@ -449,7 +449,7 @@ module.exports = function (app) {
                     break;
                 case "/start":
                     if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
-                        expressSend(res, 400, {}, req.path);
+                        expressSend(res, 400, null, req.path);
                     }
                     else {
                         status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {

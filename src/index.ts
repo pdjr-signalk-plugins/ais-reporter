@@ -460,7 +460,7 @@ module.exports = function(app: any) {
           break;
         case "/start":
           if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
-            expressSend(res, 400, {}, req.path);
+            expressSend(res, 400, null, req.path);
           } else {
             status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
               endpoint.enabled = (req.params.id)?((endpoint.name == req.params.id)?true:endpoint.enabled):true;
