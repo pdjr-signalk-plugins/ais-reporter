@@ -130,7 +130,7 @@ data received from target vessels seen by Signal K.
 
 The plugin presents an API with the following interface.
 
-|-- |-- |
+|:-- |:-- |
 | /plugins/ais-reporter/start | Start transmitting to all endpoints. |
 | /plugins/ais-reporter/start/*endpoint* | Start transmitting to *endpoint*. |
 | /plugins/ais-reporter/stop | Stop transmitting to all endpoints. |
