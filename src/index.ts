@@ -440,7 +440,6 @@ module.exports = function(app: any) {
     app.debug(`handleRoutes(${req.method}, ${req.path})...`);
     var status: any;
     try {
-      console.log(`>>>${req.path}<<<>>>${req.params.id}<<<`);
       switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
         case '/status':
           status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
@@ -461,7 +460,7 @@ module.exports = function(app: any) {
           break;
         case "/start":
           status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
-            endpoint.enabled = true;
+            endpoint.enabled = (req.params.id)?((endpoint.name == req.params.id)?true:endpoint.enabled):true;
             a[endpoint.name] = {
               "enabled": true
             };
@@ -471,7 +470,7 @@ module.exports = function(app: any) {
           break;
         case "/stop":
           status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
-            endpoint.enabled = false;
+            endpoint.enabled = (req.params.id)?((endpoint.name == req.params.id)?false:endpoint.enabled):false;
             a[endpoint.name] = {
               "enabled": false
             };
