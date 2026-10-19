@@ -459,14 +459,18 @@ module.exports = function(app: any) {
           expressSend(res, 200, status, req.path);
           break;
         case "/start":
-          status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
-            endpoint.enabled = (req.params.id)?((endpoint.name == req.params.id)?true:endpoint.enabled):true;
-            a[endpoint.name] = {
-              "enabled": true
-            };
-            return(a);
-          }, {});
-          expressSend(res, 200, status, req.path);
+          if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
+            expressSend(res, 400, {}, req.path);
+          } else {
+            status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
+              endpoint.enabled = (req.params.id)?((endpoint.name == req.params.id)?true:endpoint.enabled):true;
+              a[endpoint.name] = {
+                "enabled": true
+              };
+              return(a);
+            }, {});
+            expressSend(res, 200, status, req.path);
+          }
           break;
         case "/stop":
           status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
