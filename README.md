@@ -83,7 +83,7 @@ Marine Traffic to think that the reporting station has died.
   "configuration": {
     "endpoints": [
       {
-        "name": "Marine Traffic",
+        "name": "marine-traffic",
         "ipAddress": "203.0.113.1",
         "port": 32123,
         "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
@@ -111,7 +111,7 @@ data received from target vessels seen by Signal K.
   "configuration": {
     "endpoints": [
       {
-        "name": "Marine Traffic",
+        "name": "marine-traffic",
         "ipAddress": "203.0.113.1",
         "port": 32123,
         "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
@@ -126,17 +126,18 @@ data received from target vessels seen by Signal K.
 }
 ```
 
+### Example 3: using a local endpoint for debugging
+
+Specifying an endpoint which points to a port on a local host allows
+operation of the plugin to be easily monitored.
+
+```json
+  
+```
+
 ## Plugin API
 
-The plugin presents an API with the following interface.
-
-| URL | Description |
-|:-- |:-- |
-| /plugins/ais-reporter/start | Start transmitting to all endpoints. |
-| /plugins/ais-reporter/start/*endpoint* | Start transmitting to *endpoint*. |
-| /plugins/ais-reporter/stop | Stop transmitting to all endpoints. |
-| /plugins/ais-reporter/stop/*endpoint* | Stop transmitting to *endpoint*. |
-| /plugins/ais-reporter/status | Returns some data on resources consumed by each endpoint. |
+The plugin API is available at `/skServer/openapi/plugins/ais-reporter`.
 
 ## Author
 
