@@ -126,18 +126,9 @@ data received from target vessels seen by Signal K.
 }
 ```
 
-### Example 3: using a local endpoint for debugging
-
-Specifying an endpoint which points to a port on a local host allows
-operation of the plugin to be easily monitored.
-
-```json
-  
-```
-
 ## Plugin API
 
-The plugin API is available at `/skServer/openapi/plugins/ais-reporter`.
+A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 
 ## Author
 
