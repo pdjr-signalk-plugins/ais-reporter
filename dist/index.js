@@ -141,9 +141,6 @@ module.exports = function (app) {
         uiSchema: PLUGIN_UISCHEMA,
         start: function (options) {
             pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, 'started');
-            if (!app.getSelfPath(`navigation.state.value`)) {
-                pluginStatus.setStatus(`warning: 'navigation.state' path is not available`);
-            }
             try {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
                 if (pluginConfiguration.endpoints.length > 0) {
@@ -432,6 +429,7 @@ module.exports = function (app) {
         app.debug(`handleRoutes(${req.method}, ${req.path})...`);
         var status;
         try {
+            console.log(`>>>${req.path}<<<`);
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
                     status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {

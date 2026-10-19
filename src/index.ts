@@ -440,6 +440,7 @@ module.exports = function(app: any) {
     app.debug(`handleRoutes(${req.method}, ${req.path})...`);
     var status: any;
     try {
+      console.log(`>>>${req.path}<<<`);
       switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
         case '/status':
           status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
