@@ -163,8 +163,8 @@ module.exports = function (app) {
         },
         registerWithRouter: function (router) {
             router.get('/status', handleRoutes);
-            router.get('/stop', handleRoutes);
-            router.get('/start', handleRoutes);
+            router.get('/stop/:id?', handleRoutes);
+            router.get('/start/:id?', handleRoutes);
         },
         getOpenApi: function () {
             return (require('./openApi.json'));
@@ -429,7 +429,7 @@ module.exports = function (app) {
         app.debug(`handleRoutes(${req.method}, ${req.path})...`);
         var status;
         try {
-            console.log(`>>>${req.path}<<<`);
+            console.log(`>>>${req.path}<<<>>>${req.params.id}<<<`);
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
                     status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
