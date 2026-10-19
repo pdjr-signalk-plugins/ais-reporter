@@ -31,7 +31,7 @@ paths:
         '200':
           description: |
             Success.
-            Transmission is enabled for all endpoints.
+            Transmission started.
         '400':
           description: |
             Bad request.
@@ -50,12 +50,12 @@ paths:
           schema:
             type: string
           description: |
-            Name of endpoint to be started.
+            Name of endpoint to be stopped.
       responses:
         '200':
           description: |
             Success.
-            Transmission is disabled for all endpoints.
+            Transmission stopped.
         '400':
           description: |
             Bad request.

@@ -29,7 +29,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Success.\nTransmission is enabled for all endpoints.\n"
+            "description": "Success.\nTransmission started.\n"
           },
           "400": {
             "description": "Bad request.\nThe specified endpoint does not exist.\n"
@@ -50,12 +50,12 @@
             "schema": {
               "type": "string"
             },
-            "description": "Name of endpoint to be started.\n"
+            "description": "Name of endpoint to be stopped.\n"
           }
         ],
         "responses": {
           "200": {
-            "description": "Success.\nTransmission is disabled for all endpoints.\n"
+            "description": "Success.\nTransmission stopped.\n"
           },
           "400": {
             "description": "Bad request.\nThe specified endpoint does not exist.\n"
