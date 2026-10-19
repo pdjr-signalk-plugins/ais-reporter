@@ -22,7 +22,7 @@ import { Socket, createSocket } from 'dgram';
 import { PluginStatus } from 'signalk-libpluginstatus';
 
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_ENDPOINT_OPTIONS: any = { POSITION_UPDATE_INTERVAL: 5, STATIC_UPDATE_INTERVAL: 15 };
+const DEFAULT_ENDPOINT_OPTIONS: any = { POSITION_UPDATE_INTERVAL: 0, STATIC_UPDATE_INTERVAL: 0 };
 const HEARTBEAT_INTERVAL: number = 60000;
 
 const PLUGIN_ID: string = 'ais-reporter';
@@ -147,6 +147,11 @@ module.exports = function(app: any) {
   
     start: function(options: any) {
       pluginStatus = new PluginStatus(app, 'started');
+
+      if (!app.getSelfPath(`navigation.state.value`)) {
+        pluginStatus.setStatus(`warning: 'navigation.state' path is not available`);
+      }
+
       try {
         pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
 

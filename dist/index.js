@@ -21,7 +21,7 @@ const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 5, STATIC_UPDATE_INTERVAL: 15 };
+const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 0, STATIC_UPDATE_INTERVAL: 0 };
 const HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'ais-reporter';
@@ -141,6 +141,9 @@ module.exports = function (app) {
         uiSchema: PLUGIN_UISCHEMA,
         start: function (options) {
             pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, 'started');
+            if (!app.getSelfPath(`navigation.state.value`)) {
+                pluginStatus.setStatus(`warning: 'navigation.state' path is not available`);
+            }
             try {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
                 if (pluginConfiguration.endpoints.length > 0) {

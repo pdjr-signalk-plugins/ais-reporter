@@ -15,12 +15,21 @@ AIS equipment: it is sufficient that the vessel's MMSI and position
 are available on their default Signal K paths (`mmsi` and
 `navigation.position`).
 
+One particular use case for the plugin is publishing the host vessel
+position in regions (like much of inland Europe) where consolidation
+service base station coverage is sparse or non-exixstent.
+
 The rates at which reports are issued for the host ship, AIS targets
 and UDP enpoints can be independently configured and can be dynamically
 adjusted in response to the navigation state of the host vessel as
 reported on the Signal K `navigation.state` path.
-The [signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)
-plugin is a useful way of automatically setting `navigation.state`.
+
+## System requirements
+
+If your Signal K system does not maintain the `navigation.state` path
+then you may wish to install the
+[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)
+plugin from the appstore.
 
 ## Plugin configuration
 
@@ -33,47 +42,7 @@ Some features of the configuration file are poorly supported by Signal
 K's plugin configuration GUI and the following discussion assumes that
 a text editor is being used to directly edit the JSON configuration.
 
-### A minimal configuration
-
-The plugin includes built-in defaults for most configuration properties
-so a minimal working configuration requires only an *endpoints* array
-containing at least one reporting endpoint specified in terms of its
-*ipAddress* and service *port* (with maybe an optional descriptive
-*name*).
-
-```json
-{  
-  "configuration": {  
-    "endpoints": [  
-      {  
-        "name": "Test",  
-        "ipAddress": "127.0.0.1",  
-        "port": 12345  
-      }  
-    ]  
-  },  
-  "enabled": true  
-}
-```
-
-This example will push AIS data to port 12345 on the Signal K host and
-may be useful for checking and testing plugin operation.
-A simple way to monitor port 12345 on the host computer is to open a
-terminal window on the Signal K server and run the command
-`~/.signalk/node_modules/ais-reporter/udp_listen.pl 12345`.
-
-To report AIS data to a consolidation service provider (like Marine
-Traffic) you must subscribe with the provider as a reporting station
-and create an item in the *endpoints* array which uses the IP address
-and service port number that they supply as your station's entry point.
-
-### Default reporting intervals
-
-The minimal configuration described above uses built in, global,
-defaults to report the position of all vessels known to Signal K once
-every 5 minutes and associated static data once every 15 minutes.
-
-#### Overriding default reporting intervals
+### Configuration properties
 
 The reporting intervals described above can be overriden using the
 properties described below.
@@ -99,6 +68,56 @@ intervals.
 
 These properties can be applied anywhere in the configuration file and
 operate over the context in which they are defined.
+
+### Example 1: report host vessel data to MarineTraffic.com
+
+This example sends position and static AIS reports once every fifty-five
+minutes when the host vessel is stationary and a position report once a
+minute when the vessel is moving.
+The `navigation.state` path must be active on the host system.
+Increasing the stationary reporting interval much above 55 will cause
+Marine Traffic to think that the reporting station has died.
+
+```json
+{
+  "configuration": {
+    "endpoints": [
+      {
+        "name": "Marine Traffic",
+        "ipAddress": "203.0.113.1",
+        "port": 32123,
+        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "myPositionUpdateInterval": [55,1],
+        "myStaticUpdateInterval": 55
+      }  
+    ]  
+  },  
+  "enabled": true  
+}
+```
+
+The *ipAddress* and *port* number used in the example are fakes.
+You must subscribe with MarineTraffic.com as a reporting station
+to obtain an IP address and service port number that act as your
+station's reporting entry point.
+
+This example will push AIS data to port 12345 on the Signal K host and
+may be useful for checking and testing plugin operation.
+A simple way to monitor port 12345 on the host computer is to open a
+terminal window on the Signal K server and run the command
+`~/.signalk/node_modules/ais-reporter/udp_listen.pl 12345`.
+
+To report AIS data to a consolidation service provider (like Marine
+Traffic) you must subscribe with the provider as a reporting station
+and create an item in the *endpoints* array which uses the IP address
+and service port number that they supply as your station's entry point.
+
+### Default reporting intervals
+
+The minimal configuration described above uses built in, global,
+defaults to report the position of all vessels known to Signal K once
+every 5 minutes and associated static data once every 15 minutes.
+
 
 Note that consolidation services use the frequency of reporting as an
 indicator of vessel presence; Marine Traffic for example seems to
