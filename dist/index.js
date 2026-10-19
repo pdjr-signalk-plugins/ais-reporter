@@ -439,6 +439,7 @@ module.exports = function (app) {
                         pluginConfiguration.endpoints.forEach((endpoint) => {
                             let hours = (endpoint.statistics.started) ? (Date.now() - endpoint.statistics.started) / 3600000 : 1;
                             var status = {
+                                name: endpoint.name,
                                 ipAddress: endpoint.ipAddress,
                                 port: endpoint.port,
                                 started: (endpoint.statistics.started) ? (new Date(endpoint.statistics.started)).toISOString() : 'never',
