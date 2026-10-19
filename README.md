@@ -38,7 +38,7 @@ To operate at all the plugin's JSON configuration file
 must be initialised using either Signal K's plugin configuration GUI
 or a text editor.
 
-The plugin configuration must contain an 'endpoints' array of objects
+A valid configuration must contain an 'endpoints' array of objects
 each of which defines a reporting endpoint.
 
 The following properties can be applied globally or within each

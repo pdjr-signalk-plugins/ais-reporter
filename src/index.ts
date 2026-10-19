@@ -170,7 +170,7 @@ module.exports = function(app: any) {
     },
 
     registerWithRouter: function(router) {
-      router.get('/status', handleRoutes);
+      router.get('/status/:id?', handleRoutes);
       router.get('/stop/:id?', handleRoutes);
       router.get('/start/:id?', handleRoutes);
     },
@@ -442,21 +442,30 @@ module.exports = function(app: any) {
     try {
       switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
         case '/status':
-          status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
-            let hours: number = (endpoint.statistics.started)?(Date.now() - endpoint.statistics.started) / 3600000:1;
-            a[endpoint.name] = {
-              ipAddress: endpoint.ipAddress,
-              port: endpoint.port,
-              started: (endpoint.statistics.started)?(new Date(endpoint.statistics.started)).toISOString():'never',
-              totalBytesTransmitted: endpoint.statistics.totalBytes,
-              positionSelfBytesPerHour: Math.floor(endpoint.statistics.position.self.bytes / hours),
-              positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.others.bytes / hours),
-              staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
-              staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
-            };
-            return(a);
-          }, {});
-          expressSend(res, 200, status, req.path);
+          if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
+            expressSend(res, 400, null, req.path);
+          } else {
+            var statusResponse: any = {};
+            pluginConfiguration.endpoints.forEach((endpoint) => {
+              let hours: number = (endpoint.statistics.started)?(Date.now() - endpoint.statistics.started) / 3600000:1;
+              var status: Status = {
+                ipAddress: endpoint.ipAddress,
+                port: endpoint.port,
+                started: (endpoint.statistics.started)?(new Date(endpoint.statistics.started)).toISOString():'never',
+                totalBytesTransmitted: endpoint.statistics.totalBytes,
+                positionSelfBytesPerHour: Math.floor(endpoint.statistics.position.self.bytes / hours),
+                positionOthersBytesPerHour: Math.floor(endpoint.statistics.position.others.bytes / hours),
+                staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
+                staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
+              };
+              if (!req.params.id) {
+                statusResponse[endpoint.name] = status;
+              } else if (req.params.id == endpoint.name) {
+                statusResponse = status;
+              }
+            });
+            expressSend(res, 200, statusResponse, req.path);
+          }
           break;
         case "/start":
           if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
@@ -486,7 +495,7 @@ module.exports = function(app: any) {
       expressSend(res, ((/^\d+$/.test(e.message))?parseInt(e.message):500), null, req.path)
     }
 
-    function expressSend(res: any, code: number, body: Dictionary<StatusResponse> | null, debugPrefix: any = null) {
+    function expressSend(res: any, code: number, body: Dictionary<Status> | null, debugPrefix: any = null) {
       app.debug(`expressSend(res, ${code}, ${JSON.stringify(body)}, ${debugPrefix})...`);
       const FETCH_RESPONSES: Dictionary<string | null> = { "200": "Ok", "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" }
       res.status(code).send((body)?body:((FETCH_RESPONSES['' + code])?FETCH_RESPONSES['' + code]:null))
@@ -516,7 +525,7 @@ interface PluginConfiguration {
   endpoints: Endpoint[]
 }
 
-interface StatusResponse {
+interface Status {
   ipAddress?: string,
   enabled?: boolean,
   port?: number,
