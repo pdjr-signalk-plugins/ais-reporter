@@ -14,27 +14,25 @@
     "url": "https://github.com/pdjr-signalk-plugins/ais-reporter#readme"
   },
   "paths": {
-    "/start": {
+    "/start/{id}": {
       "get": {
-        "description": "Start transmitting to all endpoints.\n",
+        "description": "Start transmitting to one or all endpoints.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of endpoint to be started.\n"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success.\nTransmission is enabled for all endpoints.\n",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "transmitting": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Success.\nTransmission is enabled for all endpoints.\n"
+          },
+          "400": {
+            "description": "Bad request.\nThe specified endpoint does not exist.\n"
           },
           "500": {
             "description": "Error.\nThe server was unable to service the request.\n"
@@ -42,27 +40,25 @@
         }
       }
     },
-    "/stop": {
+    "/stop/{id}": {
       "get": {
-        "description": "Stop transmitting to all endpoints.\n",
+        "description": "Stop transmitting to one or all endpoints.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of endpoint to be started.\n"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success.\nTransmission is disabled for all endpoints.\n",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "transmitting": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Success.\nTransmission is disabled for all endpoints.\n"
+          },
+          "400": {
+            "description": "Bad request.\nThe specified endpoint does not exist.\n"
           },
           "500": {
             "description": "Error.\nThe server was unable to service the request.\n"

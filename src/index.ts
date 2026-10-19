@@ -472,14 +472,10 @@ module.exports = function(app: any) {
           if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
             expressSend(res, 400, null, req.path);
           } else {
-            status = (pluginConfiguration.endpoints || []).reduce((a: Dictionary<StatusResponse>, endpoint: Endpoint) => {
+            pluginConfiguration.endpoints.forEach((endpoint) => {
               endpoint.enabled = (req.params.id)?((endpoint.name == req.params.id)?false:endpoint.enabled):false;
-              a[endpoint.name] = {
-                "enabled": false
-              };
-              return(a);
-            }, {});
-            expressSend(res, 200, status, req.path);
+            });
+            expressSend(res, 200, null, req.path);
           }
           break;
         default:

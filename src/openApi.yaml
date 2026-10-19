@@ -16,46 +16,50 @@ externalDocs:
   description: Plugin README document
   url: https://github.com/pdjr-signalk-plugins/ais-reporter#readme 
 paths:
-  /start:
+  /start/{id}:
     get:
       description: |
-        Start transmitting to all endpoints.
+        Start transmitting to one or all endpoints.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          description: |
+            Name of endpoint to be started.
       responses:
         '200':
           description: |
             Success.
             Transmission is enabled for all endpoints.
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-                  properties:
-                    transmitting:
-                      type: boolean
+        '400':
+          description: |
+            Bad request.
+            The specified endpoint does not exist.
         '500':
           description: |
             Error.
             The server was unable to service the request.
-  /stop:
+  /stop/{id}:
     get:
       description: |
-        Stop transmitting to all endpoints.
+        Stop transmitting to one or all endpoints.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          description: |
+            Name of endpoint to be started.
       responses:
         '200':
           description: |
             Success.
             Transmission is disabled for all endpoints.
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-                  properties:
-                    transmitting:
-                      type: boolean
+        '400':
+          description: |
+            Bad request.
+            The specified endpoint does not exist.
         '500':
           description: |
             Error.
