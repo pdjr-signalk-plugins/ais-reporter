@@ -38,36 +38,36 @@ To operate at all the plugin's JSON configuration file
 must be initialised using either Signal K's plugin configuration GUI
 or a text editor.
 
-Some features of the configuration file are poorly supported by Signal
-K's plugin configuration GUI and the following discussion assumes that
-a text editor is being used to directly edit the JSON configuration.
+The plugin configuration must contain an 'endpoints' array of objects
+each of which defines a reporting endpoint.
 
-### Configuration properties
-
-The reporting intervals described above can be overriden using the
-properties described below.
+The following properties can be applied globally or within each
+endpoint definition.
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
+A value of 0 minutes disables updates.
 
 *staticUpdateInterval* specifies the static data update interval for
 all vessels as either a time in minutes or an array of times in
 minutes.
+A value of 0 minutes disables updates.
 
 *myPositionUpdateInterval* specifies the position update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
+A value of 0 minutes disables updates.
 
 *myStaticUpdateInterval* specifies the static data update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
+A value of 0 minutes disables updates.
 
-*navigationStateMap* used to specify which states on the Signal K's
-`navigation.state` path select which values from an array of update
+*navigationStateMap* specifies which state values on Signal K's
+`navigation.state` path select which values from any array of update
 intervals.
 
-These properties can be applied anywhere in the configuration file and
-operate over the context in which they are defined.
+## Example configurations
 
 ### Example 1: report host vessel data to MarineTraffic.com
 
@@ -101,94 +101,24 @@ You must subscribe with MarineTraffic.com as a reporting station
 to obtain an IP address and service port number that act as your
 station's reporting entry point.
 
-This example will push AIS data to port 12345 on the Signal K host and
-may be useful for checking and testing plugin operation.
-A simple way to monitor port 12345 on the host computer is to open a
-terminal window on the Signal K server and run the command
-`~/.signalk/node_modules/ais-reporter/udp_listen.pl 12345`.
+### Example 2: report host vessel data and AIS targets
 
-To report AIS data to a consolidation service provider (like Marine
-Traffic) you must subscribe with the provider as a reporting station
-and create an item in the *endpoints* array which uses the IP address
-and service port number that they supply as your station's entry point.
-
-### Default reporting intervals
-
-The minimal configuration described above uses built in, global,
-defaults to report the position of all vessels known to Signal K once
-every 5 minutes and associated static data once every 15 minutes.
-
-
-Note that consolidation services use the frequency of reporting as an
-indicator of vessel presence; Marine Traffic for example seems to
-expect reporting intervals of less than an hour or so.
-
-### Configuration examples
-
-#### Report 'self' vessel at different rate to AIS targets
+If you are feeling altruistic, then you can additionally report AIS
+data received from target vessels seen by Signal K.
 
 ```json
-{  
-  "configuration": {  
-    "myPositionUpdateInterval": 1,  
-    "myStaticUpdateInterval": 55,  
-    "endpoints": [  
-      {  
-        "name": "Test",  
-        "ipAddress": "127.0.0.1",  
-        "port": 12345  
-      }  
-    ]  
-  },  
-  "enabled": true  
-}
-```  
-
-#### Report to two endpoints at different rates
-
-```json
-{  
-  "configuration": {  
-    "endpoints": [  
-      {  
-        "name": "Test",  
-        "ipAddress": "127.0.0.1",  
-        "port": 12345,  
-        "positionUpdateInterval": 1,  
-        "staticUpdateInterval": 1  
-      },  
-      {  
-        "name": "Marine Traffic",  
-        "ipAddress": "203.0.113.1",  
-        "port": 32123,  
-        "positionUpdateInterval": 5,  
-        "staticUpdateInterval": 20  
-      }  
-    ]  
-  },  
-  "enabled": true  
-}
-```  
-
-### Automatically modulate reporting intervals
-
-On my ship I like to modify position reporting intervals so that when
-my ship is moving reports are made more frequently.
-Values on the Signal K `navigation.state` path support this behaviour.
-
-```json
-{  
-  "configuration": {  
-    "positionUpdateInterval": 5,  
-    "staticUpdateInterval": 20,  
-    "myPositionUpdateInterval": [55,1],  
-    "myStaticUpdateInterval": 55,  
-    "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],  
-    "endpoints": [  
-      {  
-        "name": "Marine Traffic",  
-        "ipAddress": "203.0.113.1",  
-        "port": 32123
+{
+  "configuration": {
+    "endpoints": [
+      {
+        "name": "Marine Traffic",
+        "ipAddress": "203.0.113.1",
+        "port": 32123,
+        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "myPositionUpdateInterval": [55,1],
+        "myStaticUpdateInterval": 55,
+        "positionUpdateInterval": 5,
+        "staticUpdateInterval": 5
       }  
     ]  
   },  
@@ -198,23 +128,14 @@ Values on the Signal K `navigation.state` path support this behaviour.
 
 ## Plugin API
 
-The plugin presents an API on `/plugins/ais-reporter/status` which
-returns some data on resources consumed by each endpoint.
+The plugin presents an API with the following interface.
 
-```json
-{
-  "MarineTraffic": {
-    "ipAddress": "127.0.0.1",
-    "port": 12345,
-    "started": "2024-12-19T11:34:30.184Z",
-    "totalBytesTransmitted": 382,
-    "positionSelfBytesPerHour": 52,
-    "positionOthersBytesPerHour": 0,
-    "staticSelfBytesPerHour": 52,
-    "staticOthersBytesPerHour": 0
-  }
-}
-```
+|-- |-- |
+| /plugins/ais-reporter/start | Start transmitting to all endpoints. |
+| /plugins/ais-reporter/start/*endpoint* | Start transmitting to *endpoint*. |
+| /plugins/ais-reporter/stop | Stop transmitting to all endpoints. |
+| /plugins/ais-reporter/stop/*endpoint* | Stop transmitting to *endpoint*. |
+| /plugins/ais-reporter/status | Returns some data on resources consumed by each endpoint. |
 
 ## Author
 

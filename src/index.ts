@@ -148,10 +148,6 @@ module.exports = function(app: any) {
     start: function(options: any) {
       pluginStatus = new PluginStatus(app, 'started');
 
-      if (!app.getSelfPath(`navigation.state.value`)) {
-        pluginStatus.setStatus(`warning: 'navigation.state' path is not available`);
-      }
-
       try {
         pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
 
