@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: AIS Reporter API
-  version: 2.0.0
+  version: 3.0.0
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -16,13 +16,13 @@ externalDocs:
   description: Plugin README document
   url: https://github.com/pdjr-signalk-plugins/ais-reporter#readme 
 paths:
-  /start/{id}:
+  /start:
     get:
       description: |
         Start transmitting to one or all endpoints.
       parameters:
-        - in: path
-          name: id
+        - in: query
+          name: name
           schema:
             type: string
           description: |
@@ -40,13 +40,13 @@ paths:
           description: |
             Error.
             The server was unable to service the request.
-  /stop/{id}:
+  /stop:
     get:
       description: |
         Stop transmitting to one or all endpoints.
       parameters:
-        - in: path
-          name: id
+        - in: query
+          name: name
           schema:
             type: string
           description: |
@@ -67,13 +67,22 @@ paths:
   /status:
     get:
       description: |
-        Get a digest reporting the status of all configured endpoints.
+        Get the status of one or all configured endpoints.
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: |
+            Name of endpoint to be stopped.
       responses:
         '200':
           description: |
             Success.
-            The response body is an object containing a status report
-            object for each endpoint keyed by endpoint name.
+            if {name} is specified the response body is an object
+            containing a status report for the named endpoint,
+            otherwise the response body is a dictionary object
+            containing a status report for each defined endpoint.
           content:
             application/json:
               schema:

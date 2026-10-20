@@ -162,9 +162,9 @@ module.exports = function (app) {
             udpSocket.close();
         },
         registerWithRouter: function (router) {
-            router.get('/status/:id?', handleRoutes);
-            router.get('/stop/:id?', handleRoutes);
-            router.get('/start/:id?', handleRoutes);
+            router.get('/status', handleRoutes);
+            router.get('/stop', handleRoutes);
+            router.get('/start', handleRoutes);
         },
         getOpenApi: function () {
             return (require('./openApi.json'));
@@ -431,7 +431,7 @@ module.exports = function (app) {
         try {
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
-                    if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
+                    if ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))) {
                         expressSend(res, 400, null, req.path);
                     }
                     else {
@@ -449,10 +449,10 @@ module.exports = function (app) {
                                 staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
                                 staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
                             };
-                            if (!req.params.id) {
+                            if (!req.query.name) {
                                 statusResponse[endpoint.name] = status;
                             }
-                            else if (req.params.id == endpoint.name) {
+                            else if (req.query.name == endpoint.name) {
                                 statusResponse = status;
                             }
                         });
@@ -460,23 +460,23 @@ module.exports = function (app) {
                     }
                     break;
                 case "/start":
-                    if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
+                    if ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))) {
                         expressSend(res, 400, null, req.path);
                     }
                     else {
                         pluginConfiguration.endpoints.forEach((endpoint) => {
-                            endpoint.enabled = (req.params.id) ? ((endpoint.name == req.params.id) ? true : endpoint.enabled) : true;
+                            endpoint.enabled = (req.query.name) ? ((endpoint.name == req.query.name) ? true : endpoint.enabled) : true;
                         });
                         expressSend(res, 200, null, req.path);
                     }
                     break;
                 case "/stop":
-                    if ((req.params.id) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.params.id))) {
+                    if ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))) {
                         expressSend(res, 400, null, req.path);
                     }
                     else {
                         pluginConfiguration.endpoints.forEach((endpoint) => {
-                            endpoint.enabled = (req.params.id) ? ((endpoint.name == req.params.id) ? false : endpoint.enabled) : false;
+                            endpoint.enabled = (req.query.name) ? ((endpoint.name == req.query.name) ? false : endpoint.enabled) : false;
                         });
                         expressSend(res, 200, null, req.path);
                     }

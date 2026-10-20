@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "AIS Reporter API",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "license": {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -14,13 +14,13 @@
     "url": "https://github.com/pdjr-signalk-plugins/ais-reporter#readme"
   },
   "paths": {
-    "/start/{id}": {
+    "/start": {
       "get": {
         "description": "Start transmitting to one or all endpoints.\n",
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
+            "in": "query",
+            "name": "name",
             "schema": {
               "type": "string"
             },
@@ -40,13 +40,13 @@
         }
       }
     },
-    "/stop/{id}": {
+    "/stop": {
       "get": {
         "description": "Stop transmitting to one or all endpoints.\n",
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
+            "in": "query",
+            "name": "name",
             "schema": {
               "type": "string"
             },
@@ -68,10 +68,20 @@
     },
     "/status": {
       "get": {
-        "description": "Get a digest reporting the status of all configured endpoints.\n",
+        "description": "Get the status of one or all configured endpoints.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of endpoint to be stopped.\n"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success.\nThe response body is an object containing a status report\nobject for each endpoint keyed by endpoint name.\n",
+            "description": "Success.\nif {name} is specified the response body is an object\ncontaining a status report for the named endpoint,\notherwise the response body is a dictionary object\ncontaining a status report for each defined endpoint.\n",
             "content": {
               "application/json": {
                 "schema": {
