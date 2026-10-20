@@ -431,7 +431,7 @@ module.exports = function (app) {
         try {
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
-                    if ((Object.keys(req.query).length === 0) || ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
+                    if ((Object.keys(req.query).length === 0) || ((req.query.name) && (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
                         var statusResponse = {};
                         pluginConfiguration.endpoints.forEach((endpoint) => {
                             let hours = (endpoint.statistics.started) ? (Date.now() - endpoint.statistics.started) / 3600000 : 1;
@@ -460,7 +460,7 @@ module.exports = function (app) {
                     }
                     break;
                 case "/start":
-                    if ((Object.keys(req.query).length === 0) || ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
+                    if ((Object.keys(req.query).length === 0) || ((req.query.name) && (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
                         pluginConfiguration.endpoints.forEach((endpoint) => {
                             endpoint.enabled = (req.query.name) ? ((endpoint.name == req.query.name) ? true : endpoint.enabled) : true;
                         });
@@ -471,7 +471,7 @@ module.exports = function (app) {
                     }
                     break;
                 case "/stop":
-                    if ((Object.keys(req.query).length === 0) || ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
+                    if ((Object.keys(req.query).length === 0) || ((req.query.name) && (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
                         pluginConfiguration.endpoints.forEach((endpoint) => {
                             endpoint.enabled = (req.query.name) ? ((endpoint.name == req.query.name) ? false : endpoint.enabled) : false;
                         });
