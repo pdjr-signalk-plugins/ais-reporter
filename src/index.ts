@@ -457,7 +457,7 @@ module.exports = function(app: any) {
                 staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
                 staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
               };
-              if (!req.query.name) {
+              if ((Object.keys(req.query).length === 0)) {
                 statusResponse[endpoint.name] = status;
               } else if (req.query.name == endpoint.name) {
                 statusResponse = status;
