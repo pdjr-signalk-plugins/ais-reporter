@@ -2,26 +2,47 @@ import { floor } from "lodash";
 
 export class Endpoint {
 
+  public app: any = undefined;
+  /**
+   * Name of the Endpoint, used only for reporting.
+   */
   public name: string = '';
+  /**
+   * IP address of the remote endpoint.
+   */
   public ipAddress: string = '';
+  /**
+   * Port number of the remote endpoint.
+   */
   public port: number = 0;
+  /**
+   * Whether or not the Endpoint is active.
+   */
   public enabled: boolean = true;
+  /**
+   * Configured intervals and related properties.
+   */
   public intervals: Intervals = <Intervals>{};
+  /**
+   * Accumulated transmission statistics.
+   */
   public statistics: Statistics = <Statistics>{};
 
-  constructor(endpointConfig: any, globalConfig: any, defaults: any) {
+  constructor(options: any[], app: any) {
 
-    if (!endpointConfig.ipAddress) throw new Error('missing \'ipAddress\' property');
-    if (!endpointConfig.port) throw new Error('missing \'port\' property');
+    if (!options[0].ipAddress) throw new Error('missing \'ipAddress\' property');
+    if (!options[0].port) throw new Error('missing \'port\' property');
 
-    this.name = endpointConfig.name || endpointConfig.ipAddress;
-    this.ipAddress = endpointConfig.ipAddress;
-    this.port = endpointConfig.port;
-    this.intervals.positionUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'positionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-    this.intervals.staticUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'staticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
-    this.intervals.myPositionUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'myPositionUpdateInterval', [defaults.POSITION_UPDATE_INTERVAL]);
-    this.intervals.myStaticUpdateIntervals = getOptionArray(endpointConfig, globalConfig, 'myStaticUpdateInterval', [defaults.STATIC_UPDATE_INTERVAL]);
-    this.intervals.updateIntervalIndexPath = getOption(endpointConfig, globalConfig, 'updateIntervalIndexPath', undefined);
+
+    this.app = app;
+    this.name = options[0].name || options[0].ipAddress;
+    this.ipAddress = options[0].ipAddress;
+    this.port = options[0].port;
+    this.intervals.positionUpdateIntervals = getOptionArray(options, 'positionUpdateInterval');
+    this.intervals.staticUpdateIntervals = getOptionArray(options, 'staticUpdateInterval');
+    this.intervals.myPositionUpdateIntervals = getOptionArray(options, 'myPositionUpdateInterval');
+    this.intervals.myStaticUpdateIntervals = getOptionArray(options, 'myStaticUpdateInterval');
+    this.intervals.navigationStateMap = getOption(options, 'navigationStateMap');
 
     this.statistics = {
       started: Date.now(),
@@ -47,7 +68,7 @@ export class Endpoint {
         }
       }
     }
-  
+
     /**
      * 
      * @param objects - an array of arbitrary objects which may contain 'name'
@@ -55,19 +76,29 @@ export class Endpoint {
      * @param fallback - the value to be returned if 'name' is not found in any object.
      * @returns 
      */
-    function getOption(endpointConfig: any, globalConfig: any, name: string, fallback: any): any {
-      var retval: any = fallback;
-      if (globalConfig.hasOwnProperty(name)) retval = globalConfig[name];
-      if (endpointConfig.hasOwnProperty(name)) retval = endpointConfig[name];
+    function getOption(options: any[], name: string): any {
+      var retval: any = undefined;
+      options.reverse().forEach((opt: any) => {
+        if (opt.hasOwnProperty(name)) retval = opt[name];
+      });
       return(retval);
     }
   
-    function getOptionArray(endpointConfig: any, globalConfig: any, name: string, fallback: any): any {
-      var retval: any = fallback;
-      if (globalConfig.hasOwnProperty(name)) retval = (Array.isArray(globalConfig[name]))?globalConfig[name]:[globalConfig[name]];
-      if (endpointConfig.hasOwnProperty(name)) retval = (Array.isArray(endpointConfig[name]))?endpointConfig[name]:[endpointConfig[name]];
+    function getOptionArray(options: any, name: string): any {
+      var retval: any = undefined;
+      options.reverse().forEach((opt: any) => {
+        if (opt.hasOwnProperty(name)) retval = (Array.isArray(opt[name]))?opt[name]:[opt[name]];
+      })
       return(retval);
     }
+  }
+
+  dump() {
+    this.app.debug(`name: ${this.name}`);
+    this.app.debug(`ipAddress: ${this.ipAddress}`);
+    this.app.debug(`port: ${this.port}`);
+    this.app.debug(`intervals: ${JSON.stringify(this.intervals)}`);
+    this.app.debug(`statistics: ${JSON.stringify(this.statistics)}`);
   }
 
   updateStatistics(reportType: string, update: ReportStatistics) {
@@ -99,7 +130,7 @@ interface Intervals {
   staticUpdateIntervals: number[],
   myPositionUpdateIntervals: number[],
   myStaticUpdateIntervals: number[],
-  updateIntervalIndexPath: string
+  navigationStateMap: string[][]
 }
 
 interface Statistics {

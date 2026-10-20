@@ -10,17 +10,26 @@ An endpoint is any remote service capable of receiving AIS data over
 UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-The rates at which reports are issued for the host ship, AIS targets
-and UDP enpoints can be independently configured and can be dynamically
-adjusted in response to values on one or more arbitrary Signal K paths.
-Together these measures may be used to give fine control over the
-granularity of data reporting and resource consumption on the host
-vessel's Internet connection.
-
 AIS reports for the host vessel can be issued even if the ship has no
 AIS equipment: it is sufficient that the vessel's MMSI and position
 are available on their default Signal K paths (`mmsi` and
 `navigation.position`).
+
+One particular use case for the plugin is publishing the host vessel
+position in regions (like much of inland Europe) where consolidation
+service base station coverage is sparse or non-exixstent.
+
+The rates at which reports are issued for the host ship, AIS targets
+and UDP enpoints can be independently configured and can be dynamically
+adjusted in response to the navigation state of the host vessel as
+reported on the Signal K `navigation.state` path.
+
+## System requirements
+
+If your Signal K system does not maintain the `navigation.state` path
+then you may wish to install the
+[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)
+plugin from the appstore.
 
 ## Plugin configuration
 
@@ -29,26 +38,57 @@ To operate at all the plugin's JSON configuration file
 must be initialised using either Signal K's plugin configuration GUI
 or a text editor.
 
-Some features of the configuration file are poorly supported by Signal
-K's plugin configuration GUI and the following discussion assumes that
-a text editor is being used to directly edit the JSON configuration.
+A valid configuration must contain an 'endpoints' array of objects
+each of which defines a reporting endpoint.
 
-### A minimal configuration
+The following properties can be applied globally or within each
+endpoint definition.
 
-The plugin includes built-in defaults for most configuration properties
-so a minimal working configuration requires only an *endpoints* array
-containing at least one reporting endpoint specified in terms of its
-*ipAddress* and service *port* (with maybe an optional descriptive
-*name*).
+*positionUpdateInterval* specifies the position update interval for all
+vessels as either a time in minutes or an array of times in minutes.
+A value of 0 minutes disables updates.
+
+*staticUpdateInterval* specifies the static data update interval for
+all vessels as either a time in minutes or an array of times in
+minutes.
+A value of 0 minutes disables updates.
+
+*myPositionUpdateInterval* specifies the position update interval for
+the 'self' vessel as either a time in minutes or an array of times in
+minutes.
+A value of 0 minutes disables updates.
+
+*myStaticUpdateInterval* specifies the static data update interval for
+the 'self' vessel as either a time in minutes or an array of times in
+minutes.
+A value of 0 minutes disables updates.
+
+*navigationStateMap* specifies which state values on Signal K's
+`navigation.state` path select which values from any array of update
+intervals.
+
+## Example configurations
+
+### Example 1: report host vessel data to MarineTraffic.com
+
+This example sends position and static AIS reports once every fifty-five
+minutes when the host vessel is stationary and a position report once a
+minute when the vessel is moving.
+The `navigation.state` path must be active on the host system.
+Increasing the stationary reporting interval much above 55 will cause
+Marine Traffic to think that the reporting station has died.
 
 ```json
-{  
-  "configuration": {  
-    "endpoints": [  
-      {  
-        "name": "Test",  
-        "ipAddress": "127.0.0.1",  
-        "port": 12345  
+{
+  "configuration": {
+    "endpoints": [
+      {
+        "name": "marine-traffic",
+        "ipAddress": "203.0.113.1",
+        "port": 32123,
+        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "myPositionUpdateInterval": [55,1],
+        "myStaticUpdateInterval": 55
       }  
     ]  
   },  
@@ -56,126 +96,29 @@ containing at least one reporting endpoint specified in terms of its
 }
 ```
 
-This example will push AIS data to port 12345 on the Signal K host and
-may be useful for checking and testing plugin operation.
-A simple way to monitor port 12345 on the host computer is to open a
-terminal window on the Signal K server and run the command
-`~/.signalk/node_modules/ais-reporter/udp_listen.pl 12345`.
+The *ipAddress* and *port* number used in the example are fakes.
+You must subscribe with MarineTraffic.com as a reporting station
+to obtain an IP address and service port number that act as your
+station's reporting entry point.
 
-To report AIS data to a consolidation service provider (like Marine
-Traffic) you must subscribe with the provider as a reporting station
-and create an item in the *endpoints* array which uses the IP address
-and service port number that they supply as your station's entry point.
+### Example 2: report host vessel data and AIS targets
 
-### Default reporting intervals
-
-The minimal configuration described above uses built in, global,
-defaults to report the position of all vessels known to Signal K once
-every 5 minutes and associated static data once every 15 minutes.
-
-#### Overriding default reporting intervals
-
-The reporting intervals described above can be overriden using the
-properties described below.
-
-*positionUpdateInterval* specifies the position update interval for all
-vessels as either a time in minutes or an array of times in minutes.
-
-*staticUpdateInterval* specifies the static data update interval for
-all vessels as either a time in minutes or an array of times in
-minutes.
-
-*myPositionUpdateInterval* specifies the position update interval for
-the 'self' vessel as either a time in minutes or an array of times in
-minutes.
-
-*myStaticUpdateInterval* specifies the static data update interval for
-the 'self' vessel as either a time in minutes or an array of times in
-minutes.
-
-*updateIntervalIndexPath* may be used to specify a Signal K path which
-returns a value that can be used to index an interval array value.
-
-These properties can be applied anywhere in the configuration file and
-operate over the context in which they are defined.
-
-Note that consolidation services use the frequency of reporting as an
-indicator of vessel presence; Marine Traffic for example seems to
-expect reporting intervals of less than an hour or so.
-
-### Configuration examples
-
-#### Report 'self' vessel at different rate to AIS targets
+If you are feeling altruistic, then you can additionally report AIS
+data received from target vessels seen by Signal K.
 
 ```json
-{  
-  "configuration": {  
-    "myPositionUpdateInterval": 1,  
-    "myStaticUpdateInterval": 55,  
-    "endpoints": [  
-      {  
-        "name": "Test",  
-        "ipAddress": "127.0.0.1",  
-        "port": 12345  
-      }  
-    ]  
-  },  
-  "enabled": true  
-}
-```  
-
-#### Report to two endpoints at different rates
-
-```json
-{  
-  "configuration": {  
-    "endpoints": [  
-      {  
-        "name": "Test",  
-        "ipAddress": "127.0.0.1",  
-        "port": 12345,  
-        "positionUpdateInterval": 1,  
-        "staticUpdateInterval": 1  
-      },  
-      {  
-        "name": "Marine Traffic",  
-        "ipAddress": "203.0.113.1",  
-        "port": 32123,  
-        "positionUpdateInterval": 5,  
-        "staticUpdateInterval": 20  
-      }  
-    ]  
-  },  
-  "enabled": true  
-}
-```  
-
-### Automatically modulate reporting intervals
-
-On my ship I like to modify my position reporting intervals based upon
-whether the ship is navigating or moored: using a short interval when
-navigating so as to report a good track and a long interval when moored
-so as to save data usage on my Internet connection.
-
-In my case my ship reports the main engine ignition state via an NMEA
-binary switchbank channel at 'electrical.switches.bank.16.16.state'
-(0 says ignition off, 1 says ignition on) and the plugin uses this
-value to select an appropriate value from the
-*myPositionUpdateInterval* array.
-
-```json
-{  
-  "configuration": {  
-    "positionUpdateInterval": 5,  
-    "staticUpdateInterval": 20,  
-    "myPositionUpdateInterval": [55,1],  
-    "myStaticUpdateInterval": 55,  
-    "upateIntervalIndexPath": "electrical.switches.bank.16.16.state",  
-    "endpoints": [  
-      {  
-        "name": "Marine Traffic",  
-        "ipAddress": "203.0.113.1",  
-        "port": 32123
+{
+  "configuration": {
+    "endpoints": [
+      {
+        "name": "marine-traffic",
+        "ipAddress": "203.0.113.1",
+        "port": 32123,
+        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "myPositionUpdateInterval": [55,1],
+        "myStaticUpdateInterval": 55,
+        "positionUpdateInterval": 5,
+        "staticUpdateInterval": 5
       }  
     ]  
   },  
@@ -185,23 +128,7 @@ value to select an appropriate value from the
 
 ## Plugin API
 
-The plugin presents an API on `/plugins/ais-reporter/status` which
-returns some data on resources consumed by each endpoint.
-
-```json
-{
-  "MarineTraffic": {
-    "ipAddress": "127.0.0.1",
-    "port": 12345,
-    "started": "2024-12-19T11:34:30.184Z",
-    "totalBytesTransmitted": 382,
-    "positionSelfBytesPerHour": 52,
-    "positionOthersBytesPerHour": 0,
-    "staticSelfBytesPerHour": 52,
-    "staticOthersBytesPerHour": 0
-  }
-}
-```
+A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 
 ## Author
 

@@ -21,7 +21,7 @@ const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 5, STATIC_UPDATE_INTERVAL: 15 };
+const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 0, STATIC_UPDATE_INTERVAL: 0 };
 const HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'ais-reporter';
@@ -58,9 +58,15 @@ const PLUGIN_SCHEMA = {
                 { "type": "array", "items": { "type": "integer", "minimum": 0 } }
             ]
         },
-        "updateIntervalIndexPath": {
-            "title": "Path which selects override intervals",
-            "type": "string"
+        "navigationStateMap": {
+            "title": "Select different intervals based upon navigation state",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                }
+            }
         },
         "endpoints": {
             "type": "array",
@@ -137,9 +143,9 @@ module.exports = function (app) {
             pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, 'started');
             try {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
-                app.debug(`using canonical configuration: ${JSON.stringify(pluginConfiguration, null, 2)}`);
                 if (pluginConfiguration.endpoints.length > 0) {
-                    pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'} (${pluginConfiguration.endpoints.map((e) => ('\'' + e.name + '\'')).join(', ')})`);
+                    pluginConfiguration.endpoints.forEach((endpoint) => { app.debug(`created endpoint '${endpoint.name}`); });
+                    pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'}`);
                     heartbeatInterval = startReporting(pluginConfiguration, udpSocket = (0, dgram_1.createSocket)('udp4'), HEARTBEAT_INTERVAL);
                 }
                 else {
@@ -178,7 +184,7 @@ module.exports = function (app) {
         var retval = {
             myMMSI: app.getSelfPath('mmsi'),
             myAisClass: app.getSelfPath('sensors.ais.class.value') || DEFAULT_MY_AIS_CLASS,
-            endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint(option, options, defaults))
+            endpoints: options.endpoints.map((option) => new Endpoint_1.Endpoint([option, options, defaults], app))
         };
         return (retval);
     }
@@ -194,21 +200,16 @@ module.exports = function (app) {
      * @returns - NodeJS.timeout handle of the timer control.
      */
     function startReporting(pluginConfiguration, udpSocket, heartbeat) {
-        app.debug(`startReporting(${JSON.stringify(pluginConfiguration, null, 2)}, udpSocket)...`);
         return (setInterval(() => {
-            app.debug(`reportMaybe(${heartbeatCount})...`);
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var reportStatistics = {};
                     var totalBytes = 0;
-                    let mvIDX = ((endpoint.intervals.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0) : 0);
-                    let ovIDX = ((endpoint.intervals.updateIntervalIndexPath) ? (app.getSelfPath(`${endpoint.intervals.updateIntervalIndexPath}.value`) || 0) : 0);
-                    let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${mvIDX}]`, 0);
-                    let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${mvIDX}]`, 0);
-                    let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${ovIDX}]`, 0);
-                    let ovSUI = _.get(endpoint.intervals, `staticUpdateIntervals[${ovIDX}]`, 0);
-                    app.debug(`mvIDX = ${mvIDX}, mvPUI = ${mvPUI}, mvSUI = ${mvSUI}`);
-                    app.debug(`ovIDX = ${ovIDX}, ovPUI = ${ovPUI}, ovSUI = ${ovSUI}`);
+                    let updateIndex = getUpdateIndex(endpoint.intervals.navigationStateMap);
+                    let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${updateIndex}]`, 0);
+                    let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${updateIndex}]`, 0);
+                    let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${updateIndex}]`, 0);
+                    let ovSUI = _.get(endpoint.intervals, `staticUpdateIntervals[${updateIndex}]`, 0);
                     if (((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0)) || ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0))) {
                         pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
                         reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0));
@@ -227,6 +228,23 @@ module.exports = function (app) {
             });
             heartbeatCount++;
         }, heartbeat));
+        /**
+         * Uses a supplied stateMap to translate the current 'self'
+         * 'navigation.state' into a numeric array index.
+         * @param stateMap
+         * @returns
+         */
+        function getUpdateIndex(stateMap) {
+            var retval = 0;
+            var navigationState = app.getSelfPath(`navigation.state.value`);
+            if (navigationState) {
+                for (var index = 0; index < stateMap.length; index++) {
+                    if (stateMap[index].includes(navigationState))
+                        retval = index;
+                }
+            }
+            return (retval);
+        }
     }
     /**
      * Generate one or more AIS position reports for transmission to a
@@ -239,7 +257,6 @@ module.exports = function (app) {
      * @returns - ReportStatistics for the transmission.
      */
     function reportPosition(socket, endpoint, reportSelf, reportOthers) {
-        app.debug(`reportPosition(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`);
         var reportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 } };
         var aisClass;
         var aisProperties;
@@ -295,7 +312,6 @@ module.exports = function (app) {
      * @returns - ReportStatistics for the transmission.
      */
     function reportStatic(socket, endpoint, reportSelf = false, reportOthers = false) {
-        app.debug(`reportStatic(socket, ${endpoint.name}, ${reportSelf}, ${reportOthers})...`);
         var reportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 } };
         var aisClass;
         var aisProperties;
@@ -389,7 +405,7 @@ module.exports = function (app) {
     function sendReportMsg(socket, msg, endpoint) {
         var retval = 0;
         if (endpoint.enabled) {
-            app.debug(`sendReportMsg(socket, ${msg}, ${endpoint.name})...`);
+            app.debug(`sending "${msg}" to '${endpoint.name}'`);
             socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e) => { });
             retval = (msg.length + 1);
         }
@@ -413,11 +429,19 @@ module.exports = function (app) {
         app.debug(`handleRoutes(${req.method}, ${req.path})...`);
         var status;
         try {
+            if (Object.keys(req.query).length != 0) {
+                if (req.query.name === undefined)
+                    throw new Error("400");
+                if (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))
+                    throw new Error("404");
+            }
             switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1) ? undefined : req.path.indexOf('/', 1))) {
                 case '/status':
-                    status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
+                    var statusResponse = {};
+                    pluginConfiguration.endpoints.forEach((endpoint) => {
                         let hours = (endpoint.statistics.started) ? (Date.now() - endpoint.statistics.started) / 3600000 : 1;
-                        a[endpoint.name] = {
+                        var status = {
+                            name: endpoint.name,
                             ipAddress: endpoint.ipAddress,
                             port: endpoint.port,
                             started: (endpoint.statistics.started) ? (new Date(endpoint.statistics.started)).toISOString() : 'never',
@@ -427,29 +451,26 @@ module.exports = function (app) {
                             staticSelfBytesPerHour: Math.floor(endpoint.statistics.static.self.bytes / hours),
                             staticOthersBytesPerHour: Math.floor(endpoint.statistics.static.others.bytes / hours)
                         };
-                        return (a);
-                    }, {});
-                    expressSend(res, 200, status, req.path);
+                        if ((Object.keys(req.query).length === 0)) {
+                            statusResponse[endpoint.name] = status;
+                        }
+                        else if (req.query.name == endpoint.name) {
+                            statusResponse = status;
+                        }
+                    });
+                    expressSend(res, 200, statusResponse, req.path);
                     break;
                 case "/start":
-                    status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
-                        endpoint.enabled = true;
-                        a[endpoint.name] = {
-                            "enabled": true
-                        };
-                        return (a);
-                    }, {});
-                    expressSend(res, 200, status, req.path);
+                    pluginConfiguration.endpoints.forEach((endpoint) => {
+                        endpoint.enabled = (Object.keys(req.query).length === 0) ? true : ((endpoint.name == req.query.name) ? true : endpoint.enabled);
+                    });
+                    expressSend(res, 200, null, req.path);
                     break;
                 case "/stop":
-                    status = (pluginConfiguration.endpoints || []).reduce((a, endpoint) => {
-                        endpoint.enabled = false;
-                        a[endpoint.name] = {
-                            "enabled": false
-                        };
-                        return (a);
-                    }, {});
-                    expressSend(res, 200, status, req.path);
+                    pluginConfiguration.endpoints.forEach((endpoint) => {
+                        endpoint.enabled = (Object.keys(req.query).length === 0) ? false : ((endpoint.name == req.query.name) ? false : endpoint.enabled);
+                    });
+                    expressSend(res, 200, null, req.path);
                     break;
                 default:
                     break;
@@ -461,7 +482,7 @@ module.exports = function (app) {
         }
         function expressSend(res, code, body, debugPrefix = null) {
             app.debug(`expressSend(res, ${code}, ${JSON.stringify(body)}, ${debugPrefix})...`);
-            const FETCH_RESPONSES = { "200": null, "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" };
+            const FETCH_RESPONSES = { "200": "Ok", "201": null, "400": "bad request", "403": "forbidden", "404": "not found", "503": "service unavailable (try again later)", "500": "internal server error" };
             res.status(code).send((body) ? body : ((FETCH_RESPONSES['' + code]) ? FETCH_RESPONSES['' + code] : null));
             return (false);
         }

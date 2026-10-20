@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "AIS Reporter API",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "license": {
       "name": "Apache 2.0",
       "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -16,25 +16,26 @@
   "paths": {
     "/start": {
       "get": {
-        "description": "Start transmitting to all endpoints.\n",
+        "description": "Start transmitting to one or all endpoints.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of endpoint to be started.\n"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success.\nTransmission is enabled for all endpoints.\n",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "transmitting": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Success.\nTransmission started.\n"
+          },
+          "400": {
+            "description": "Bad request.\nThe specified parameter name is invalid.\n"
+          },
+          "404": {
+            "description": "Not found.\nThe specified endpoint name does not exist.\n"
           },
           "500": {
             "description": "Error.\nThe server was unable to service the request.\n"
@@ -44,25 +45,26 @@
     },
     "/stop": {
       "get": {
-        "description": "Stop transmitting to all endpoints.\n",
+        "description": "Stop transmitting to one or all endpoints.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of endpoint to be stopped.\n"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success.\nTransmission is disabled for all endpoints.\n",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "transmitting": {
-                        "type": "boolean"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Success.\nTransmission stopped.\n"
+          },
+          "400": {
+            "description": "Bad request.\nThe specified parameter name is invalid.\n"
+          },
+          "404": {
+            "description": "Not found.\nThe specified endpoint name does not exist.\n"
           },
           "500": {
             "description": "Error.\nThe server was unable to service the request.\n"
@@ -72,63 +74,129 @@
     },
     "/status": {
       "get": {
-        "description": "Get a digest reporting the status of all configured endpoints.\n",
+        "description": "Get the status of one or all configured endpoints.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of endpoint to be stopped.\n"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Success.\nThe response body is an object containing a status report\nobject for each endpoint keyed by endpoint name.\n",
+            "description": "Success.\nif {name} is specified the response body is an object\ncontaining a status report for the named endpoint,\notherwise the response body is a dictionary object\ncontaining a status report for each defined endpoint.\n",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object",
-                    "properties": {
-                      "ipAddress": {
-                        "description": "IP address of the report endpoint.",
-                        "type": "string",
-                        "example": "192.168.1.12"
-                      },
-                      "port": {
-                        "description": "Port number of the report endpoint.",
-                        "type": "integer",
-                        "example": 12345
-                      },
-                      "started": {
-                        "description": "Time (UTC) at which the plugin commenced operation.",
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2024-12-19T09:31:26.774Z"
-                      },
-                      "totalBytesTransmitted": {
-                        "description": "Number of bytes transmitted to the endpoint since the plugin started.",
-                        "type": "integer",
-                        "example": 457683
-                      },
-                      "positionSelfBytesPerHour": {
-                        "description": "Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.",
-                        "type": "integer",
-                        "example": 456
-                      },
-                      "positionOthersBytesPerHour": {
-                        "description": "Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.",
-                        "type": "integer",
-                        "example": 912
-                      },
-                      "staticSelfBytesPerHour": {
-                        "description": "Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.",
-                        "type": "integer",
-                        "example": 456
-                      },
-                      "staticOthersBytesPerHour": {
-                        "description": "Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.",
-                        "type": "integer",
-                        "example": 912
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "ipAddress": {
+                          "description": "IP address of the report endpoint.",
+                          "type": "string",
+                          "example": "192.168.1.12"
+                        },
+                        "port": {
+                          "description": "Port number of the report endpoint.",
+                          "type": "integer",
+                          "example": 12345
+                        },
+                        "started": {
+                          "description": "Time (UTC) at which the plugin commenced operation.",
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-19T09:31:26.774Z"
+                        },
+                        "totalBytesTransmitted": {
+                          "description": "Number of bytes transmitted to the endpoint since the plugin started.",
+                          "type": "integer",
+                          "example": 457683
+                        },
+                        "positionSelfBytesPerHour": {
+                          "description": "Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.",
+                          "type": "integer",
+                          "example": 456
+                        },
+                        "positionOthersBytesPerHour": {
+                          "description": "Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.",
+                          "type": "integer",
+                          "example": 912
+                        },
+                        "staticSelfBytesPerHour": {
+                          "description": "Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.",
+                          "type": "integer",
+                          "example": 456
+                        },
+                        "staticOthersBytesPerHour": {
+                          "description": "Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.",
+                          "type": "integer",
+                          "example": 912
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "ipAddress": {
+                            "description": "IP address of the report endpoint.",
+                            "type": "string",
+                            "example": "192.168.1.12"
+                          },
+                          "port": {
+                            "description": "Port number of the report endpoint.",
+                            "type": "integer",
+                            "example": 12345
+                          },
+                          "started": {
+                            "description": "Time (UTC) at which the plugin commenced operation.",
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-12-19T09:31:26.774Z"
+                          },
+                          "totalBytesTransmitted": {
+                            "description": "Number of bytes transmitted to the endpoint since the plugin started.",
+                            "type": "integer",
+                            "example": 457683
+                          },
+                          "positionSelfBytesPerHour": {
+                            "description": "Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.",
+                            "type": "integer",
+                            "example": 456
+                          },
+                          "positionOthersBytesPerHour": {
+                            "description": "Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.",
+                            "type": "integer",
+                            "example": 912
+                          },
+                          "staticSelfBytesPerHour": {
+                            "description": "Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.",
+                            "type": "integer",
+                            "example": 456
+                          },
+                          "staticOthersBytesPerHour": {
+                            "description": "Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.",
+                            "type": "integer",
+                            "example": 912
+                          }
+                        }
                       }
                     }
-                  }
+                  ]
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad request.\nThe specified parameter name is invalid.\n"
+          },
+          "404": {
+            "description": "Not found.\nThe specified endpoint name does not exist.\n"
           },
           "500": {
             "description": "Error.\nThe server was unable to service the request."

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: AIS Reporter API
-  version: 2.0.0
+  version: 3.0.0
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -19,21 +19,27 @@ paths:
   /start:
     get:
       description: |
-        Start transmitting to all endpoints.
+        Start transmitting to one or all endpoints.
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: |
+            Name of endpoint to be started.
       responses:
         '200':
           description: |
             Success.
-            Transmission is enabled for all endpoints.
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-                  properties:
-                    transmitting:
-                      type: boolean
+            Transmission started.
+        '400':
+          description: |
+            Bad request.
+            The specified parameter name is invalid.
+        '404':
+          description: |
+            Not found.
+            The specified endpoint name does not exist.
         '500':
           description: |
             Error.
@@ -41,21 +47,27 @@ paths:
   /stop:
     get:
       description: |
-        Stop transmitting to all endpoints.
+        Stop transmitting to one or all endpoints.
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: |
+            Name of endpoint to be stopped.
       responses:
         '200':
           description: |
             Success.
-            Transmission is disabled for all endpoints.
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: object
-                  properties:
-                    transmitting:
-                      type: boolean
+            Transmission stopped.
+        '400':
+          description: |
+            Bad request.
+            The specified parameter name is invalid.
+        '404':
+          description: |
+            Not found.
+            The specified endpoint name does not exist.
         '500':
           description: |
             Error.
@@ -63,53 +75,106 @@ paths:
   /status:
     get:
       description: |
-        Get a digest reporting the status of all configured endpoints.
+        Get the status of one or all configured endpoints.
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: |
+            Name of endpoint to be stopped.
       responses:
         '200':
           description: |
             Success.
-            The response body is an object containing a status report
-            object for each endpoint keyed by endpoint name.
+            if {name} is specified the response body is an object
+            containing a status report for the named endpoint,
+            otherwise the response body is a dictionary object
+            containing a status report for each defined endpoint.
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties:
-                  type: object
-                  properties:
-                    ipAddress:
-                      description: IP address of the report endpoint.
-                      type: string
-                      example: 192.168.1.12
-                    port:
-                      description: Port number of the report endpoint.
-                      type: integer
-                      example: 12345
-                    started:
-                      description: Time (UTC) at which the plugin commenced operation.
-                      type: string
-                      format: date-time
-                      example: 2024-12-19T09:31:26.774Z
-                    totalBytesTransmitted:
-                      description: Number of bytes transmitted to the endpoint since the plugin started.
-                      type: integer
-                      example: 457683
-                    positionSelfBytesPerHour:
-                      description: Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.
-                      type: integer
-                      example: 456
-                    positionOthersBytesPerHour:
-                      description: Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.
-                      type: integer
-                      example: 912
-                    staticSelfBytesPerHour:
-                      description: Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.
-                      type: integer
-                      example: 456
-                    staticOthersBytesPerHour:
-                      description: Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.
-                      type: integer
-                      example: 912
+                oneOf:
+                  - type: object
+                    properties:
+                      ipAddress:
+                        description: IP address of the report endpoint.
+                        type: string
+                        example: 192.168.1.12
+                      port:
+                        description: Port number of the report endpoint.
+                        type: integer
+                        example: 12345
+                      started:
+                        description: Time (UTC) at which the plugin commenced operation.
+                        type: string
+                        format: date-time
+                        example: 2024-12-19T09:31:26.774Z
+                      totalBytesTransmitted:
+                        description: Number of bytes transmitted to the endpoint since the plugin started.
+                        type: integer
+                        example: 457683
+                      positionSelfBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.
+                        type: integer
+                        example: 456
+                      positionOthersBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.
+                        type: integer
+                        example: 912
+                      staticSelfBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.
+                        type: integer
+                        example: 456
+                      staticOthersBytesPerHour:
+                        description: Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.
+                        type: integer
+                        example: 912
+                  - type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        ipAddress:
+                          description: IP address of the report endpoint.
+                          type: string
+                          example: 192.168.1.12
+                        port:
+                          description: Port number of the report endpoint.
+                          type: integer
+                          example: 12345
+                        started:
+                          description: Time (UTC) at which the plugin commenced operation.
+                          type: string
+                          format: date-time
+                          example: 2024-12-19T09:31:26.774Z
+                        totalBytesTransmitted:
+                          description: Number of bytes transmitted to the endpoint since the plugin started.
+                          type: integer
+                          example: 457683
+                        positionSelfBytesPerHour:
+                          description: Number of bytes transmitted to the endpoint per hour as part of a position report for vessel 'self'.
+                          type: integer
+                          example: 456
+                        positionOthersBytesPerHour:
+                          description: Number of bytes transmitted to the endpoint per hour as part of position reports for all vessels other than 'self'.
+                          type: integer
+                          example: 912
+                        staticSelfBytesPerHour:
+                          description: Number of bytes transmitted to the endpoint per hour as part of a static data report for vessel 'self'.
+                          type: integer
+                          example: 456
+                        staticOthersBytesPerHour:
+                          description: Number of bytes transmitted to the endpoint per hour as part of static data reports for all vessels other than 'self'.
+                          type: integer
+                          example: 912
+        '400':
+          description: |
+            Bad request.
+            The specified parameter name is invalid.
+        '404':
+          description: |
+            Not found.
+            The specified endpoint name does not exist.
         '500':
           description: |
             Error.
