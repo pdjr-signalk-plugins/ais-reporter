@@ -469,21 +469,31 @@ module.exports = function(app: any) {
           }
           break;
         case "/start":
-          if ((Object.keys(req.query).length === 0) || ((req.query.name) && (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
-            pluginConfiguration.endpoints.forEach((endpoint) => {
-              endpoint.enabled = (req.query.name)?((endpoint.name == req.query.name)?true:endpoint.enabled):true;
-            });
+          if (Object.keys(req.query).length === 0) {
+            pluginConfiguration.endpoints.forEach((endpoint) => { endpoint.enabled = true });
             expressSend(res, 200, null, req.path);
+          } else if (req.query.name) {
+            if (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)) {
+              pluginConfiguration.endpoints.forEach((endpoint) => { if (endpoint.name == req.query.name) endpoint.enabled = true; });
+              expressSend(res, 200, null, req.path);
+            } else {
+              expressSend(res, 404, null, req.path);
+            }
           } else {
             expressSend(res, 400, null, req.path);
           }
           break;
         case "/stop":
-          if ((Object.keys(req.query).length === 0) || ((req.query.name) && (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
-            pluginConfiguration.endpoints.forEach((endpoint) => {
-              endpoint.enabled = (req.query.name)?((endpoint.name == req.query.name)?false:endpoint.enabled):false;
-            });
+          if (Object.keys(req.query).length === 0) {
+            pluginConfiguration.endpoints.forEach((endpoint) => { endpoint.enabled = false });
             expressSend(res, 200, null, req.path);
+          } else if (req.query.name) {
+            if (pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)) {
+              pluginConfiguration.endpoints.forEach((endpoint) => { if (endpoint.name == req.query.name) endpoint.enabled = false; });
+              expressSend(res, 200, null, req.path);
+            } else {
+              expressSend(res, 404, null, req.path);
+            }
           } else {
             expressSend(res, 400, null, req.path);
           }
