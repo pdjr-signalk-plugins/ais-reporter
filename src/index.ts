@@ -442,9 +442,7 @@ module.exports = function(app: any) {
     try {
       switch (req.path.slice(0, (req.path.indexOf('/', 1) == -1)?undefined:req.path.indexOf('/', 1))) {
         case '/status':
-          if ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))) {
-            expressSend(res, 400, null, req.path);
-          } else {
+          if ((Object.keys(req.query).length === 0) || ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
             var statusResponse: any = {};
             pluginConfiguration.endpoints.forEach((endpoint) => {
               let hours: number = (endpoint.statistics.started)?(Date.now() - endpoint.statistics.started) / 3600000:1;
@@ -466,26 +464,28 @@ module.exports = function(app: any) {
               }
             });
             expressSend(res, 200, statusResponse, req.path);
+          } else {
+            expressSend(res, 400, null, req.path);
           }
           break;
         case "/start":
-          if ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))) {
-            expressSend(res, 400, null, req.path);
-          } else {
+          if ((Object.keys(req.query).length === 0) || ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
             pluginConfiguration.endpoints.forEach((endpoint) => {
               endpoint.enabled = (req.query.name)?((endpoint.name == req.query.name)?true:endpoint.enabled):true;
             });
             expressSend(res, 200, null, req.path);
+          } else {
+            expressSend(res, 400, null, req.path);
           }
           break;
         case "/stop":
-          if ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name))) {
-            expressSend(res, 400, null, req.path);
-          } else {
+          if ((Object.keys(req.query).length === 0) || ((req.query.name) && (!pluginConfiguration.endpoints.map((e) => e.name).includes(req.query.name)))) {
             pluginConfiguration.endpoints.forEach((endpoint) => {
               endpoint.enabled = (req.query.name)?((endpoint.name == req.query.name)?false:endpoint.enabled):false;
             });
             expressSend(res, 200, null, req.path);
+          } else {
+            expressSend(res, 400, null, req.path);
           }
           break;
         default:
