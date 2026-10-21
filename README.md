@@ -17,7 +17,7 @@ are available on their default Signal K paths (`mmsi` and
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
-service base station coverage is sparse or non-exixstent.
+service base station coverage is sparse or non-existent.
 
 The rates at which reports are issued for the host ship, AIS targets
 and UDP enpoints can be independently configured and can be dynamically
