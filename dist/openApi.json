@@ -95,6 +95,11 @@
                     {
                       "type": "object",
                       "properties": {
+                        "name": {
+                          "description": "Endpoint identifier.",
+                          "type": "string",
+                          "example": "marine-traffic"
+                        },
                         "ipAddress": {
                           "description": "IP address of the report endpoint.",
                           "type": "string",
@@ -143,6 +148,11 @@
                       "additionalProperties": {
                         "type": "object",
                         "properties": {
+                          "name": {
+                            "description": "Endpoint identifier.",
+                            "type": "string",
+                            "example": "marine-traffic"
+                          },
                           "ipAddress": {
                             "description": "IP address of the report endpoint.",
                             "type": "string",
