@@ -73,6 +73,7 @@ const PLUGIN_SCHEMA = {
             "title": "UDP endpoints to report to",
             "items": {
                 "type": "object",
+                "title": "Endpoint",
                 "required": ["ipaddress", "port"],
                 "properties": {
                     "name": {
@@ -104,22 +105,28 @@ const PLUGIN_SCHEMA = {
                         ]
                     },
                     "myPositionUpdateInterval": {
-                        "title": "Position update interval in minutes",
+                        "title": "Self vessel position update interval in minutes",
                         "oneOf": [
                             { "type": "integer", "minimum": 0 },
                             { "type": "array", "items": { "type": "integer", "minimum": 0 } }
                         ]
                     },
                     "myStaticUpdateInterval": {
-                        "title": "Static data update interval in minutes",
+                        "title": "Self vessel static data update interval in minutes",
                         "oneOf": [
                             { "type": "integer", "minimum": 0 },
                             { "type": "array", "items": { "type": "integer", "minimum": 0 } }
                         ]
                     },
-                    "updateIntervalIndexPath": {
-                        "title": "Path which selects override intervals",
-                        "type": "string"
+                    "navigationStateMap": {
+                        "title": "Select different intervals based upon navigation state",
+                        "type": "array",
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                            }
+                        }
                     }
                 }
             }
