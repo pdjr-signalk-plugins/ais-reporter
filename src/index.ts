@@ -136,6 +136,7 @@ const PLUGIN_SCHEMA: object = {
   }
 };
 const PLUGIN_UISCHEMA: object = {};
+const PLUGIN_SCHEMA_VERSION: string = "3.0";
 
 module.exports = function(app: any) {
   var pluginConfiguration: PluginConfiguration;
@@ -153,7 +154,7 @@ module.exports = function(app: any) {
     uiSchema: PLUGIN_UISCHEMA,
   
     start: function(options: any) {
-      pluginStatus = new PluginStatus(app, 'started');
+      pluginStatus = new PluginStatus(app, `started (using schema version ${PLUGIN_SCHEMA_VERSION})`);
 
       try {
         pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);

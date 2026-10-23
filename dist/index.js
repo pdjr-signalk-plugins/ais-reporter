@@ -134,6 +134,7 @@ const PLUGIN_SCHEMA = {
     }
 };
 const PLUGIN_UISCHEMA = {};
+const PLUGIN_SCHEMA_VERSION = "3.0";
 module.exports = function (app) {
     var pluginConfiguration;
     var pluginStatus;
@@ -147,7 +148,7 @@ module.exports = function (app) {
         schema: PLUGIN_SCHEMA,
         uiSchema: PLUGIN_UISCHEMA,
         start: function (options) {
-            pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, 'started');
+            pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `started (using schema version ${PLUGIN_SCHEMA_VERSION})`);
             try {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
                 if (pluginConfiguration.endpoints.length > 0) {
