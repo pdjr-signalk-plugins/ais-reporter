@@ -138,7 +138,7 @@ endpoint to your configuration.
         "port": 12345,
         "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
         "myPositionUpdateInterval": [2,1],
-        "myStaticUpdateInterval": 2,
+        "myStaticUpdateInterval": 2
       }
 ```
 
