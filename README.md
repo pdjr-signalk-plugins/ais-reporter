@@ -127,7 +127,7 @@ data received from target vessels seen by Signal K.
 ### Example 3: report to a local endpoint
 
 To make sure things are working as expected, you can add a local
-endpoint to your configuration.
+endpoint to your configuration...
 
 ```json
       {
@@ -140,7 +140,7 @@ endpoint to your configuration.
       }
 ```
 
-And then monitor it to make sure things are working as expected.
+Which you can then monitor...
 
 ```bash
 $> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
