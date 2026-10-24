@@ -14,8 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const _ = require("lodash");
+const _ = __importStar(require("lodash"));
 const Endpoint_1 = require("./Endpoint");
 const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
@@ -26,109 +62,7 @@ const HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'ais-reporter';
 const PLUGIN_DESCRIPTION = 'Report AIS data to remote UDP services.';
-const PLUGIN_SCHEMA = {
-    "type": "object",
-    "required": ["endpoints"],
-    "properties": {
-        "positionUpdateInterval": {
-            "title": "Position update interval in minutes",
-            "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-        },
-        "staticUpdateInterval": {
-            "title": "Static data update interval in minutes",
-            "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-        },
-        "myPositionUpdateInterval": {
-            "title": "Position update interval in minutes",
-            "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-        },
-        "myStaticUpdateInterval": {
-            "title": "Static data update interval in minutes",
-            "oneOf": [
-                { "type": "integer", "minimum": 0 },
-                { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-        },
-        "navigationStateMap": {
-            "title": "Select different intervals based upon navigation state",
-            "type": "object",
-            "additionalProperties": {
-                "type": "integer",
-                "minimum": 0
-            }
-        },
-        "endpoints": {
-            "type": "array",
-            "title": "UDP endpoints to report to",
-            "items": {
-                "type": "object",
-                "title": "Endpoint",
-                "required": ["ipaddress", "port"],
-                "properties": {
-                    "name": {
-                        "title": "Endpoint name",
-                        "type": "string"
-                    },
-                    "ipaddress": {
-                        "title": "Endpoint IP address",
-                        "type": "string",
-                        "format": "ipv4"
-                    },
-                    "port": {
-                        "title": "Endpoint port number",
-                        "type": "number",
-                        "minimum": 0
-                    },
-                    "positionUpdateInterval": {
-                        "title": "Position update interval in minutes",
-                        "oneOf": [
-                            { "type": "integer", "minimum": 0 },
-                            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-                        ]
-                    },
-                    "staticUpdateInterval": {
-                        "title": "Static data update interval in minutes",
-                        "oneOf": [
-                            { "type": "integer", "minimum": 0 },
-                            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-                        ]
-                    },
-                    "myPositionUpdateInterval": {
-                        "title": "Self vessel position update interval in minutes",
-                        "oneOf": [
-                            { "type": "integer", "minimum": 0 },
-                            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-                        ]
-                    },
-                    "myStaticUpdateInterval": {
-                        "title": "Self vessel static data update interval in minutes",
-                        "oneOf": [
-                            { "type": "integer", "minimum": 0 },
-                            { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-                        ]
-                    },
-                    "navigationStateMap": {
-                        "title": "Select different intervals based upon navigation state",
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "integer",
-                            "minimum": 0
-                        }
-                    }
-                }
-            }
-        }
-    }
-};
+const schema_json_1 = __importDefault(require("./schema.json"));
 const PLUGIN_UISCHEMA = {};
 module.exports = function (app) {
     var pluginConfiguration;
@@ -140,7 +74,7 @@ module.exports = function (app) {
         id: PLUGIN_ID,
         name: PLUGIN_NAME,
         description: PLUGIN_DESCRIPTION,
-        schema: PLUGIN_SCHEMA,
+        schema: schema_json_1.default,
         uiSchema: PLUGIN_UISCHEMA,
         start: function (options) {
             pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `started`);
