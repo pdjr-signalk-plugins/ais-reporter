@@ -26,17 +26,17 @@ reported on the Signal K `navigation.state` path.
 
 ## System requirements
 
-If your Signal K system does not maintain the `navigation.state` path
-then you may wish to install the
-[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)
-plugin from the appstore.
-
-## Plugin configuration
-
 To operate at all the plugin's JSON configuration file
 `~/.signalk/plugin-configuration-data/ais-reporter.json`
 must be initialised using either Signal K's plugin configuration GUI
 or a text editor.
+
+If your Signal K system does not already maintain the `navigation.state`
+path then you may wish to install the
+[signalk-autostate](https://github.com/meri-imperiumi/signalk-autostate)
+plugin from the appstore.
+
+## Plugin configuration
 
 A valid configuration must contain an 'endpoints' array of objects
 each of which defines a reporting endpoint.
@@ -46,26 +46,27 @@ endpoint definition.
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
-A value of 0 minutes disables updates.
+A value of 0 (the default) disables updates.
 
 *staticUpdateInterval* specifies the static data update interval for
 all vessels as either a time in minutes or an array of times in
 minutes.
-A value of 0 minutes disables updates.
+A value of 0 (the default) disables updates.
 
 *myPositionUpdateInterval* specifies the position update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
-A value of 0 minutes disables updates.
+A value of 0 (the default) disables updates.
 
 *myStaticUpdateInterval* specifies the static data update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
-A value of 0 minutes disables updates.
+A value of 0 (the default) disables updates.
 
-*navigationStateMap* specifies which state values on Signal K's
-`navigation.state` path select which values from any array of update
-intervals.
+*navigationStateMap* specifies which values in an update interval array
+should be selected.
+Computes an array index by matching items against state values on Signal
+K's`navigation.state` path.
 
 ## Example configurations
 
@@ -75,8 +76,8 @@ This example sends position and static AIS reports once every fifty-five
 minutes when the host vessel is stationary and a position report once a
 minute when the vessel is moving.
 The `navigation.state` path must be active on the host system.
-Increasing the stationary reporting interval much above 55 will cause
-Marine Traffic to think that the reporting station has died.
+Increasing reporting intervals much above 55 minutes will cause Marine
+Traffic to think that the reporting station has died.
 
 ```json
 {
@@ -96,10 +97,9 @@ Marine Traffic to think that the reporting station has died.
 }
 ```
 
-The *ipAddress* and *port* number used in the example are fakes.
-You must subscribe with MarineTraffic.com as a reporting station
-to obtain an IP address and service port number that act as your
-station's reporting entry point.
+The *ipAddress* and *port* number used in this example are fakes.
+You must subscribe with MarineTraffic.com as a reporting station to
+obtain your own unique IP address/service port number.
 
 ### Example 2: report host vessel data and AIS targets
 
@@ -124,6 +124,28 @@ data received from target vessels seen by Signal K.
   },  
   "enabled": true  
 }
+```
+
+### Example 3: report to a local endpoint
+
+To make sure things are working as expected, you can add a local
+endpoint to your configuration.
+
+```json
+      {
+        "name": "test",
+        "ipAddress": "127.0.0.1",
+        "port": 12345,
+        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "myPositionUpdateInterval": [2,1],
+        "myStaticUpdateInterval": 2,
+      }
+```
+
+And then monitor it to make sure things are working as expected.
+
+```
+$> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
 ```
 
 ## Plugin API
