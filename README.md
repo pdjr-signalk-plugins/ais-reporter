@@ -46,22 +46,22 @@ endpoint definition.
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *staticUpdateInterval* specifies the static data update interval for
 all vessels as either a time in minutes or an array of times in
 minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *myPositionUpdateInterval* specifies the position update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *myStaticUpdateInterval* specifies the static data update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *navigationStateMap* specifies which value in an update interval array
 should be selected when a particular navigation state is active.
@@ -72,7 +72,7 @@ should be selected when a particular navigation state is active.
 
 This example sends position and static AIS reports once every fifty-five
 minutes when the host vessel is stationary and a position report once a
-minute when the vessel is moving.
+minute when the vessel is moving (i.e. either sailing or motoring).
 The `navigation.state` path must be active on the host system.
 Increasing reporting intervals much above 55 minutes will cause Marine
 Traffic to think that the reporting station has died.
