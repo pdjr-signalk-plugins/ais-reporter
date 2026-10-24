@@ -29,7 +29,7 @@ const PLUGIN_ID: string = 'ais-reporter';
 const PLUGIN_NAME: string = 'ais-reporter';
 const PLUGIN_DESCRIPTION: string = 'Report AIS data to remote UDP services.';
 import PLUGIN_SCHEMA from './schema.json';
-const PLUGIN_UISCHEMA: object = {};
+import PLUGIN_UISCHEMA from './uischema.json';
 
 module.exports = function(app: any) {
   var pluginConfiguration: PluginConfiguration;

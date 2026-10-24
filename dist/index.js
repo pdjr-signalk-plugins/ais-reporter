@@ -63,7 +63,7 @@ const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'ais-reporter';
 const PLUGIN_DESCRIPTION = 'Report AIS data to remote UDP services.';
 const schema_json_1 = __importDefault(require("./schema.json"));
-const PLUGIN_UISCHEMA = {};
+const uischema_json_1 = __importDefault(require("./uischema.json"));
 module.exports = function (app) {
     var pluginConfiguration;
     var pluginStatus;
@@ -75,7 +75,7 @@ module.exports = function (app) {
         name: PLUGIN_NAME,
         description: PLUGIN_DESCRIPTION,
         schema: schema_json_1.default,
-        uiSchema: PLUGIN_UISCHEMA,
+        uiSchema: uischema_json_1.default,
         start: function (options) {
             pluginStatus = new signalk_libpluginstatus_1.PluginStatus(app, `started`);
             try {
