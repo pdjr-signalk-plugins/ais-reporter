@@ -60,12 +60,10 @@ const PLUGIN_SCHEMA = {
         },
         "navigationStateMap": {
             "title": "Select different intervals based upon navigation state",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {
-                    "type": "string",
-                }
+            "type": "object",
+            "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
             }
         },
         "endpoints": {
@@ -120,12 +118,10 @@ const PLUGIN_SCHEMA = {
                     },
                     "navigationStateMap": {
                         "title": "Select different intervals based upon navigation state",
-                        "type": "array",
-                        "items": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                            }
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "minimum": 0
                         }
                     }
                 }
@@ -246,10 +242,10 @@ module.exports = function (app) {
             var retval = 0;
             var navigationState = app.getSelfPath(`navigation.state.value`);
             if (navigationState) {
-                for (var index = 0; index < stateMap.length; index++) {
-                    if (stateMap[index].includes(navigationState))
-                        retval = index;
-                }
+                Object.keys(stateMap).forEach((key) => {
+                    if (key == navigationState)
+                        retval = stateMap[key];
+                });
             }
             return (retval);
         }
