@@ -34,7 +34,7 @@ interface Intervals {
     staticUpdateIntervals: number[];
     myPositionUpdateIntervals: number[];
     myStaticUpdateIntervals: number[];
-    navigationStateMap: string[][];
+    navigationStateMap: any;
 }
 interface Statistics {
     started: number | undefined;

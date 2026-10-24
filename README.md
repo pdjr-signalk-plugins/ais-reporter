@@ -46,27 +46,25 @@ endpoint definition.
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *staticUpdateInterval* specifies the static data update interval for
 all vessels as either a time in minutes or an array of times in
 minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *myPositionUpdateInterval* specifies the position update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
 *myStaticUpdateInterval* specifies the static data update interval for
 the 'self' vessel as either a time in minutes or an array of times in
 minutes.
-A value of 0 (the default) disables updates.
+Defaults to 0 (disable updates).
 
-*navigationStateMap* specifies which values in an update interval array
-should be selected.
-Computes an array index by matching items against state values on Signal
-K's`navigation.state` path.
+*navigationStateMap* specifies which value in an update interval array
+should be selected when a particular navigation state is active.
 
 ## Example configurations
 
@@ -74,7 +72,7 @@ K's`navigation.state` path.
 
 This example sends position and static AIS reports once every fifty-five
 minutes when the host vessel is stationary and a position report once a
-minute when the vessel is moving.
+minute when the vessel is moving (i.e. either sailing or motoring).
 The `navigation.state` path must be active on the host system.
 Increasing reporting intervals much above 55 minutes will cause Marine
 Traffic to think that the reporting station has died.
@@ -87,7 +85,7 @@ Traffic to think that the reporting station has died.
         "name": "marine-traffic",
         "ipAddress": "203.0.113.1",
         "port": 32123,
-        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "navigationStateMap": { "sailing": 1, "motoring": 1 },
         "myPositionUpdateInterval": [55,1],
         "myStaticUpdateInterval": 55
       }  
@@ -114,7 +112,7 @@ data received from target vessels seen by Signal K.
         "name": "marine-traffic",
         "ipAddress": "203.0.113.1",
         "port": 32123,
-        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "navigationStateMap": { "sailing": 1, "motoring": 1 },
         "myPositionUpdateInterval": [55,1],
         "myStaticUpdateInterval": 55,
         "positionUpdateInterval": 5,
@@ -136,7 +134,7 @@ endpoint to your configuration.
         "name": "test",
         "ipAddress": "127.0.0.1",
         "port": 12345,
-        "navigationStateMap": [ [ ], [ "sailing", "motoring" ] ],
+        "navigationStateMap": { "sailing": 1, "motoring": 1 },
         "myPositionUpdateInterval": [2,1],
         "myStaticUpdateInterval": 2
       }
@@ -144,7 +142,7 @@ endpoint to your configuration.
 
 And then monitor it to make sure things are working as expected.
 
-```
+```bash
 $> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
 ```
 

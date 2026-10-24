@@ -28,115 +28,8 @@ const HEARTBEAT_INTERVAL: number = 60000;
 const PLUGIN_ID: string = 'ais-reporter';
 const PLUGIN_NAME: string = 'ais-reporter';
 const PLUGIN_DESCRIPTION: string = 'Report AIS data to remote UDP services.';
-const PLUGIN_SCHEMA: object = {
-  "type": "object",
-  "required": [ "endpoints" ],
-  "properties": {
-    "positionUpdateInterval": {
-      "title": "Position update interval in minutes",
-      "oneOf": [
-        { "type": "integer", "minimum": 0 },
-        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-      ]
-    },
-    "staticUpdateInterval": {
-      "title": "Static data update interval in minutes",
-      "oneOf": [
-        { "type": "integer", "minimum": 0 },
-        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-      ]
-    },
-    "myPositionUpdateInterval": {
-      "title": "Position update interval in minutes",
-      "oneOf": [
-        { "type": "integer", "minimum": 0 },
-        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-      ]
-    },
-    "myStaticUpdateInterval": {
-      "title": "Static data update interval in minutes",
-      "oneOf": [
-        { "type": "integer", "minimum": 0 },
-        { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-      ]
-    },
-    "navigationStateMap": {
-      "title": "Select different intervals based upon navigation state",
-      "type": "array",
-      "items": {
-        "type": "array",
-        "items": {
-          "type": "string",
-        }
-      }
-    },
-    "endpoints": {
-      "type": "array",
-      "title": "UDP endpoints to report to",
-      "items": {
-        "type": "object",
-        "title": "Endpoint",
-        "required": ["ipaddress", "port"],
-        "properties": {
-          "name": {
-            "title": "Endpoint name",
-            "type": "string"
-          },
-          "ipaddress": {
-            "title": "Endpoint IP address",
-            "type": "string",
-            "format": "ipv4"
-          },
-          "port": {
-            "title": "Endpoint port number",
-            "type": "number",
-            "minimum": 0
-          },
-          "positionUpdateInterval": {
-            "title": "Position update interval in minutes",
-            "oneOf": [
-              { "type": "integer", "minimum": 0 },
-              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-          },
-          "staticUpdateInterval": {
-            "title": "Static data update interval in minutes",
-            "oneOf": [
-              { "type": "integer", "minimum": 0 },
-              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-          },
-          "myPositionUpdateInterval": {
-            "title": "Self vessel position update interval in minutes",
-            "oneOf": [
-              { "type": "integer", "minimum": 0 },
-              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-          },
-          "myStaticUpdateInterval": {
-            "title": "Self vessel static data update interval in minutes",
-            "oneOf": [
-              { "type": "integer", "minimum": 0 },
-              { "type": "array", "items": { "type": "integer", "minimum": 0 } }
-            ]
-          },
-          "navigationStateMap": {
-            "title": "Select different intervals based upon navigation state",
-            "type": "array",
-            "items": {
-              "type": "array",
-              "items": {
-                "type": "string",
-              }
-            }
-          }
-        }        
-      }
-    }
-  }
-};
+import PLUGIN_SCHEMA from './schema.json';
 const PLUGIN_UISCHEMA: object = {};
-const PLUGIN_SCHEMA_VERSION: string = "3.0";
 
 module.exports = function(app: any) {
   var pluginConfiguration: PluginConfiguration;
@@ -144,7 +37,6 @@ module.exports = function(app: any) {
   var udpSocket: Socket;
   var heartbeatInterval: NodeJS.Timeout;
   var heartbeatCount: number = 0;
-
 
   const plugin: SKPlugin = {
     id: PLUGIN_ID,
@@ -154,7 +46,7 @@ module.exports = function(app: any) {
     uiSchema: PLUGIN_UISCHEMA,
   
     start: function(options: any) {
-      pluginStatus = new PluginStatus(app, `started (using schema version ${PLUGIN_SCHEMA_VERSION})`);
+      pluginStatus = new PluginStatus(app, `started`);
 
       try {
         pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
@@ -257,13 +149,13 @@ module.exports = function(app: any) {
      * @param stateMap 
      * @returns 
      */
-    function getUpdateIndex(stateMap: string[][]) {
+    function getUpdateIndex(stateMap: any) {
       var retval: number = 0;
       var navigationState: any = app.getSelfPath(`navigation.state.value`);
       if (navigationState) {
-        for (var index: number = 0; index < stateMap.length; index++) {
-          if (stateMap[index].includes(navigationState)) retval = index;
-        }
+        Object.keys(stateMap).forEach((key) => {
+          if (key == navigationState) retval = stateMap[key];
+        });
       }
       return(retval);
     }
