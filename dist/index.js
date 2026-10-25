@@ -209,7 +209,7 @@ module.exports = function (app) {
                 aisProperties['accuracy'] = 0;
                 aisProperties['aistype'] = (aisClass == 'A') ? 1 : 18;
                 aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
-                aisProperties['hdg'] = _.get(vessel, 'navigation.headingTrue.value', 511);
+                aisProperties['hdg'] = radsToDeg(_.get(vessel, 'navigation.headingTrue.value', 511));
                 aisProperties['lat'] = vessel.navigation.position.value.latitude;
                 aisProperties['lon'] = vessel.navigation.position.value.longitude;
                 aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi) ? 1 : 0;
