@@ -38,8 +38,10 @@ plugin from the appstore.
 
 ## Plugin configuration
 
-A valid configuration must contain an 'endpoints' array of objects
-each of which defines a reporting endpoint.
+A
+[valid configuration](./src/schema.json)
+must contain an 'endpoints' array of objects each of which defines a
+reporting endpoint.
 
 The following properties can be applied globally or within each
 endpoint definition.
