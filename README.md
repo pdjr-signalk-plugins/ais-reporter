@@ -67,6 +67,8 @@ Defaults to 0 (disable updates).
 
 *navigationStateMap* specifies which value in an update interval array
 should be selected when a particular navigation state is active.
+If, for whatever reason, the vessel's current navigation state is not
+selected then the zeroth value in an update interval array is chosen.
 
 ## Example configurations
 
