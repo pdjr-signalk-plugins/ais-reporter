@@ -185,7 +185,7 @@ module.exports = function(app: any) {
       try {  
         aisProperties = { mmsi: vessel.mmsi };
         aisClass = (vessel.mmsi == pluginConfiguration.myMMSI)?pluginConfiguration.myAisClass:_.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
-        aisProperties['accuracy'] = 0;
+        aisProperties['accuracy'] = (vessel.navigation.gnss.positionDilution < 5)?1:0;
         aisProperties['aistype'] = (aisClass == 'A')?1:18;
         aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
         aisProperties['hdg'] = radsToDeg(_.get(vessel, 'navigation.headingTrue.value', 511));
