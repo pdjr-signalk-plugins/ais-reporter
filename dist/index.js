@@ -216,7 +216,7 @@ module.exports = function (app) {
                 aisProperties['repeat'] = 3;
                 aisProperties['rot'] = _.get(vessel, 'navigation.rateOfTurn.value', 128);
                 aisProperties['sog'] = mpsToKn(_.get(vessel, 'navigation.speedOverGround.value', 0));
-                aisProperties['smi'] = decodeSMI(_.get(vessel, 'navigation.specialManeuver', 'not available'));
+                aisProperties['smi'] = _.get(vessel, 'navigation.maneuver', 0);
                 msg = new ggencoder_1.AisEncode(aisProperties);
                 if ((msg) && (msg.valid)) {
                     bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
@@ -261,7 +261,7 @@ module.exports = function (app) {
             try {
                 aisProperties = { mmsi: vessel.mmsi };
                 aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : _.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
-                aisProperties['callsign'] = '';
+                aisProperties['callsign'] = _.get(vessel, 'communication.value.callsignVhf', '');
                 aisProperties['cargo'] = _.get(vessel, 'design.aisShipType.value.id', 0);
                 aisProperties['destination'] = _.get(vessel, 'navigation.destination.commonName', '');
                 aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
