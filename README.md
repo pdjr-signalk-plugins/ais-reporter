@@ -10,10 +10,11 @@ An endpoint is any remote service capable of receiving AIS data over
 UDP, typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-AIS reports for the host vessel can be issued even if the ship has no
-AIS equipment: it is sufficient that the vessel's MMSI and position
-are available on their default Signal K paths (`mmsi` and
-`navigation.position`).
+AIS reports of types 1/2/3 (Class A) or 18/19 (Class B) can be issued
+for the host vessel even if the ship has no AIS equipment: it is
+sufficient that the vessel's MMSI and position are available on their
+default Signal K paths (`mmsi` and `navigation.position`).
+Other path data will be used to populate the AIS reports as necessary.
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
@@ -45,6 +46,10 @@ reporting endpoint.
 
 The following properties can be applied globally or within each
 endpoint definition.
+
+*myPositionReportType* forces the type of position report that should be
+issued to the associated endpoint(s) (for Class A use the value 1, for
+Class B use either 18 or 19).
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
@@ -153,6 +158,26 @@ $> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
 ## Plugin API
 
 A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
+
+## AIS <-> Signal K data mappings
+
+| AIS field | Signal K source                    | In report types |
+| :--       | :--                                | 
+| type      | *myPositionReportType*             | 1, 18, 19
+| repeat    | 3                                  | 1, 18, 19
+| mmsi      | `mmsi`                             | 1, 18, 19
+| status    | `navigation.state`                 | 1
+| turn      | `navigation.rateOfTurn`            | 1
+| speed     | `navigation.speedOverGround`       | 1, 18, 19
+| accuracy  | `navigation.gnss.positionDilution` | 1, 18, 19
+| lon       | `navigation.position`              | 1, 18, 19
+| lat       | `navigation.position`              | 1, 18, 19
+| course    | `navigation.courseOverGroundTrue`  | 1, 18, 19
+| heading   | `navigation.headingTrue`           | 1, 18, 19
+| second    | 60                                 | 1, 18, 19
+| maneuver  | `navigation.maneuver`              | 1, 18, 19
+| raim      | 0                                  | 1, 18, 19
+| radio     | 0                                  | 1, 18, 19
 
 ## Author
 
