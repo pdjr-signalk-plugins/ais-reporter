@@ -214,7 +214,7 @@ module.exports = function (app) {
                 aisProperties['lon'] = vessel.navigation.position.value.longitude;
                 aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi) ? 1 : 0;
                 aisProperties['repeat'] = 3;
-                aisProperties['rot'] = _.get(vessel, 'navigation.rateOfTurn.value', 128);
+                aisProperties['rot'] = rot(_.get(vessel, 'navigation.rateOfTurn.value', 128));
                 aisProperties['sog'] = mpsToKn(_.get(vessel, 'navigation.speedOverGround.value', 0));
                 aisProperties['smi'] = _.get(vessel, 'navigation.maneuver', 0);
                 msg = new ggencoder_1.AisEncode(aisProperties);
@@ -353,6 +353,16 @@ module.exports = function (app) {
     }
     function mpsToKn(mps) {
         return (1.9438444924574 * mps);
+    }
+    function rot(rps) {
+        var retval = 128; // no turn data available
+        if (rps != 128) {
+            var sign = (rps < 0) ? -1 : 1;
+            var dpm = (Math.abs(rps) * 3437.7468);
+            retval = Math.sqrt((dpm < 708) ? Math.round(dpm) : 126) * 4.733;
+            retval = ((retval > 126) ? 126 : retval) * sign;
+        }
+        return (retval);
     }
     function decodeSMI(label) {
         switch (label) {
