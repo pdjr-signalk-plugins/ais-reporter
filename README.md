@@ -162,22 +162,22 @@ A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 ## AIS <-> Signal K data mappings
 
 | AIS field | Signal K source                    | In report types |
-| :--       | :--                                | 
-| type      | *myPositionReportType*             | 1, 18, 19
-| repeat    | 3                                  | 1, 18, 19
-| mmsi      | `mmsi`                             | 1, 18, 19
-| status    | `navigation.state`                 | 1
-| turn      | `navigation.rateOfTurn`            | 1
-| speed     | `navigation.speedOverGround`       | 1, 18, 19
-| accuracy  | `navigation.gnss.positionDilution` | 1, 18, 19
-| lon       | `navigation.position`              | 1, 18, 19
-| lat       | `navigation.position`              | 1, 18, 19
-| course    | `navigation.courseOverGroundTrue`  | 1, 18, 19
-| heading   | `navigation.headingTrue`           | 1, 18, 19
-| second    | 60                                 | 1, 18, 19
-| maneuver  | `navigation.maneuver`              | 1, 18, 19
-| raim      | 0                                  | 1, 18, 19
-| radio     | 0                                  | 1, 18, 19
+|:--        |:--                                 |:-- 
+| type      | *myPositionReportType*             | 1, 18, 19 |
+| repeat    | 3                                  | 1, 18, 19 |
+| mmsi      | `mmsi`                             | 1, 18, 19 |
+| status    | `navigation.state`                 | 1 |
+| turn      | `navigation.rateOfTurn`            | 1 |
+| speed     | `navigation.speedOverGround`       | 1, 18, 19 |
+| accuracy  | `navigation.gnss.positionDilution` | 1, 18, 19 |
+| lon       | `navigation.position`              | 1, 18, 19 |
+| lat       | `navigation.position`              | 1, 18, 19 |
+| course    | `navigation.courseOverGroundTrue`  | 1, 18, 19 |
+| heading   | `navigation.headingTrue`           | 1, 18, 19 |
+| second    | 60                                 | 1, 18, 19 |
+| maneuver  | `navigation.maneuver`              | 1, 18, 19 |
+| raim      | 0                                  | 1, 18, 19 |
+| radio     | 0                                  | 1, 18, 19 |
 
 ## Author
 
