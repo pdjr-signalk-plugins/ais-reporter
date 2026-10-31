@@ -6,15 +6,16 @@ plugin which pushes AIS data on *known vessels* to one or more user
 specified UDP *endpoints*.
 Known vessels in this context means the host ship and all AIS targets
 from which data is currently being received.
-An endpoint is any remote service capable of receiving AIS data over
-UDP, typically a consolidation service like
+An endpoint is any remote service capable of receiving data over UDP,
+typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-AIS reports of types 1/2/3 (Class A) or 18/19 (Class B) can be issued
-for the host vessel even if the ship has no AIS equipment: it is
-sufficient that the vessel's MMSI and position are available on their
-default Signal K paths (`mmsi` and `navigation.position`).
-Other path data will be used to populate the AIS reports as necessary.
+AIS reports of types 1 (Class A), 18 or 19 (both Class B) can be issued
+for the host vessel even if the ship has no AIS equipment: as an
+absolute minimum the vessel's MMSI and position must be available on
+their default Signal K paths (`mmsi` and `navigation.position`).
+Other path data will be used to populate AIS reports as necessary (for
+more informations see 'AIS to Signal K data mappings' below).
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
@@ -47,9 +48,11 @@ reporting endpoint.
 The following properties can be applied globally or within each
 endpoint definition.
 
-*myPositionReportType* forces the type of position report that should be
-issued to the associated endpoint(s) (for Class A use the value 1, for
-Class B use either 18 or 19).
+*myAisReportClass* forces the type of position report that should
+be issued for the host vessel to the associated endpoint(s) and if
+specified must be one of 'A' (AIS report type 1), 'B' (AIS report
+type 18) or 'B+' (AIS report type 19).
+If not specified 'B' is assumed.
 
 *positionUpdateInterval* specifies the position update interval for all
 vessels as either a time in minutes or an array of times in minutes.
@@ -159,7 +162,7 @@ $> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
 
 A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 
-## AIS <-> Signal K data mappings
+## AIS to Signal K data mappings
 
 | AIS field | Signal K source                    | In report types |
 |:--        |:--                                 |:-- 

@@ -2,6 +2,11 @@
   "type": "object",
   "required": [ "endpoints" ],
   "properties": {
+    "myAisReportClass": {
+      "title": "Class of AIS report to be used for host vessel",
+      "type": "string",
+      "pattern": "^[AB]\\+?$"
+    },
     "positionUpdateInterval": {
       "title": "Position update interval in minutes",
       "oneOf": [
@@ -59,6 +64,11 @@
             "title": "Endpoint port number",
             "type": "number",
             "minimum": 0
+          },
+          "myAisReportClass": {
+            "title": "Class of AIS report to be used for host vessel",
+            "type": "string",
+            "pattern": "^[AB]\\+?$"
           },
           "positionUpdateInterval": {
             "title": "Position update interval in minutes",
