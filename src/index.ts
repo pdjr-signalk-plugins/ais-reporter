@@ -190,7 +190,7 @@ module.exports = function(app: any) {
     try {
       var aisProperties: any = {};
       // Set common AIS properties...
-      aisProperties['aistype'] = (vessel.mmsi == app.getSelfPath('mmsi'))?((endpoint.myAisReportClass == 'A')?1:((endpoint.myAisReportClass == 'B+')?19:18)):((vessel.sensors.ais.class == 'A')?1:18);
+      aisProperties['aistype'] = (vessel.mmsi.value == app.getSelfPath('mmsi').value)?((endpoint.myAisReportClass == 'A')?1:((endpoint.myAisReportClass == 'B+')?19:18)):((vessel.sensors.ais.class.value == 'A')?1:18);
       aisProperties['repeat'] = 3;
       aisProperties['mmsi'] = vessel.mmsi;
       aisProperties['sog'] = mpsToKn(_.get(vessel, 'navigation.speedOverGround.value', 0));
