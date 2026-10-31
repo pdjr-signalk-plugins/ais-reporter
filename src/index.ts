@@ -181,11 +181,11 @@ module.exports = function(app: any) {
    * @param socket - Socket to be used for report transmission. 
    * @param endpoint - Endpoint to which the report should be sent.
    * @param vessel - the vessel which should be reported.
-   * @param type - the AIS message type to be transmitted (1|18|19).
    * @returns - the number of bytes transmitted over socket.
    */
   function reportPosition(socket: Socket, endpoint: Endpoint, vessel: any): number {
-    var bytesTransmitted : number = 0;
+    app.debug(`reportPosition(${vessel.mmsi})`);
+    var bytesTransmitted: number = 0;
     try {
       var aisProperties: any = {};
       // Set common AIS properties...
