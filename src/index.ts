@@ -117,6 +117,7 @@ module.exports = function(app: any) {
         try {
           var spbt: number = 0, ssbt: number = 0, tpbt: number = 0, tsbt: number = 0;
           var myVessel: any = app.getPath('vessels')[app.getPath('self')];
+          console.log(`myVessel = ${myVessel.mmsi}`);
 
           let updateIndex: number = getUpdateIndex(endpoint.intervals.navigationStateMap);
           let mvPUI: number = _.get(endpoint.intervals, `myPositionUpdateIntervals[${updateIndex}]`, 0);
