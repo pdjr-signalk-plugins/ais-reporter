@@ -141,8 +141,8 @@ module.exports = function (app) {
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var spbt = 0, ssbt = 0, tpbt = 0, tsbt = 0;
-                    console.log(`myy MMSI = ${app.getSelfPath('mmsi')}`);
-                    var myVessel = Object.values(app.getPath('vessels')).reduce((a, v) => ((v.mmsi.value == app.getSelfPath('mmsi').value) ? v : a), {});
+                    console.log(`myy MMSI = ${pluginConfiguration.myMMSI}`);
+                    var myVessel = Object.values(app.getPath('vessels')).reduce((a, v) => ((v.mmsi == pluginConfiguration.myMMSI) ? v : a), {});
                     console.log(`myVessel = ${myVessel.mmsi}`);
                     let updateIndex = getUpdateIndex(endpoint.intervals.navigationStateMap);
                     let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${updateIndex}]`, 0);
