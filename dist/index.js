@@ -275,7 +275,7 @@ module.exports = function (app) {
                 throw new Error('cancelling position report for vessel with no MMSI');
             aisProperties = {};
             aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 5 : 24) : (vessel.aisClass == 'A') ? 5 : 24;
-            app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
+            app.debug(`preparing type ${aisProperties['aistype']} static data report for (${vessel.mmsi})`);
             aisProperties['repeat'] = 3;
             aisProperties['mmsi'] = vessel.mmsi;
             aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(_.get(vessel, 'name', undefined));
@@ -297,6 +297,7 @@ module.exports = function (app) {
             switch (aisProperties['aistype']) {
                 case '5':
                     msgA = new ggencoder_1.AisEncode(aisProperties);
+                    console.log(`is valid ${msgA.valid}`);
                     if ((msgA) && (msgA.valid)) {
                         bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
                     }
