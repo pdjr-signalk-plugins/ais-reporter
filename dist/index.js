@@ -319,7 +319,7 @@ module.exports = function (app) {
                 }
             }
             catch (e) {
-                app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
+                app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${JSON.stringify(e)})`);
             }
         }
         ;
