@@ -296,9 +296,7 @@ module.exports = function (app) {
             }
             switch (aisProperties['aistype']) {
                 case 5:
-                    console.log(JSON.stringify(aisProperties, null, ' '));
                     msgA = new ggencoder_1.AisEncode(aisProperties);
-                    console.log(`is valid ${msgA.valid}`);
                     if ((msgA) && (msgA.valid)) {
                         bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
                     }
