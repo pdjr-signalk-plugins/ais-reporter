@@ -233,10 +233,10 @@ module.exports = function (app) {
             // Set extended Class B AIS properties...
             if (aisProperties['aistype'] == 19) {
                 aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(vessel.name);
-                aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
-                aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
-                aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
-                aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+                aisProperties['dimA'] = Math.round(_.get(vessel, 'sensors.ais.fromBow.value', 0));
+                aisProperties['dimB'] = Math.round(_.get(vessel, 'design.length.value.overall', 0) - aisProperties['dimA']);
+                aisProperties['dimC'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0));
+                aisProperties['dimD'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0));
             }
             // Encode and transmit message
             var msg = new ggencoder_1.AisEncode(aisProperties);
@@ -281,12 +281,10 @@ module.exports = function (app) {
             aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(_.get(vessel, 'name', undefined));
             aisProperties['cargo'] = sk2ais_1.Sk2Ais.shiptype(_.get(vessel, 'design.aisShipType.value.id', undefined));
             aisProperties['callsign'] = sk2ais_1.Sk2Ais.callsign(_.get(vessel, 'communication.callsignVhf', undefined));
-            aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0));
-            console.log(`dimA ${aisProperties['dimA']}`);
-            aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - aisProperties['dimA']);
-            console.log(`dimB ${aisProperties['dimB']}`);
-            aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
-            aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+            aisProperties['dimA'] = Math.round(_.get(vessel, 'sensors.ais.fromBow.value', 0));
+            aisProperties['dimB'] = Math.round(_.get(vessel, 'design.length.value.overall', 0) - aisProperties['dimA']);
+            aisProperties['dimC'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0));
+            aisProperties['dimD'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0));
             if (aisProperties['aistype'] == 5) {
                 aisProperties['imo'] = sk2ais_1.Sk2Ais.imo(_.get(vessel, 'registrations.imo', undefined));
                 aisProperties['etaMo'] = sk2ais_1.Sk2Ais.etaMo(_.get(vessel, 'navigation.destination.eta', undefined));
