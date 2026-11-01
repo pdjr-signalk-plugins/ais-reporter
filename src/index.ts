@@ -202,7 +202,7 @@ module.exports = function(app: any) {
       aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0);
       // Set additional Class A AIS properties...
       if (aisProperties['aistype'] == 1) {
-        aisProperties['status'] = navigationStatus(vessel.navigation.state.value);
+        aisProperties['navstatus'] = navstatus(vessel.navigation.state.value);
         aisProperties['rot'] = rot(_.get(vessel, 'navigation.rateOfTurn.value', 128));
       }
       // Set extended Class B AIS properties...
@@ -334,8 +334,7 @@ module.exports = function(app: any) {
     return((isNaN(retval)?60:retval));
   }
 
-  function navigationStatus(state: string): number {
-    console.log(`navstate = ${state}`);
+  function navstatus(state: string): number {
     var retval: number = 15;
     switch (state) {
       case 'sailing' : retval = 8; break;
@@ -344,7 +343,6 @@ module.exports = function(app: any) {
       case 'moored': retval = 5; break;
       default: break;
     }
-    console.log(`returning ${retval}`);
     return(retval);
   }
 
