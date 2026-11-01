@@ -185,12 +185,13 @@ module.exports = function(app: any) {
    * @returns - the number of bytes transmitted over socket.
    */
   function reportPosition(socket: Socket, endpoint: Endpoint, vessel: any): number {
-    app.debug(`reportPosition(${vessel.mmsi})`);
     var bytesTransmitted: number = 0;
     try {
+      if (!vessel.mmsi) throw new Error('cancelling position report for vessel with no MMSI');
       var aisProperties: any = {};
       // Set common AIS properties...
       aisProperties['aistype'] = (vessel.mmsi.value == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?1:((endpoint.myAisReportClass == 'B+')?19:18)):((vessel.sensors.ais.class.value == 'A')?1:18);
+      app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
       aisProperties['repeat'] = 3;
       aisProperties['mmsi'] = vessel.mmsi;
       aisProperties['sog'] = Sk2Ais.mps2kn(vessel.navigation.speedOverGround.value);
