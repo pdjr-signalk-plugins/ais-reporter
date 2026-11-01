@@ -141,9 +141,7 @@ module.exports = function (app) {
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
                     var spbt = 0, ssbt = 0, tpbt = 0, tsbt = 0;
-                    console.log(`myy MMSI = ${pluginConfiguration.myMMSI}`);
                     var myVessel = Object.values(app.getPath('vessels')).reduce((a, v) => ((v.mmsi == pluginConfiguration.myMMSI) ? v : a), {});
-                    console.log(`myVessel = ${myVessel.mmsi}`);
                     let updateIndex = getUpdateIndex(endpoint.intervals.navigationStateMap);
                     let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${updateIndex}]`, 0);
                     let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${updateIndex}]`, 0);
@@ -227,6 +225,7 @@ module.exports = function (app) {
             aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0);
             // Set additional Class A AIS properties...
             if (aisProperties['aistype'] == 1) {
+                console.log(`navstate = ${vessel.navigation.state}`);
                 aisProperties['status'] = navigationStatus(vessel.navigation.state);
                 aisProperties['rot'] = rot(_.get(vessel, 'navigation.rateOfTurn.value', 128));
             }
