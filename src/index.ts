@@ -116,6 +116,7 @@ module.exports = function(app: any) {
       pluginConfiguration.endpoints.forEach((endpoint) => {
         try {
           var spbt: number = 0, ssbt: number = 0, tpbt: number = 0, tsbt: number = 0;
+          console.log(`myy MMSI = ${app.getSelfPath('mmsi').value}`);
           var myVessel: any = Object.values(app.getPath('vessels')).reduce((a: any, v: any) => ((v.mmsi.value == app.getSelfPath('mmsi').value)?v:a), {});
           console.log(`myVessel = ${myVessel.mmsi}`);
 
@@ -200,7 +201,7 @@ module.exports = function(app: any) {
       aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
       aisProperties['hdg'] = radsToDeg(_.get(vessel, 'navigation.headingTrue.value', 511));
       console.log(`>>> ${vessel.navigation.maneuver.value}`);
-      aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0); 
+      aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0);
       // Set additional Class A AIS properties...
       if (aisProperties['aistype'] == 1) {
         aisProperties['status'] = navigationStatus(vessel.navigation.state);
