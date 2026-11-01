@@ -378,6 +378,7 @@ module.exports = function (app) {
                 break;
             default: break;
         }
+        console.log(`returning ${retval}`);
         return (retval);
     }
     function radsToDeg(radians) {

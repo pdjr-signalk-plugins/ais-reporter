@@ -344,6 +344,7 @@ module.exports = function(app: any) {
       case 'moored': retval = 5; break;
       default: break;
     }
+    console.log(`returning ${retval}`);
     return(retval);
   }
 
