@@ -277,11 +277,11 @@ module.exports = function (app) {
                 console.log(253);
                 aisProperties['mmsi'] = vessel.mmsi;
                 console.log(255);
-                aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(vessel.name);
+                aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(_.get(vessel, 'name', undefined));
                 console.log(257);
-                aisProperties['cargo'] = sk2ais_1.Sk2Ais.shiptype(vessel.design.aisShipType.value.id);
+                aisProperties['cargo'] = sk2ais_1.Sk2Ais.shiptype(_.get(vessel, 'design.aisShipType.value.id', undefined));
                 console.log(259);
-                aisProperties['callsign'] = sk2ais_1.Sk2Ais.callsign(vessel.communication.callsignVhf);
+                aisProperties['callsign'] = sk2ais_1.Sk2Ais.callsign(_.get(vessel, 'communication.callsignVhf', undefined));
                 console.log(261);
                 aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
                 console.log(263);
@@ -292,19 +292,19 @@ module.exports = function (app) {
                 aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
                 if (aisProperties['aistype'] == 5) {
                     console.log(270);
-                    aisProperties['imo'] = sk2ais_1.Sk2Ais.imo(vessel.registrations.imo);
+                    aisProperties['imo'] = sk2ais_1.Sk2Ais.imo(_.get(vessel, 'registrations.imo', undefined));
                     console.log(272);
-                    aisProperties['etaMo'] = sk2ais_1.Sk2Ais.etaMo(vessel.navigation.destination.eta);
+                    aisProperties['etaMo'] = sk2ais_1.Sk2Ais.etaMo(_.get(vessel, 'navigation.destination.eta', undefined));
                     console.log(274);
-                    aisProperties['etaDay'] = sk2ais_1.Sk2Ais.etaDay(vessel.navigation.destination.eta);
+                    aisProperties['etaDay'] = sk2ais_1.Sk2Ais.etaDay(_.get(vessel, 'navigation.destination.eta', undefined));
                     console.log(276);
-                    aisProperties['etaHr'] = sk2ais_1.Sk2Ais.etaHr(vessel.navigation.destination.eta);
+                    aisProperties['etaHr'] = sk2ais_1.Sk2Ais.etaHr(_.get(vessel, 'navigation.destination.eta', undefined));
                     console.log(278);
-                    aisProperties['etaMin'] = sk2ais_1.Sk2Ais.etaMin(vessel.navigation.destination.eta);
+                    aisProperties['etaMin'] = sk2ais_1.Sk2Ais.etaMin(_.get(vessel, 'navigation.destination.eta', undefined));
                     console.log(280);
                     aisProperties['draught'] = (_.get(vessel, 'design.draft.value.current', 0) / 10);
                     console.log(282);
-                    aisProperties['destination'] = sk2ais_1.Sk2Ais.destination(vessel.navigation.destination.value.commonName);
+                    aisProperties['destination'] = sk2ais_1.Sk2Ais.destination(_.get(vessel, 'navigation.destination.value.commonName', undefined));
                 }
                 switch (aisProperties['aistype']) {
                     case '5':
