@@ -16,7 +16,6 @@ export class Endpoint {
     if (!options[0].ipAddress) throw new Error('missing \'ipAddress\' property');
     if (!options[0].port) throw new Error('missing \'port\' property');
 
-
     this.app = app;
     this.name = options[0].name || options[0].ipAddress;
     this.ipAddress = options[0].ipAddress;

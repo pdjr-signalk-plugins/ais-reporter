@@ -14,8 +14,9 @@ AIS reports of types 1 (Class A), 18 or 19 (both Class B) can be issued
 for the host vessel even if the ship has no AIS equipment: as an
 absolute minimum the vessel's MMSI and position must be available on
 their default Signal K paths (`mmsi` and `navigation.position`).
-Other path data will be used to populate AIS reports as necessary (for
-more informations see 'AIS to Signal K data mappings' below).
+Other path data will be used to populate AIS reports as necessary
+for the chosen report Class (for more information see 'AIS to Signal
+K data mappings' below).
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
@@ -162,25 +163,19 @@ $> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
 
 A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 
-## AIS to Signal K data mappings
+## Signal K paths used to generate AIS messages
 
-| AIS field | Signal K source                    | In report types |
-|:--        |:--                                 |:-- 
-| type      | *myPositionReportType*             | 1, 18, 19 |
-| repeat    | 3                                  | 1, 18, 19 |
-| mmsi      | `mmsi`                             | 1, 18, 19 |
-| status    | `navigation.state`                 | 1 |
-| turn      | `navigation.rateOfTurn`            | 1 |
-| speed     | `navigation.speedOverGround`       | 1, 18, 19 |
-| accuracy  | `navigation.gnss.positionDilution` | 1, 18, 19 |
-| lon       | `navigation.position`              | 1, 18, 19 |
-| lat       | `navigation.position`              | 1, 18, 19 |
-| course    | `navigation.courseOverGroundTrue`  | 1, 18, 19 |
-| heading   | `navigation.headingTrue`           | 1, 18, 19 |
-| second    | 60                                 | 1, 18, 19 |
-| maneuver  | `navigation.maneuver`              | 1, 18, 19 |
-| raim      | 0                                  | 1, 18, 19 |
-| radio     | 0                                  | 1, 18, 19 |
+`design.aisShipType.value.id`,
+`mmsi`,
+`name`,
+`navigation.courseOverGroundTrue`,
+`navigation.gnss.positionDilution`,
+`navigation.headingTrue`,
+`navigation.maneuver`,
+`navigation.position`,
+`navigation.rateOfTurn`,
+`navigation.speedOverGround`,
+`navigation.state`.            |
 
 ## Author
 

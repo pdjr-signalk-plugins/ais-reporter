@@ -212,12 +212,11 @@ module.exports = function (app) {
         try {
             if (!vessel.mmsi)
                 throw new Error('cancelling position report for vessel with no MMSI');
-            var aisProperties = {};
+            var aisProperties = { mmsi: vessel.mmsi };
             // Set common AIS properties...
             aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 1 : ((endpoint.myAisReportClass == 'B+') ? 19 : 18)) : ((vessel.sensors.ais.class.value == 'A') ? 1 : 18);
             app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
             aisProperties['repeat'] = 3;
-            aisProperties['mmsi'] = vessel.mmsi;
             aisProperties['sog'] = sk2ais_1.Sk2Ais.mps2kn(vessel.navigation.speedOverGround.value);
             aisProperties['accuracy'] = sk2ais_1.Sk2Ais.accuracy(vessel.navigation.gnss.positionDilution.value);
             aisProperties['lon'] = vessel.navigation.position.value.longitude;
@@ -264,16 +263,14 @@ module.exports = function (app) {
      */
     function reportStatic(socket, endpoint, vessel) {
         var bytesTransmitted = 0;
-        var aisClass;
-        var aisProperties;
         var msgA, msgB;
         var bytesTransmitted;
         try {
             if (endpoint.myAisReportClass == 'B+')
                 throw new Error('AIS Class B+ is not yet supported');
             if (!vessel.mmsi)
-                throw new Error('cancelling position report for vessel with no MMSI');
-            aisProperties = {};
+                throw new Error('cancelling static data report for vessel with no MMSI');
+            var aisProperties = { mmsi: vessel.mmsi };
             aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 5 : 24) : (vessel.aisClass == 'A') ? 5 : 24;
             app.debug(`preparing type ${aisProperties['aistype']} static data report for (${vessel.mmsi})`);
             aisProperties['repeat'] = 3;
