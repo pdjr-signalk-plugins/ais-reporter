@@ -116,7 +116,7 @@ module.exports = function(app: any) {
       pluginConfiguration.endpoints.forEach((endpoint) => {
         try {
           var spbt: number = 0, ssbt: number = 0, tpbt: number = 0, tsbt: number = 0;
-          console.log(`myy MMSI = ${app.getSelfPath('mmsi').value}`);
+          console.log(`myy MMSI = ${app.getSelfPath('mmsi')}`);
           var myVessel: any = Object.values(app.getPath('vessels')).reduce((a: any, v: any) => ((v.mmsi.value == app.getSelfPath('mmsi').value)?v:a), {});
           console.log(`myVessel = ${myVessel.mmsi}`);
 
