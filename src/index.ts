@@ -257,7 +257,7 @@ module.exports = function(app: any) {
         console.log(257)
         aisProperties['cargo'] = Sk2Ais.shiptype(vessel.design.aisShipType.value.id);
         console.log(259)
-        aisProperties['callsign'] = Sk2Ais.callsign(vessel.communication.value.callsignVhf);
+        aisProperties['callsign'] = Sk2Ais.callsign(vessel.communication.callsignVhf);
         console.log(261)
         aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
         console.log(263)
