@@ -243,54 +243,55 @@ module.exports = function(app: any) {
     var msgA: any, msgB: any
     var bytesTransmitted: number;
   
-    if (endpoint.myAisReportClass != 'B+') { 
-      try {
-        aisProperties = {};
-        aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?5:24):(vessel.aisClass == 'A')?5:24;
-        aisProperties['repeat'] = 3;
-        aisProperties['mmsi'] = vessel.mmsi;      
-        aisProperties['shipname'] = Sk2Ais.shipname(_.get(vessel, 'name', undefined));
-        aisProperties['cargo'] = Sk2Ais.shiptype(_.get(vessel, 'design.aisShipType.value.id', undefined));
-        aisProperties['callsign'] = Sk2Ais.callsign(_.get(vessel, 'communication.callsignVhf', undefined));
-        aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
-        aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
-        aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
-        aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
-        if (aisProperties['aistype'] == 5) {
-          aisProperties['imo'] = Sk2Ais.imo(_.get(vessel, 'registrations.imo', undefined));
-          aisProperties['etaMo'] = Sk2Ais.etaMo(_.get(vessel, 'navigation.destination.eta', undefined));
-          aisProperties['etaDay'] = Sk2Ais.etaDay(_.get(vessel, 'navigation.destination.eta', undefined));
-          aisProperties['etaHr'] = Sk2Ais.etaHr(_.get(vessel, 'navigation.destination.eta', undefined));
-          aisProperties['etaMin'] = Sk2Ais.etaMin(_.get(vessel, 'navigation.destination.eta', undefined));
-          aisProperties['draught'] = (_.get(vessel, 'design.draft.value.current', 0) / 10);
-          aisProperties['destination'] = Sk2Ais.destination(_.get(vessel, 'navigation.destination.value.commonName', undefined));
-        }
-        switch (aisProperties['aistype']) {
-          case '5':
-            msgA = new AisEncode(aisProperties);
-            if ((msgA) && (msgA.valid)) {
-              bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
-            } else throw new Error('AIS encode failed');
-            break;
-          case '24':
-            aisProperties['part'] = 0;
-            msgA = new AisEncode(aisProperties);
-            if ((msgA) && (msgA.valid)) {
-              aisProperties['part'] = 1;
-              msgB = new AisEncode(aisProperties);
-              if ((msgB) && (msgB.valid)) {
-                bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
-                bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
-              } else throw new Error('AIS Part B encode failed');
-            } else throw new Error('AIS Part A encode failed');
-            break;
-          default:
-            break;
-        }          
-      } catch(e: any) {
-        app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
+    try {
+      if (endpoint.myAisReportClass == 'B+') throw new Error('AIS Class B+ is not yet supported');
+      if (!vessel.mmsi) throw new Error('cancelling position report for vessel with no MMSI');
+      aisProperties = {};
+      aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?5:24):(vessel.aisClass == 'A')?5:24;
+      app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
+      aisProperties['repeat'] = 3;
+      aisProperties['mmsi'] = vessel.mmsi;      
+      aisProperties['shipname'] = Sk2Ais.shipname(_.get(vessel, 'name', undefined));
+      aisProperties['cargo'] = Sk2Ais.shiptype(_.get(vessel, 'design.aisShipType.value.id', undefined));
+      aisProperties['callsign'] = Sk2Ais.callsign(_.get(vessel, 'communication.callsignVhf', undefined));
+      aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
+      aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
+      aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+      aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+      if (aisProperties['aistype'] == 5) {
+        aisProperties['imo'] = Sk2Ais.imo(_.get(vessel, 'registrations.imo', undefined));
+        aisProperties['etaMo'] = Sk2Ais.etaMo(_.get(vessel, 'navigation.destination.eta', undefined));
+        aisProperties['etaDay'] = Sk2Ais.etaDay(_.get(vessel, 'navigation.destination.eta', undefined));
+        aisProperties['etaHr'] = Sk2Ais.etaHr(_.get(vessel, 'navigation.destination.eta', undefined));
+        aisProperties['etaMin'] = Sk2Ais.etaMin(_.get(vessel, 'navigation.destination.eta', undefined));
+        aisProperties['draught'] = (_.get(vessel, 'design.draft.value.current', 0) / 10);
+        aisProperties['destination'] = Sk2Ais.destination(_.get(vessel, 'navigation.destination.value.commonName', undefined));
       }
-    };
+      switch (aisProperties['aistype']) {
+        case '5':
+          msgA = new AisEncode(aisProperties);
+          if ((msgA) && (msgA.valid)) {
+            bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
+          } else throw new Error('AIS encode failed');
+          break;
+        case '24':
+          aisProperties['part'] = 0;
+          msgA = new AisEncode(aisProperties);
+          if ((msgA) && (msgA.valid)) {
+            aisProperties['part'] = 1;
+            msgB = new AisEncode(aisProperties);
+            if ((msgB) && (msgB.valid)) {
+              bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
+              bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
+            } else throw new Error('AIS Part B encode failed');
+          } else throw new Error('AIS Part A encode failed');
+          break;
+        default:
+          break;
+      }          
+    } catch(e: any) {
+      app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
+    }
     return(bytesTransmitted);
   }
 
