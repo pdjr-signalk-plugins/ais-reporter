@@ -335,6 +335,7 @@ module.exports = function(app: any) {
   }
 
   function navigationStatus(state: string): number {
+    console.log(`navstate = ${state}`);
     var retval: number = 15;
     switch (state) {
       case 'sailing' : retval = 8; break;

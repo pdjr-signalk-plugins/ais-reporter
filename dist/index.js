@@ -361,6 +361,7 @@ module.exports = function (app) {
         return ((isNaN(retval) ? 60 : retval));
     }
     function navigationStatus(state) {
+        console.log(`navstate = ${state}`);
         var retval = 15;
         switch (state) {
             case 'sailing':
