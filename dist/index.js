@@ -295,7 +295,7 @@ module.exports = function (app) {
                 aisProperties['destination'] = sk2ais_1.Sk2Ais.destination(_.get(vessel, 'navigation.destination.value.commonName', undefined));
             }
             switch (aisProperties['aistype']) {
-                case '5':
+                case 5:
                     console.log(JSON.stringify(aisProperties, null, ' '));
                     msgA = new ggencoder_1.AisEncode(aisProperties);
                     console.log(`is valid ${msgA.valid}`);
@@ -305,7 +305,7 @@ module.exports = function (app) {
                     else
                         throw new Error('AIS encode failed');
                     break;
-                case '24':
+                case 24:
                     aisProperties['part'] = 0;
                     msgA = new ggencoder_1.AisEncode(aisProperties);
                     if ((msgA) && (msgA.valid)) {
