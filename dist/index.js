@@ -225,7 +225,7 @@ module.exports = function (app) {
             aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0);
             // Set additional Class A AIS properties...
             if (aisProperties['aistype'] == 1) {
-                console.log(`navstate = ${vessel.navigation.state}`);
+                console.log(`navstate = ${vessel.navigation.state.value}`);
                 aisProperties['status'] = navigationStatus(vessel.navigation.state);
                 aisProperties['rot'] = rot(_.get(vessel, 'navigation.rateOfTurn.value', 128));
             }
