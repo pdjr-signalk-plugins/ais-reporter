@@ -232,7 +232,7 @@ module.exports = function (app) {
             // Set extended Class B AIS properties...
             if (aisProperties['aistype'] == 19) {
                 aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(vessel.name);
-                aisProperties['dimA'] = Math.round(_.get(vessel, 'sensors.ais.fromBow.value', 0));
+                aisProperties['dimA'] = Math.round(_.get(vessel, 'sensors.gps.fromBow.value', 0));
                 aisProperties['dimB'] = Math.round(_.get(vessel, 'design.length.value.overall', 0) - aisProperties['dimA']);
                 aisProperties['dimC'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0));
                 aisProperties['dimD'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0));
