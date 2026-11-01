@@ -190,7 +190,7 @@ module.exports = function(app: any) {
       if (!vessel.mmsi) throw new Error('cancelling position report for vessel with no MMSI');
       var aisProperties: any = {};
       // Set common AIS properties...
-      aisProperties['aistype'] = (vessel.mmsi.value == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?1:((endpoint.myAisReportClass == 'B+')?19:18)):((vessel.sensors.ais.class.value == 'A')?1:18);
+      aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?1:((endpoint.myAisReportClass == 'B+')?19:18)):((vessel.sensors.ais.class.value == 'A')?1:18);
       app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
       aisProperties['repeat'] = 3;
       aisProperties['mmsi'] = vessel.mmsi;
