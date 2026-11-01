@@ -198,7 +198,6 @@ module.exports = function(app: any) {
       aisProperties['lat'] = vessel.navigation.position.value.latitude
       aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
       aisProperties['hdg'] = radsToDeg(_.get(vessel, 'navigation.headingTrue.value', 511));
-      console.log(`>>> ${vessel.navigation.maneuver.value}`);
       aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0);
       // Set additional Class A AIS properties...
       if (aisProperties['aistype'] == 1) {
