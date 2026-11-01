@@ -16,6 +16,7 @@
 
 import * as _ from 'lodash';
 import { Endpoint } from './Endpoint';
+import { Sk2Ais } from './sk2ais';
 import type { ReportStatistics } from './Endpoint';
 import { AisEncode, AisEncodeOptions } from 'ggencoder';
 import { Socket, createSocket } from 'dgram';
@@ -192,21 +193,21 @@ module.exports = function(app: any) {
       aisProperties['aistype'] = (vessel.mmsi.value == app.getSelfPath('mmsi').value)?((endpoint.myAisReportClass == 'A')?1:((endpoint.myAisReportClass == 'B+')?19:18)):((vessel.sensors.ais.class.value == 'A')?1:18);
       aisProperties['repeat'] = 3;
       aisProperties['mmsi'] = vessel.mmsi;
-      aisProperties['sog'] = mpsToKn(_.get(vessel, 'navigation.speedOverGround.value', 0));
-      aisProperties['accuracy'] = (_.get(vessel ,'navigation.gnss.positionDilution.value', 0) < 5)?1:0;
+      aisProperties['sog'] = Sk2Ais.mps2kn(vessel.navigation.speedOverGround.value);
+      aisProperties['accuracy'] = Sk2Ais.accuracy(vessel.navigation.gnss.positionDilution.value);
       aisProperties['lon'] = vessel.navigation.position.value.longitude
       aisProperties['lat'] = vessel.navigation.position.value.latitude
-      aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
-      aisProperties['hdg'] = radsToDeg(_.get(vessel, 'navigation.headingTrue.value', 511));
-      aisProperties['smi'] = smi(vessel.navigation.maneuver.value || 0);
+      aisProperties['cog'] = Sk2Ais.rads2deg(vessel.navigation.courseOverGroundTrue.value, 0);
+      aisProperties['hdg'] = Sk2Ais.rads2deg(vessel.navigation.headingTrue.value, 511);
+      aisProperties['smi'] = Sk2Ais.smi(vessel.navigation.maneuver.value);
       // Set additional Class A AIS properties...
       if (aisProperties['aistype'] == 1) {
-        aisProperties['navstatus'] = navstatus(vessel.navigation.state.value);
-        aisProperties['rot'] = rot(_.get(vessel, 'navigation.rateOfTurn.value', 128));
+        aisProperties['navstatus'] = Sk2Ais.navstatus(vessel.navigation.state.value);
+        aisProperties['rot'] = Sk2Ais.rot(vessel.navigation.rateOfTurn.value);
       }
       // Set extended Class B AIS properties...
       if (aisProperties['aistype'] == 19) {
-        aisProperties['shipname'] = _.get(vessel, 'name', '');
+        aisProperties['shipname'] = Sk2Ais.shipname(vessel.name);
         aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
         aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
         aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
@@ -247,21 +248,21 @@ module.exports = function(app: any) {
         aisProperties['aistype'] = (vessel.mmsi == app.getSelfPath('mmsi'))?((endpoint.myAisReportClass == 'A')?5:24):(vessel.aisClass == 'A')?5:24;
         aisProperties['repeat'] = 3;
         aisProperties['mmsi'] = vessel.mmsi;      
-        aisProperties['shipname'] = _.get(vessel, 'name', '');
-        aisProperties['cargo'] = _.get(vessel, 'design.aisShipType.value.id', 0);
-        aisProperties['callsign'] = _.get(vessel, 'communication.value.callsignVhf','');
+        aisProperties['shipname'] = Sk2Ais.shipname(vessel.name);
+        aisProperties['cargo'] = Sk2Ais.shiptype(vessel.design.aisShipType.value.id);
+        aisProperties['callsign'] = Sk2Ais.callsign(vessel.communication.value.callsignVhf);
         aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
         aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
         aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
         aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
         if (aisProperties['aistype'] == 5) {
-          aisProperties['imo'] = _.get(vessel, 'registrations.imo', '');
-          aisProperties['etaMo'] = etaMo(_.get(vessel, 'navigation.destination.eta', ''));
-          aisProperties['etaDay'] = etaDay(_.get(vessel, 'navigation.destination.eta', ''));
-          aisProperties['etaHr'] = etaHr(_.get(vessel, 'navigation.destination.eta', ''));
-          aisProperties['etaMin'] = etaMin(_.get(vessel, 'navigation.destination.eta', ''));
+          aisProperties['imo'] = Sk2Ais.imo(vessel.registrations.imo);
+          aisProperties['etaMo'] = Sk2Ais.etaMo(vessel.navigation.destination.eta);
+          aisProperties['etaDay'] = Sk2Ais.etaDay(vessel.navigation.destination.eta);
+          aisProperties['etaHr'] = Sk2Ais.etaHr(vessel.navigation.destination.eta);
+          aisProperties['etaMin'] = Sk2Ais.etaMin(vessel.navigation.destination.eta);
           aisProperties['draught'] = (_.get(vessel, 'design.draft.value.current', 0) / 10);
-          aisProperties['destination'] = _.get(vessel, 'navigation.destination.value.commonName', '');
+          aisProperties['destination'] = Sk2Ais.destination(vessel.navigation.destination.value.commonName);
         }
         switch (aisProperties['aistype']) {
           case '5':
@@ -309,66 +310,6 @@ module.exports = function(app: any) {
       app.debug(`sending "${msg}" to '${endpoint.name}'`);
       socket.send(msg + '\n', 0, msg.length + 1, endpoint.port, endpoint.ipAddress, (e: any) => { });
       retval = (msg.length + 1);
-    }
-    return(retval);
-  }
-
-  function etaDay(date: string) : number {
-    var retval: number = parseInt(date.slice(8, 2), 10);
-    return((isNaN(retval)?0:retval));
-  }
-
-  function etaHr(date: string) : number {
-    var retval: number = parseInt(date.slice(11, 2), 10);
-    return((isNaN(retval)?24:retval));
-  }
-
-  function etaMo(date: string) : number {
-    var retval: number = parseInt(date.slice(5, 2), 10);
-    return((isNaN(retval)?0:retval));
-  }
-
-  function etaMin(date: string) : number {
-    var retval: number = parseInt(date.slice(14, 2), 10);
-    return((isNaN(retval)?60:retval));
-  }
-
-  function navstatus(state: string): number {
-    var retval: number = 15;
-    switch (state) {
-      case 'sailing' : retval = 8; break;
-      case 'motoring' : retval = 0; break;
-      case 'anchored' : retval = 1; break;
-      case 'moored': retval = 5; break;
-      default: break;
-    }
-    return(retval);
-  }
-
-  function radsToDeg(radians: number): number {
-    return(radians * 180 / Math.PI)
-  }
-  
-  function mpsToKn(mps: number): number {
-    return(1.9438444924574 * mps)
-  }
-
-  function rot(rps: number): number {
-    var retval = 128; // no turn data available
-    if (rps != 128) {
-      var sign: number = (rps < 0)?-1:1;
-      var dpm = (Math.abs(rps) * 3437.7468);
-      retval = Math.sqrt((dpm < 708)?Math.round(dpm):126) * 4.733;
-      retval = ((retval > 126)?126:retval) * sign;
-    }
-    return(retval);
-  }
-
-  function smi(label: string): number {
-    var retval: number = 0;
-    switch (label) {
-      case 'No special maneuver': retval = 1; break;
-      case 'Special maneuver': retval = 2; break;
     }
     return(retval);
   }
