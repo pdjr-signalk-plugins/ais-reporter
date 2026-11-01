@@ -243,25 +243,43 @@ module.exports = function(app: any) {
     var bytesTransmitted: number;
   
     if (endpoint.myAisReportClass != 'B+') { 
-//      try {
+      try {
+        console.log(247)
         aisProperties = {};
+        console.log(249)
         aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?5:24):(vessel.aisClass == 'A')?5:24;
+        console.log(251)
         aisProperties['repeat'] = 3;
+        console.log(253)
         aisProperties['mmsi'] = vessel.mmsi;      
+        console.log(255)
         aisProperties['shipname'] = Sk2Ais.shipname(vessel.name);
+        console.log(257)
         aisProperties['cargo'] = Sk2Ais.shiptype(vessel.design.aisShipType.value.id);
+        console.log(259)
         aisProperties['callsign'] = Sk2Ais.callsign(vessel.communication.value.callsignVhf);
+        console.log(261)
         aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
+        console.log(263)
         aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
+        console.log(265)
         aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
+        console.log(267)
         aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
         if (aisProperties['aistype'] == 5) {
+        console.log(270)
           aisProperties['imo'] = Sk2Ais.imo(vessel.registrations.imo);
+        console.log(272)
           aisProperties['etaMo'] = Sk2Ais.etaMo(vessel.navigation.destination.eta);
+        console.log(274)
           aisProperties['etaDay'] = Sk2Ais.etaDay(vessel.navigation.destination.eta);
+        console.log(276)
           aisProperties['etaHr'] = Sk2Ais.etaHr(vessel.navigation.destination.eta);
+        console.log(278)
           aisProperties['etaMin'] = Sk2Ais.etaMin(vessel.navigation.destination.eta);
+        console.log(280)
           aisProperties['draught'] = (_.get(vessel, 'design.draft.value.current', 0) / 10);
+        console.log(282)
           aisProperties['destination'] = Sk2Ais.destination(vessel.navigation.destination.value.commonName);
         }
         switch (aisProperties['aistype']) {
@@ -287,9 +305,9 @@ module.exports = function(app: any) {
           default:
             break;
         }          
-//      } catch(e: any) {
-//        app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
-//      }
+      } catch(e: any) {
+        app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
+      }
     };
     return(bytesTransmitted);
   }
