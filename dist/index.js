@@ -213,7 +213,7 @@ module.exports = function (app) {
         try {
             var aisProperties = {};
             // Set common AIS properties...
-            aisProperties['aistype'] = (vessel.mmsi.value == app.getSelfPath('mmsi').value) ? ((endpoint.myAisReportClass == 'A') ? 1 : ((endpoint.myAisReportClass == 'B+') ? 19 : 18)) : ((vessel.sensors.ais.class.value == 'A') ? 1 : 18);
+            aisProperties['aistype'] = (vessel.mmsi.value == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 1 : ((endpoint.myAisReportClass == 'B+') ? 19 : 18)) : ((vessel.sensors.ais.class.value == 'A') ? 1 : 18);
             aisProperties['repeat'] = 3;
             aisProperties['mmsi'] = vessel.mmsi;
             aisProperties['sog'] = sk2ais_1.Sk2Ais.mps2kn(vessel.navigation.speedOverGround.value);
@@ -269,7 +269,7 @@ module.exports = function (app) {
         if (endpoint.myAisReportClass != 'B+') {
             try {
                 aisProperties = {};
-                aisProperties['aistype'] = (vessel.mmsi == app.getSelfPath('mmsi')) ? ((endpoint.myAisReportClass == 'A') ? 5 : 24) : (vessel.aisClass == 'A') ? 5 : 24;
+                aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 5 : 24) : (vessel.aisClass == 'A') ? 5 : 24;
                 aisProperties['repeat'] = 3;
                 aisProperties['mmsi'] = vessel.mmsi;
                 aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(vessel.name);
