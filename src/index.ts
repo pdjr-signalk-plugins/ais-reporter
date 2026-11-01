@@ -17,7 +17,6 @@
 import * as _ from 'lodash';
 import { Endpoint } from './Endpoint';
 import { Sk2Ais } from './sk2ais';
-import type { ReportStatistics } from './Endpoint';
 import { AisEncode, AisEncodeOptions } from 'ggencoder';
 import { Socket, createSocket } from 'dgram';
 import { PluginStatus } from 'signalk-libpluginstatus';
@@ -54,7 +53,7 @@ module.exports = function(app: any) {
 
         if (pluginConfiguration.endpoints.length > 0) {
           pluginConfiguration.endpoints.forEach((endpoint) => { app.debug(`created endpoint '${endpoint.name}`); });
-          pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'}`);
+          pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1)?'':'s'}`);
           heartbeatInterval = startReporting(pluginConfiguration, udpSocket = createSocket('udp4'), HEARTBEAT_INTERVAL);
         } else {
           pluginStatus.setDefaultStatus('Stopped: no configured endpoints');
