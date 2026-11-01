@@ -243,7 +243,7 @@ module.exports = function(app: any) {
     var bytesTransmitted: number;
   
     if (endpoint.myAisReportClass != 'B+') { 
-      try {
+//      try {
         aisProperties = {};
         aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI)?((endpoint.myAisReportClass == 'A')?5:24):(vessel.aisClass == 'A')?5:24;
         aisProperties['repeat'] = 3;
@@ -287,9 +287,9 @@ module.exports = function(app: any) {
           default:
             break;
         }          
-      } catch(e: any) {
-        app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${JSON.stringify(e)})`)
-      }
+//      } catch(e: any) {
+//        app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`)
+//      }
     };
     return(bytesTransmitted);
   }
