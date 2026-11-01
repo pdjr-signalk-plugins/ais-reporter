@@ -269,6 +269,7 @@ module.exports = function(app: any) {
       }
       switch (aisProperties['aistype']) {
         case '5':
+          console.log(JSON.stringify(aisProperties, null, ' '));
           msgA = new AisEncode(aisProperties);
           console.log(`is valid ${msgA.valid}`);
           if ((msgA) && (msgA.valid)) {
