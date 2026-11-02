@@ -20,13 +20,13 @@ data used to generate AIS reports
 [see below](#signal-k-data-used-to-generate-ais-messages)).
 
 One particular use case for the plugin is publishing the host vessel
-position in regions (like much of inland Europe) where consolidation
-service base station coverage is sparse or non-existent.
+position in regions where consolidation service base station coverage
+is sparse or non-existent.
 
 The rates at which reports are issued for the host ship, AIS targets
 and UDP enpoints can be independently configured and can be dynamically
-adjusted in response to the navigation state of the host vessel as
-reported on the Signal K `navigation.state` path.
+adjusted in response to the navigation state of the host vessel reported
+on the Signal K `navigation.state` path.
 
 ## System requirements
 
