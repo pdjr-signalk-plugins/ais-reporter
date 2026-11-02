@@ -15,10 +15,9 @@ The AIS reporting method for the host vessel can be set to Class A
 B+ (message type 19) and reports can be issued even if the ship has
 no installed AIS equipment.
 As an absolute minimum the vessel's MMSI and position must be available
-on their default Signal K paths (`mmsi` and `navigation.position`)
-and other path data will be used to populate AIS reports as necessary
-for the chosen report Class (for more information see 'Signal K paths
-us to generate AIS messages' below).
+on their default Signal K paths (for more information on the Signal K
+data used to generate AIS reports
+[see below](#Signal K data used to generate AIS messages)).
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
@@ -166,7 +165,7 @@ $> ~/.signalk/node_modules/ais-reporter/udp-listen.pl 12345
 
 A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 
-## Signal K paths used to generate AIS messages
+## Signal K data used to generate AIS messages
 
 `communication.callsignVhf`,
 `design.aisShipType.value.id`,
