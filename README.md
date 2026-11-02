@@ -17,7 +17,7 @@ no installed AIS equipment.
 As an absolute minimum the vessel's MMSI and position must be available
 on their default Signal K paths (for more information on the Signal K
 data used to generate AIS reports
-[see below](#Signal K data used to generate AIS messages)).
+[see below](#signal-k-data-used-to-generate-ais-messages)).
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
