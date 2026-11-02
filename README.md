@@ -10,13 +10,15 @@ An endpoint is any remote service capable of receiving data over UDP,
 typically a consolidation service like
 [MarineTraffic](https://www.marinetraffic.com).
 
-AIS reports of types 1 (Class A), 18 or 19 (both Class B) can be issued
-for the host vessel even if the ship has no AIS equipment: as an
-absolute minimum the vessel's MMSI and position must be available on
-their default Signal K paths (`mmsi` and `navigation.position`).
-Other path data will be used to populate AIS reports as necessary
-for the chosen report Class (for more information see 'AIS to Signal
-K data mappings' below).
+The AIS reporting method for the host vessel can be set to Class A
+(message types 1 and 5), Class B (message types 18 and 24) or Class
+B+ (message type 19) and reports can be issued even if the ship has
+no installed AIS equipment.
+As an absolute minimum the vessel's MMSI and position must be available
+on their default Signal K paths (`mmsi` and `navigation.position`)
+and other path data will be used to populate AIS reports as necessary
+for the chosen report Class (for more information see 'Signal K paths
+us to generate AIS messages' below).
 
 One particular use case for the plugin is publishing the host vessel
 position in regions (like much of inland Europe) where consolidation
@@ -148,6 +150,7 @@ endpoint to your configuration...
         "ipAddress": "127.0.0.1",
         "port": 12345,
         "navigationStateMap": { "sailing": 1, "motoring": 1 },
+        "myAisReportClass": "A",
         "myPositionUpdateInterval": [2,1],
         "myStaticUpdateInterval": 2
       }
@@ -165,17 +168,25 @@ A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 
 ## Signal K paths used to generate AIS messages
 
+`communication.callsignVhf`,
 `design.aisShipType.value.id`,
+`design.draft.current`,
+`design.length.overall`,
 `mmsi`,
 `name`,
 `navigation.courseOverGroundTrue`,
+`navigation.destination.commonName`,
+`navigation.destination.eta`,
 `navigation.gnss.positionDilution`,
 `navigation.headingTrue`,
 `navigation.maneuver`,
 `navigation.position`,
 `navigation.rateOfTurn`,
 `navigation.speedOverGround`,
-`navigation.state`.            |
+`navigation.state`,
+`registrations.imo`,
+`sensors.gps.fromBow`,
+`sensors.gps.fromCenter`            |
 
 ## Author
 
