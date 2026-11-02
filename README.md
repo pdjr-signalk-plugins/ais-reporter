@@ -185,7 +185,7 @@ A simple API is available at `/skServer/openapi/plugins/ais-reporter`.
 `navigation.state`,
 `registrations.imo`,
 `sensors.gps.fromBow`,
-`sensors.gps.fromCenter`            |
+`sensors.gps.fromCenter`
 
 ## Author
 
