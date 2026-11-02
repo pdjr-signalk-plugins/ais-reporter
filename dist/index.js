@@ -215,7 +215,7 @@ module.exports = function (app) {
             var aisProperties = { mmsi: vessel.mmsi };
             // Set common AIS properties...
             aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 1 : ((endpoint.myAisReportClass == 'B+') ? 19 : 18)) : ((vessel.sensors.ais.class.value == 'A') ? 1 : 18);
-            app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
+            app.debug(`preparing type ${aisProperties['aistype']} position report for ${vessel.mmsi}`);
             aisProperties['repeat'] = 3;
             aisProperties['sog'] = sk2ais_1.Sk2Ais.mps2kn(vessel.navigation.speedOverGround.value);
             aisProperties['accuracy'] = sk2ais_1.Sk2Ais.accuracy(vessel.navigation.gnss.positionDilution.value);
@@ -272,7 +272,7 @@ module.exports = function (app) {
                 throw new Error('cancelling static data report for vessel with no MMSI');
             var aisProperties = { mmsi: vessel.mmsi };
             aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 5 : 24) : (vessel.aisClass == 'A') ? 5 : 24;
-            app.debug(`preparing type ${aisProperties['aistype']} static data report for (${vessel.mmsi})`);
+            app.debug(`preparing type ${aisProperties['aistype']} static data report for ${vessel.mmsi}`);
             aisProperties['repeat'] = 3;
             aisProperties['mmsi'] = vessel.mmsi;
             aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(_.get(vessel, 'name', undefined));
