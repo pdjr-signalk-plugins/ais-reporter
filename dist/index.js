@@ -53,11 +53,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const _ = __importStar(require("lodash"));
 const Endpoint_1 = require("./Endpoint");
+const sk2ais_1 = require("./sk2ais");
 const ggencoder_1 = require("ggencoder");
 const dgram_1 = require("dgram");
 const signalk_libpluginstatus_1 = require("signalk-libpluginstatus");
 const DEFAULT_MY_AIS_CLASS = 'B';
-const DEFAULT_ENDPOINT_OPTIONS = { POSITION_UPDATE_INTERVAL: 0, STATIC_UPDATE_INTERVAL: 0 };
+const DEFAULT_ENDPOINT_OPTIONS = { myAisReportClass: "B", positionUpdateInterval: 0, staticUpdateInterval: 0 };
 const HEARTBEAT_INTERVAL = 60000;
 const PLUGIN_ID = 'ais-reporter';
 const PLUGIN_NAME = 'ais-reporter';
@@ -82,7 +83,7 @@ module.exports = function (app) {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
                 if (pluginConfiguration.endpoints.length > 0) {
                     pluginConfiguration.endpoints.forEach((endpoint) => { app.debug(`created endpoint '${endpoint.name}`); });
-                    pluginStatus.setDefaultStatus(`Reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'}`);
+                    pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'}`);
                     heartbeatInterval = startReporting(pluginConfiguration, udpSocket = (0, dgram_1.createSocket)('udp4'), HEARTBEAT_INTERVAL);
                 }
                 else {
@@ -140,24 +141,34 @@ module.exports = function (app) {
         return (setInterval(() => {
             pluginConfiguration.endpoints.forEach((endpoint) => {
                 try {
-                    var reportStatistics = {};
-                    var totalBytes = 0;
+                    var spbt = 0, ssbt = 0, tpbt = 0, tsbt = 0;
+                    var myVessel = Object.values(app.getPath('vessels')).reduce((a, v) => ((v.mmsi == pluginConfiguration.myMMSI) ? v : a), {});
                     let updateIndex = getUpdateIndex(endpoint.intervals.navigationStateMap);
                     let mvPUI = _.get(endpoint.intervals, `myPositionUpdateIntervals[${updateIndex}]`, 0);
                     let mvSUI = _.get(endpoint.intervals, `myStaticUpdateIntervals[${updateIndex}]`, 0);
                     let ovPUI = _.get(endpoint.intervals, `positionUpdateIntervals[${updateIndex}]`, 0);
                     let ovSUI = _.get(endpoint.intervals, `staticUpdateIntervals[${updateIndex}]`, 0);
-                    if (((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0)) || ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0))) {
-                        pluginStatus.setStatus(`sending position report to endpoint '${endpoint.name}'`);
-                        reportStatistics = reportPosition(udpSocket, endpoint, (mvPUI === 0) ? false : ((heartbeatCount % mvPUI) === 0), (ovPUI === 0) ? false : ((heartbeatCount % ovPUI) === 0));
-                        endpoint.updateStatistics('position', reportStatistics);
+                    // Maybe transmit position report for 'self' vessel
+                    if ((mvPUI !== 0) && ((heartbeatCount % mvPUI) === 0) && (myVessel)) {
+                        spbt = reportPosition(udpSocket, endpoint, myVessel);
                     }
-                    ;
-                    if (((mvSUI !== 0) && ((heartbeatCount % mvSUI) === 0)) || ((ovSUI !== 0) && ((heartbeatCount % ovSUI) === 0))) {
-                        pluginStatus.setStatus(`sending static data report to endpoint '${endpoint.name}'`);
-                        reportStatistics = reportStatic(udpSocket, endpoint, (mvSUI === 0) ? false : ((heartbeatCount % mvSUI) === 0), (ovSUI === 0) ? false : ((heartbeatCount % ovSUI) === 0));
-                        endpoint.updateStatistics('static', reportStatistics);
+                    // Maybe transmit static report for 'self' vessel
+                    if ((mvSUI !== 0) && ((heartbeatCount % mvSUI) === 0) && (myVessel)) {
+                        ssbt = reportStatic(udpSocket, endpoint, myVessel);
                     }
+                    // Maybe transmit position reports for AIS targets
+                    if ((ovPUI !== 0) && ((heartbeatCount % ovPUI) === 0)) {
+                        Object.values(app.getPath('vessels')).filter((vessel) => (vessel.mmsi !== myVessel.mmsi)).forEach((vessel) => {
+                            tpbt += reportPosition(udpSocket, endpoint, vessel);
+                        });
+                    }
+                    // Maybe transmit static reports for AIS targets
+                    if ((ovSUI !== 0) && ((heartbeatCount % ovSUI) === 0)) {
+                        Object.values(app.getPath('vessels')).filter((vessel) => (vessel.mmsi !== myVessel.mmsi)).forEach((vessel) => {
+                            tsbt += reportStatic(udpSocket, endpoint, vessel);
+                        });
+                    }
+                    endpoint.updateStatistics(spbt, ssbt, tpbt, tsbt);
                 }
                 catch (e) {
                     app.debug(`${e.message}`);
@@ -184,150 +195,135 @@ module.exports = function (app) {
         }
     }
     /**
-     * Generate one or more AIS position reports for transmission to a
-     * specified endpoint and forward these reports for UDP output.
+     * Transmit an AIS Position report for vessel to endpoint using UDP
+     * socket.
+     *
+     * If vessel is 'self', then the position report aistype will be set
+     * to type (or 18 if type is not supplied), otherwise the aistype
+     * will be set to the type reported by the target vessel.
      *
      * @param socket - Socket to be used for report transmission.
-     * @param endpoint - Endpoint to be processed.
-     * @param reportSelf - true to report 'self' vessel.
-     * @param reportOthers - true to report vessels other than 'self'.
-     * @returns - ReportStatistics for the transmission.
+     * @param endpoint - Endpoint to which the report should be sent.
+     * @param vessel - the vessel which should be reported.
+     * @returns - the number of bytes transmitted over socket.
      */
-    function reportPosition(socket, endpoint, reportSelf, reportOthers) {
-        var reportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 } };
-        var aisClass;
-        var aisProperties;
-        var msg;
-        var bytesTransmitted;
-        Object.values(app.getPath('vessels'))
-            .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)))))
-            .forEach((vessel) => {
-            try {
-                aisProperties = { mmsi: vessel.mmsi };
-                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : _.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
-                aisProperties['accuracy'] = (_.get(vessel, 'navigation.gnss.positionDilution.value', 0) < 5) ? 1 : 0;
-                aisProperties['aistype'] = (aisClass == 'A') ? 1 : 18;
-                aisProperties['cog'] = radsToDeg(_.get(vessel, 'navigation.courseOverGroundTrue.value', 0));
-                aisProperties['hdg'] = radsToDeg(_.get(vessel, 'navigation.headingTrue.value', 511));
-                aisProperties['lat'] = vessel.navigation.position.value.latitude;
-                aisProperties['lon'] = vessel.navigation.position.value.longitude;
-                aisProperties['own'] = (pluginConfiguration.myMMSI == vessel.mmsi) ? 1 : 0;
-                aisProperties['repeat'] = 3;
-                aisProperties['rot'] = rot(_.get(vessel, 'navigation.rateOfTurn.value', 128));
-                aisProperties['sog'] = mpsToKn(_.get(vessel, 'navigation.speedOverGround.value', 0));
-                aisProperties['smi'] = _.get(vessel, 'navigation.maneuver', 0);
-                msg = new ggencoder_1.AisEncode(aisProperties);
-                if ((msg) && (msg.valid)) {
-                    bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
-                    if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) { // reporting self
-                        reportStatistics.self.reports++;
-                        reportStatistics.self.bytes += bytesTransmitted;
-                    }
-                    else {
-                        reportStatistics.others.reports++;
-                        reportStatistics.others.bytes += bytesTransmitted;
-                    }
-                }
-                else
-                    throw new Error('AIS encode failed');
+    function reportPosition(socket, endpoint, vessel) {
+        var bytesTransmitted = 0;
+        try {
+            if (!vessel.mmsi)
+                throw new Error('cancelling position report for vessel with no MMSI');
+            var aisProperties = { mmsi: vessel.mmsi };
+            // Set common AIS properties...
+            aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 1 : ((endpoint.myAisReportClass == 'B+') ? 19 : 18)) : ((vessel.sensors.ais.class.value == 'A') ? 1 : 18);
+            app.debug(`preparing type ${aisProperties['aistype']} position report for (${vessel.mmsi})`);
+            aisProperties['repeat'] = 3;
+            aisProperties['sog'] = sk2ais_1.Sk2Ais.mps2kn(vessel.navigation.speedOverGround.value);
+            aisProperties['accuracy'] = sk2ais_1.Sk2Ais.accuracy(vessel.navigation.gnss.positionDilution.value);
+            aisProperties['lon'] = vessel.navigation.position.value.longitude;
+            aisProperties['lat'] = vessel.navigation.position.value.latitude;
+            aisProperties['cog'] = sk2ais_1.Sk2Ais.rads2deg(vessel.navigation.courseOverGroundTrue.value, 0);
+            aisProperties['hdg'] = sk2ais_1.Sk2Ais.rads2deg(vessel.navigation.headingTrue.value, 511);
+            aisProperties['smi'] = sk2ais_1.Sk2Ais.smi(vessel.navigation.maneuver.value);
+            // Set additional Class A AIS properties...
+            if (aisProperties['aistype'] == 1) {
+                aisProperties['navstatus'] = sk2ais_1.Sk2Ais.navstatus(vessel.navigation.state.value);
+                aisProperties['rot'] = sk2ais_1.Sk2Ais.rot(vessel.navigation.rateOfTurn.value);
             }
-            catch (e) {
-                app.debug(`error sending AIS position report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
+            // Set extended Class B AIS properties...
+            if (aisProperties['aistype'] == 19) {
+                aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(vessel.name);
+                aisProperties['dimA'] = Math.round(_.get(vessel, 'sensors.gps.fromBow.value', 0));
+                aisProperties['dimB'] = Math.round(_.get(vessel, 'design.length.value.overall', 0) - aisProperties['dimA']);
+                aisProperties['dimC'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0));
+                aisProperties['dimD'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0));
             }
-        });
-        return (reportStatistics);
+            // Encode and transmit message
+            var msg = new ggencoder_1.AisEncode(aisProperties);
+            if ((msg) && (msg.valid)) {
+                bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
+            }
+            else
+                throw new Error('AIS encode failed');
+        }
+        catch (e) {
+            app.debug(`error sending AIS position report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
+        }
+        return (bytesTransmitted);
     }
     /**
-     * Generate one or more AIS static data reports for transmission to a
-     * specified endpoint and forward these reports for UDP output.
+     * Transmit an AIS Static & Voyage Related data report for vessel to
+     * endpoint using UDP socket.
+     *
+     * Report aistype is set to 5.
      *
      * @param socket - Socket to be used for report transmission.
      * @param endpoint - Endpoint to be processed.
-     * @param reportSelf - true to report 'self' vessel.
-     * @param reportOthers - true to report vessels other than 'self'.
-     * @returns - ReportStatistics for the transmission.
+     * @param vessel - the vessel which should be reported.
+     * @returns - the number of bytes transmitted over socket.
      */
-    function reportStatic(socket, endpoint, reportSelf = false, reportOthers = false) {
-        var reportStatistics = { self: { reports: 0, bytes: 0 }, others: { reports: 0, bytes: 0 } };
-        var aisClass;
-        var aisProperties;
-        var msg, msgB;
+    function reportStatic(socket, endpoint, vessel) {
+        var bytesTransmitted = 0;
+        var msgA, msgB;
         var bytesTransmitted;
-        Object.values(app.getPath('vessels'))
-            .filter((vessel) => ((reportSelf && (vessel.mmsi == pluginConfiguration.myMMSI)) || (reportOthers && (vessel.mmsi != pluginConfiguration.myMMSI))))
-            .filter((vessel) => (reportSelf && (_.get(vessel, 'navigation.position.timestamp', false)) || (reportOthers && (_.get(vessel, 'navigation.position.timestamp', false)))))
-            .forEach((vessel) => {
-            try {
-                aisProperties = { mmsi: vessel.mmsi };
-                aisClass = (vessel.mmsi == pluginConfiguration.myMMSI) ? pluginConfiguration.myAisClass : _.get(vessel, 'sensors.ais.class.value', DEFAULT_MY_AIS_CLASS);
-                aisProperties['callsign'] = _.get(vessel, 'communication.value.callsignVhf', '');
-                aisProperties['cargo'] = _.get(vessel, 'design.aisShipType.value.id', 0);
-                aisProperties['destination'] = _.get(vessel, 'navigation.destination.commonName', '');
-                aisProperties['dimA'] = (_.get(vessel, 'sensors.ais.fromBow.value', 0)).toFixed(0);
-                aisProperties['dimB'] = (_.get(vessel, 'design.length.value.overall', 0) - _.get(vessel, 'sensors.gps.fromBow.value', 0)).toFixed(0);
-                aisProperties['dimC'] = (_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
-                aisProperties['dimD'] = (_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0)).toFixed(0);
-                aisProperties['draught'] = _.get(vessel, 'design.draft.value.maximum', 0);
-                aisProperties['etaDay'] = 0;
-                aisProperties['etaHr'] = 0;
-                aisProperties['etaMin'] = 0;
-                aisProperties['etaMo'] = 0;
-                aisProperties['imo'] = '';
-                aisProperties['repeat'] = 3;
-                aisProperties['shipname'] = _.get(vessel, 'name', '');
-                switch (aisClass) {
-                    case 'A':
-                        aisProperties['aistype'] = 5;
-                        msg = new ggencoder_1.AisEncode(aisProperties);
-                        if ((msg) && (msg.valid)) {
-                            bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
-                            if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
-                                reportStatistics.self.reports++;
-                                reportStatistics.self.bytes += bytesTransmitted;
-                            }
-                            else {
-                                reportStatistics.others.reports++;
-                                reportStatistics.others.bytes += bytesTransmitted;
-                            }
+        try {
+            if (endpoint.myAisReportClass == 'B+')
+                throw new Error('AIS Class B+ is not yet supported');
+            if (!vessel.mmsi)
+                throw new Error('cancelling static data report for vessel with no MMSI');
+            var aisProperties = { mmsi: vessel.mmsi };
+            aisProperties['aistype'] = (vessel.mmsi == pluginConfiguration.myMMSI) ? ((endpoint.myAisReportClass == 'A') ? 5 : 24) : (vessel.aisClass == 'A') ? 5 : 24;
+            app.debug(`preparing type ${aisProperties['aistype']} static data report for (${vessel.mmsi})`);
+            aisProperties['repeat'] = 3;
+            aisProperties['mmsi'] = vessel.mmsi;
+            aisProperties['shipname'] = sk2ais_1.Sk2Ais.shipname(_.get(vessel, 'name', undefined));
+            aisProperties['cargo'] = sk2ais_1.Sk2Ais.shiptype(_.get(vessel, 'design.aisShipType.value.id', undefined));
+            aisProperties['callsign'] = sk2ais_1.Sk2Ais.callsign(_.get(vessel, 'communication.callsignVhf', undefined));
+            aisProperties['dimA'] = Math.round(_.get(vessel, 'sensors.ais.fromBow.value', 0));
+            aisProperties['dimB'] = Math.round(_.get(vessel, 'design.length.value.overall', 0) - aisProperties['dimA']);
+            aisProperties['dimC'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 + _.get(vessel, 'sensors.gps.fromCenter.value', 0));
+            aisProperties['dimD'] = Math.round(_.get(vessel, 'design.beam.value', 0) / 2 - _.get(vessel, 'sensors.gps.fromCenter.value', 0));
+            if (aisProperties['aistype'] == 5) {
+                aisProperties['imo'] = sk2ais_1.Sk2Ais.imo(_.get(vessel, 'registrations.imo', undefined));
+                aisProperties['etaMo'] = sk2ais_1.Sk2Ais.etaMo(_.get(vessel, 'navigation.destination.eta', undefined));
+                aisProperties['etaDay'] = sk2ais_1.Sk2Ais.etaDay(_.get(vessel, 'navigation.destination.eta', undefined));
+                aisProperties['etaHr'] = sk2ais_1.Sk2Ais.etaHr(_.get(vessel, 'navigation.destination.eta', undefined));
+                aisProperties['etaMin'] = sk2ais_1.Sk2Ais.etaMin(_.get(vessel, 'navigation.destination.eta', undefined));
+                aisProperties['draught'] = (_.get(vessel, 'design.draft.value.current', 0) / 10);
+                aisProperties['destination'] = sk2ais_1.Sk2Ais.destination(_.get(vessel, 'navigation.destination.value.commonName', undefined));
+            }
+            switch (aisProperties['aistype']) {
+                case 5:
+                    msgA = new ggencoder_1.AisEncode(aisProperties);
+                    if ((msgA) && (msgA.valid)) {
+                        bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
+                    }
+                    else
+                        throw new Error('AIS encode failed');
+                    break;
+                case 24:
+                    aisProperties['part'] = 0;
+                    msgA = new ggencoder_1.AisEncode(aisProperties);
+                    if ((msgA) && (msgA.valid)) {
+                        aisProperties['part'] = 1;
+                        msgB = new ggencoder_1.AisEncode(aisProperties);
+                        if ((msgB) && (msgB.valid)) {
+                            bytesTransmitted = sendReportMsg(socket, msgA.nmea, endpoint);
+                            bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
                         }
                         else
-                            throw new Error('AIS encode failed');
-                        break;
-                    case 'B':
-                        aisProperties['aistype'] = 24;
-                        aisProperties['part'] = 0;
-                        msg = new ggencoder_1.AisEncode(aisProperties);
-                        if ((msg) && (msg.valid)) {
-                            aisProperties['part'] = 1;
-                            msgB = new ggencoder_1.AisEncode(aisProperties);
-                            if ((msgB) && (msgB.valid)) {
-                                bytesTransmitted = sendReportMsg(socket, msg.nmea, endpoint);
-                                bytesTransmitted += sendReportMsg(socket, msgB.nmea, endpoint);
-                                if ((reportSelf) && (vessel.mmsi == pluginConfiguration.myMMSI)) {
-                                    reportStatistics.self.reports++;
-                                    reportStatistics.self.bytes += bytesTransmitted;
-                                }
-                                else {
-                                    reportStatistics.others.reports++;
-                                    reportStatistics.others.bytes += bytesTransmitted;
-                                }
-                            }
-                            else
-                                throw new Error('AIS Part B encode failed');
-                        }
-                        else
-                            throw new Error('AIS Part A encode failed');
-                        break;
-                    default:
-                        break;
-                }
+                            throw new Error('AIS Part B encode failed');
+                    }
+                    else
+                        throw new Error('AIS Part A encode failed');
+                    break;
+                default:
+                    break;
             }
-            catch (e) {
-                app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
-            }
-        });
-        return (reportStatistics);
+        }
+        catch (e) {
+            app.debug(`error sending AIS static data report for vessel '${vessel.mmsi}' to endpoint '${endpoint.name}' (${e.message})`);
+        }
+        return (bytesTransmitted);
     }
     /**
      * Transmits a message string over UDP.
@@ -347,30 +343,6 @@ module.exports = function (app) {
             retval = (msg.length + 1);
         }
         return (retval);
-    }
-    function radsToDeg(radians) {
-        return (radians * 180 / Math.PI);
-    }
-    function mpsToKn(mps) {
-        return (1.9438444924574 * mps);
-    }
-    function rot(rps) {
-        var retval = 128; // no turn data available
-        if (rps != 128) {
-            var sign = (rps < 0) ? -1 : 1;
-            var dpm = (Math.abs(rps) * 3437.7468);
-            retval = Math.sqrt((dpm < 708) ? Math.round(dpm) : 126) * 4.733;
-            retval = ((retval > 126) ? 126 : retval) * sign;
-        }
-        return (retval);
-    }
-    function decodeSMI(label) {
-        switch (label) {
-            case 'not available': return (0);
-            case 'not engaged': return (1);
-            case 'engaged': return (2);
-            default: return (0);
-        }
     }
     function handleRoutes(req, res) {
         app.debug(`handleRoutes(${req.method}, ${req.path})...`);

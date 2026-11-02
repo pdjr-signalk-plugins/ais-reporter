@@ -2,7 +2,8 @@ declare module 'ggencoder' {
   export interface AisEncodeOptions {
     accuracy?: number,
     aistype?: number,
-    cargo?: string | undefined
+    callsign?: string | undefined,
+    cargo?: number | undefined,
     cog?: number | undefined,
     destination?: string | undefined,
     dimA?: number | undefined,
@@ -19,6 +20,7 @@ declare module 'ggencoder' {
     lat?: number | undefined,
     lon?: number | undefined,
     mmsi: string,
+    navstatus?: number,
     own?: number | undefined,
     part?: number,
     repeat?: number,
