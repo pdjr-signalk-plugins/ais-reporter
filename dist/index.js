@@ -82,7 +82,7 @@ module.exports = function (app) {
             try {
                 pluginConfiguration = makePluginConfiguration(options, DEFAULT_ENDPOINT_OPTIONS);
                 if (pluginConfiguration.endpoints.length > 0) {
-                    pluginConfiguration.endpoints.forEach((endpoint) => { app.debug(`created endpoint '${endpoint.name}`); });
+                    pluginConfiguration.endpoints.forEach((endpoint) => { app.debug(`created endpoint '${endpoint.name} (${endpoint.ipAddress}:${endpoint.port})`); });
                     pluginStatus.setDefaultStatus(`Started: reporting to ${pluginConfiguration.endpoints.length} endpoint${(pluginConfiguration.endpoints.length == 1) ? '' : 's'}`);
                     heartbeatInterval = startReporting(pluginConfiguration, udpSocket = (0, dgram_1.createSocket)('udp4'), HEARTBEAT_INTERVAL);
                 }
