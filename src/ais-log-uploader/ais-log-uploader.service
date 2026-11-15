@@ -1,0 +1,14 @@
+[Unit]
+Description=AIS log uploader service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=preeve
+ExecStart=/usr/local/bin/ais-log-uploader
+
+[Install]
+WantedBy=multi-user.target
