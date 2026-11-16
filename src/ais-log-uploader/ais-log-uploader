@@ -1,7 +1,8 @@
 #!/bin/bash
 # usage: log-upload -[-a places] [-d] [-h] [-p port] [-r recipient]
 #
-# -a set lat/lon accuracy to places decimal places.
+# -a set lat/lon accuracy to places decimal places
+# -c display or modify (with -a, -p or -r) default configuration
 # -d enable debug (disables upload, prints diagnostics)
 # -h print (this) help information
 # -p listen on port (rather than 12345)
