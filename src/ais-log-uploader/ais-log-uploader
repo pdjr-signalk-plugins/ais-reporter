@@ -1,10 +1,11 @@
 #!/bin/bash
 # usage: ais-log-uploader -c [-a accuracy] [-p port] [-r recipient]
-# usage: ais-log-uploader [-a accuracy] [-h] [-p port] [-r recipient] [-v]
+# usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
 #
 # -a set lat/lon accuracy to places decimal places
 # -c display or modify (with -a, -p or -r) default configuration
 # -h print (this) help information
+# -m upload to recipient after count messages
 # -p listen on port (rather than 12345)
 # -r upload to recipient mail address 
 # -v print diagnostics
@@ -24,10 +25,11 @@ MIMECONSTRUCT=/usr/bin/mime-construct
 
 MY_NAME=$(${BASENAME} ${0})
 ACCURACY=4
-VERBOSE=no
+CONFIGURE=no
+MESSAGES=0
 PORT=12345
 RECIPIENT=wordpress@pdjr.eu
-CONFIGURE=no
+VERBOSE=no
 
 while [ "${1}" != "" ] ; do
   case ${1} in
@@ -42,6 +44,10 @@ while [ "${1}" != "" ] ; do
     -h)
       ${SED} -e '/^$/,$d' ${0} | tail -n +2 | cut -c 3-
       exit 0
+      ;;
+    -m)
+      shift
+      MESSAGES=${1}
       ;;
     -p)
       shift
@@ -109,7 +115,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
   MSG_DAY=`date +%j`
 
   # If a new day, then send the consolidated log
-  if [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
+  if ( [[ ${MESSAGES} -ne 0 ]] && [[ {$MSG_COUNT} -gt ${MESSAGES} ]]) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
     WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
 
     EMAIL_SUBJECT="log: ${LOG_PRETTY_DAY}"
