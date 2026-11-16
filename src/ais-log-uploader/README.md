@@ -47,31 +47,8 @@ sudo systemctl start ais-log-uploader
 
 `ais-log-uploader` has a number of features which support
 reconfiguration and monitoring of the server performance.
-You can get documentation of these.
+You can get documentation of these using the command:
 
 ```bash
 ais-log-uploader -h
 ```
-
-
-
-
-
-
-Use -a *places* to set the reporting accuracy of the logging system to
-*places* decimal places in latitude and longitude.
-
--p *port* to set the UDP port number on which the uploader should
-listen for incoming AIS reports.
-This value should be identical to the port number specified in the
-`ais-reporter` configuration.
-
--r *recipient* to set the mail address to which consolidated daily
-logs should be posted.
-
-```bash
-ais-log-updater -c -a 4 -p 12345 -r wordpress4958@gmail.com
-```
-
-
-
