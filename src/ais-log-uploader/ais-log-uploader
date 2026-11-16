@@ -1,17 +1,63 @@
 #!/bin/bash
-# usage: ais-log-uploader -c [-a accuracy] [-m count] [-p port] [-r recipient]
-# usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
+# NAME
+#   ais-log-uploader - accumulate/upload AIS data to an email address.
+# USAGE
+#   usage: ais-log-uploader -c [-a accuracy] [-m count] [-p port] [-r recipient]
+#   usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
+# DESCRIPTION
+#   ais-log-uploader is a simple server which listens on a UDP port for
+#   incoming !AIVDM position messages. Consecutive messages which refer
+#   to the same position are silently dropped; other messages are
+#   timestamped and assembled into a sequential log.
 #
-# -a set lat/lon accuracy to places decimal places
-# -c display or modify (with -a, -p or -r) default configuration
-# -h print (this) help information
-# -m upload to recipient after count messages
-# -p listen on port (rather than 12345)
-# -r upload to recipient mail address 
-# -v print diagnostics
-# 
-# ais-log-uploader is typically run under systemd and the usage
-# patterns shown above are rarely needed.
+#   At the end of each day the assembled log is mailed to a specified
+#   recipient, emptied, and the uploader resumes listening.
+#
+#   The program maintains an internal configuration consisting of
+#   ACCURACY, MESSAGES, PORT and RECIPIENT settings.
+#
+#   ACCURACY is an integer value which specifies the number of
+#   decimal places in latitude and longitude values which should be
+#   considered significant when identifying duplicate position reports.
+#   Default is 4.
+#
+#   MESSAGES is an integer value which triggers mailing of the current
+#   log after the specified number of UDP messages have been received
+#   rather than at the end of the day. Useful for testing. Defaults to
+#   0 (disabled).
+#
+#   PORT is an integer value which specifies the UDP port on which the
+#   program should listen. This value must be set to the port number to
+#   which the AIS message generator transmits. Defaults to 12345.
+#
+#   RECIPIENT is an email address to which consolidated log data should
+#   sent. Defaults to someuser@somwhere.com and must be set to an
+#   appropriate value.
+#
+#   The program can be invoked in configuration mode which allows these
+#   persistent configuration values to be displayed and updated.
+#
+#   ais-log-uploader is typically run under systemd after a first
+#   interactive configuration.
+# PROGRAM OPTIONS
+#   The following options are available. 
+#
+#   -a introduces an integer which sets ACCURACY.
+#
+#   -c runs the program in configuration mode. On its own the switch
+#      simply reports the program configuration. If used with any of
+#      -a, -m, -p or -r the root user can update the in-built program
+#      configuration.
+#
+#   -h print (this) help information
+#
+#   -m introduces an integer which sets MESSAGES.
+#
+#   -p introduces an integer which set PORT.
+#
+#   -r introduces an email address which sets RECIPIENT.
+#
+#   -v print diagnostics
 
 AISDECODE="/home/preeve/.local/bin/ais-decode -j"
 BASENAME="/usr/bin/basename"
