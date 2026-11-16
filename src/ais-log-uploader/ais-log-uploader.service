@@ -7,7 +7,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=preeve
+User=ais-log-uploader
 ExecStart=/usr/local/bin/ais-log-uploader
 
 [Install]

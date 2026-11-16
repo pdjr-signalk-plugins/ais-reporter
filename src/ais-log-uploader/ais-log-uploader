@@ -26,6 +26,7 @@ ACCURACY=4
 DEBUG=no
 PORT=12345
 RECIPIENT=wordpress@pdjr.eu
+CONFIGURE=no
 
 while [ "${1}" != "" ] ; do
   case ${1} in
@@ -33,8 +34,11 @@ while [ "${1}" != "" ] ; do
       shift
       OPTION_ACCURACY=${1}
       ;;
+    -c)
+      OPTION_CONFIGURE=yes
+      ;;
     -d)
-      DEBUG=yes
+    DEBUG=yes
       echo "${MY_NAME}: debug mode enabled"
       ;;
     -h)
@@ -57,28 +61,30 @@ while [ "${1}" != "" ] ; do
   shift
 done
 
-if [ -v OPTION_ACCURACY ] && [[ "${ACCURACY}" -ne ${OPTION_ACCURACY} ]] ; then
-	if [[ ${EUID} -eq 0 ]] ; then
-    ${SED} 's/^ACCURACY = .*$/ACCURACY = ${OPTION_ACCURACY}/' $(${REALPATH} ${0})
-		echo "${MY_NAME}: updating default ACCURACY to ${OPTION_ACCURACY}"
-	fi
-	ACCURACY=${OPTION_ACCURACY}
-fi
-
-if [ -v OPTION_PORT ] && [[ "${PORT}" -ne ${OPTION_PORT} ]] ; then
-	if [[ ${EUID} -eq 0 ]] ; then
-    ${SED} 's/^PORT = .*$/PORT = ${OPTION_PORT}/' $(${REALPATH} ${0})
-		echo "${MY_NAME}: updating default PORT to ${OPTION_PORT}"
-	fi
-	PORT=${OPTION_PORT}
-fi
-
-if [ -v OPTION_RECIPIENT ] && [[ "${RECIPIENT}" != ${OPTION_RECIPIENT} ]] ; then
-	if [[ ${EUID} -eq 0 ]] ; then
-    ${SED} 's/^RECIPIENT = .*$/RECIPIENT = ${OPTION_RECIPIENT}/' $(${REALPATH} ${0})
-		echo "${MY_NAME}: updating default RECIPIENT to ${OPTION_RECIPIENT}"
-	fi
-	RECIPIENT=${OPTION_RECIPIENT}
+if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
+  if [ -v OPTION_ACCURACY ] && [[ "${ACCURACY}" -ne ${OPTION_ACCURACY} ]] ; then
+	  if [[ ${EUID} -eq 0 ]] ; then
+      ${SED} -i 's/^ACCURACY = .*$/ACCURACY = ${OPTION_ACCURACY}/' $(${REALPATH} ${0})
+	  fi
+	  ACCURACY=${OPTION_ACCURACY}
+  fi
+  if [ -v OPTION_PORT ] && [[ "${PORT}" -ne ${OPTION_PORT} ]] ; then
+	  if [[ ${EUID} -eq 0 ]] ; then
+      ${SED} -i 's/^PORT = .*$/PORT = ${OPTION_PORT}/' $(${REALPATH} ${0})
+	  fi
+	  PORT=${OPTION_PORT}
+  fi
+  if [ -v OPTION_RECIPIENT ] && [[ "${RECIPIENT}" != ${OPTION_RECIPIENT} ]] ; then
+	  if [[ ${EUID} -eq 0 ]] ; then
+      ${SED} -i 's/^RECIPIENT = .*$/RECIPIENT = ${OPTION_RECIPIENT}/' $(${REALPATH} ${0})
+	  fi
+	  RECIPIENT=${OPTION_RECIPIENT}
+  fi
+  if [ -v OPTION_ACCURACY ] || [ -v OPTION_PORT ] || [ -v OPTION_RECIPIENT ] ; then
+    exec "$(${REALPATH} ${MY_NAME}) -c"
+  fi
+  echo "${MY_NAME}: ACCURACY = ${ACCURACY}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
+  exit
 fi
 
 EMAIL_SEND=$( [ "${DEBUG}" == "yes" ] && echo "--output" || echo "" ) 
@@ -143,4 +149,3 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
 	LLAT=${LAT}
 	LLON=${LON}
 done
-
