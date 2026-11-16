@@ -1,5 +1,5 @@
 #!/bin/bash
-# usage: ais-log-uploader -c [-a accuracy] [-p port] [-r recipient]
+# usage: ais-log-uploader -c [-a accuracy] [-m count] [-p port] [-r recipient]
 # usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
 #
 # -a set lat/lon accuracy to places decimal places
@@ -47,6 +47,7 @@ while [ "${1}" != "" ] ; do
       ;;
     -m)
       shift
+      OPTION_MESSAGES=${1}
       MESSAGES=${1}
       ;;
     -p)
@@ -74,10 +75,13 @@ done
 # Configuration mode (invoked by -c option)
 #
 if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
-  if [ -v OPTION_ACCURACY ] || [ -v OPTION_PORT ] || [ -v OPTION_RECIPIENT ] ; then
+  if [ -v OPTION_ACCURACY ] || [ -v OPTION_MESSAGES ] || [ -v OPTION_PORT ] || [ -v OPTION_RECIPIENT ] ; then
     if [[ ${EUID} -eq 0 ]] ; then
       if [ -v OPTION_ACCURACY ] ; then
         ${SED} -i "s/^ACCURACY=.*$/ACCURACY=${OPTION_ACCURACY}/" $(${REALPATH} ${0})
+      fi
+      if [ -v OPTION_MESSAGES ] ; then
+        ${SED} -i "s/^MESSAGES=.*$/MESSAGES=${OPTION_MESSAGES}/" $(${REALPATH} ${0})
       fi
       if [ -v OPTION_PORT ] ; then
         ${SED} -i "s/^PORT=.*$/PORT=${OPTION_PORT}/" $(${REALPATH} ${0})
@@ -91,7 +95,7 @@ if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
       exit
     fi
   fi
-  echo "${MY_NAME}[$$]: ACCURACY = ${ACCURACY}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
+  echo "${MY_NAME}[$$]: ACCURACY = ${ACCURACY}, MESSAGES = ${MESSAGES}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
   exit
 fi
 
@@ -115,7 +119,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
   MSG_DAY=`date +%j`
 
   # If a new day, then send the consolidated log
-  if ( [[ ${MESSAGES} -ne 0 ]] && [[ {$MSG_COUNT} -gt ${MESSAGES} ]]) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
+  if ( [[ ${MESSAGES} -ne 0 ]] && [[ ${MSG_COUNT} -gt ${MESSAGES} ]] ) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
     WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
 
     EMAIL_SUBJECT="log: ${LOG_PRETTY_DAY}"
@@ -127,6 +131,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     LOG_ATTACHMENT_CLAUSE="--file-attach ${LOG_ATTACHMENT_FILENAME}"
 
     ${MIMECONSTRUCT} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE} 
+    [[ "${VERBOSE}" == "yes" ]] && echo "${MY_NAME}[$$]: uploading log"
 
     LOG=()
     LOG_DAY=${MSG_DAY}
@@ -156,3 +161,4 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
 done
 
 exit
+
