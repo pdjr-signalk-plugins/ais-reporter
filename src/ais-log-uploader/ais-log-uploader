@@ -1,16 +1,16 @@
 #!/bin/bash
-# usage: log-upload -[-a places] [-d] [-h] [-p port] [-r recipient]
+# usage: ais-log-uploader -c [-a accuracy] [-p port] [-r recipient]
+# usage: ais-log-uploader [-a accuracy] [-h] [-p port] [-r recipient] [-v]
 #
 # -a set lat/lon accuracy to places decimal places
 # -c display or modify (with -a, -p or -r) default configuration
-# -d enable debug (disables upload, prints diagnostics)
 # -h print (this) help information
 # -p listen on port (rather than 12345)
 # -r upload to recipient mail address 
-#
-# If the command is executed by the root user then any
-# changes become new persistent defaults.
+# -v print diagnostics
 # 
+# ais-log-uploader is typically run under systemd and the usage
+# patterns shown above are rarely needed.
 
 AISDECODE="/home/preeve/.local/bin/ais-decode -j"
 BASENAME="/usr/bin/basename"
@@ -24,7 +24,7 @@ MIMECONSTRUCT=/usr/bin/mime-construct
 
 MY_NAME=$(${BASENAME} ${0})
 ACCURACY=4
-DEBUG=no
+VERBOSE=no
 PORT=12345
 RECIPIENT=wordpress@pdjr.eu
 CONFIGURE=no
@@ -34,13 +34,10 @@ while [ "${1}" != "" ] ; do
     -a)
       shift
       OPTION_ACCURACY=${1}
+      ACCURACY=${1}
       ;;
     -c)
       OPTION_CONFIGURE=yes
-      ;;
-    -d)
-    DEBUG=yes
-      echo "${MY_NAME}: debug mode enabled"
       ;;
     -h)
       ${SED} -e '/^$/,$d' ${0} | tail -n +2 | cut -c 3-
@@ -49,10 +46,15 @@ while [ "${1}" != "" ] ; do
     -p)
       shift
       OPTION_PORT=${1}
+      PORT=${1}
       ;;
     -r)
       shift
       OPTION_RECIPIENT=${1}
+      RECIPIENT=${1}
+      ;;
+    -v)
+      VERBOSE=yes
       ;;
     *)
       echo "syntax error"
@@ -62,41 +64,37 @@ while [ "${1}" != "" ] ; do
   shift
 done
 
+#######################################################################
+# Configuration mode (invoked by -c option)
+#
 if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
-  if [ -v OPTION_ACCURACY ] && [[ "${ACCURACY}" -ne ${OPTION_ACCURACY} ]] ; then
-	  if [[ ${EUID} -eq 0 ]] ; then
-      ${SED} -i 's/^ACCURACY = .*$/ACCURACY = ${OPTION_ACCURACY}/' $(${REALPATH} ${0})
-	  fi
-	  ACCURACY=${OPTION_ACCURACY}
-  fi
-  if [ -v OPTION_PORT ] && [[ "${PORT}" -ne ${OPTION_PORT} ]] ; then
-	  if [[ ${EUID} -eq 0 ]] ; then
-      ${SED} -i 's/^PORT = .*$/PORT = ${OPTION_PORT}/' $(${REALPATH} ${0})
-	  fi
-	  PORT=${OPTION_PORT}
-  fi
-  if [ -v OPTION_RECIPIENT ] && [[ "${RECIPIENT}" != ${OPTION_RECIPIENT} ]] ; then
-	  if [[ ${EUID} -eq 0 ]] ; then
-      ${SED} -i 's/^RECIPIENT = .*$/RECIPIENT = ${OPTION_RECIPIENT}/' $(${REALPATH} ${0})
-	  fi
-	  RECIPIENT=${OPTION_RECIPIENT}
-  fi
   if [ -v OPTION_ACCURACY ] || [ -v OPTION_PORT ] || [ -v OPTION_RECIPIENT ] ; then
-    exec "$(${REALPATH} ${MY_NAME}) -c"
+    if [[ ${EUID} -eq 0 ]] ; then
+      if [ -v OPTION_ACCURACY ] ; then
+        ${SED} -i "s/^ACCURACY=.*$/ACCURACY=${OPTION_ACCURACY}/" $(${REALPATH} ${0})
+      fi
+      if [ -v OPTION_PORT ] ; then
+        ${SED} -i "s/^PORT=.*$/PORT=${OPTION_PORT}/" $(${REALPATH} ${0})
+	    fi
+      if [ -v OPTION_RECIPIENT ] ; then
+        ${SED} -i "s/^RECIPIENT=.*$/RECIPIENT=${OPTION_RECIPIENT}/" $(${REALPATH} ${0})
+	    fi
+      exec "$(${REALPATH} ${0})" "-c"
+    else
+      echo "${MY_NAME}[$$]: sorry, only root can do that"
+      exit
+    fi
   fi
-  echo "${MY_NAME}: ACCURACY = ${ACCURACY}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
+  echo "${MY_NAME}[$$]: ACCURACY = ${ACCURACY}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
   exit
 fi
 
-EMAIL_SEND=$( [ "${DEBUG}" == "yes" ] && echo "--output" || echo "" ) 
-WP_CATEGORY="log"
-WP_TAG_STATUS=""
-WP_TAG_DURATION="day"
-
-echo "${MY_NAME}: listening on port ${PORT}, sending updates to <${RECIPIENT}>"
+#######################################################################
+# Start server
+#
+echo "${MY_NAME}[$$]: listening on port ${PORT}, sending updates to <${RECIPIENT}>"
 
 LOG=()
-MSG_COUNT=0
 LOG_DAY=`date +%j`
 LOG_PRETTY_DAY="$(date '+%a %-d %B %Y')"
 LOG_DATE="$(date '+%Y%m%d')"
@@ -104,49 +102,51 @@ LOG_MONTH="$(date '+%Y%m')"
 LOG_YEAR="$(date '+%Y')"
 LLAT=
 LLON=
+MSG_COUNT=0
 
 ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
+  MSG_COUNT=$((MSG_COUNT + 1))
   MSG_DAY=`date +%j`
-	if [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
-    WP_TAG_STATUS=$( [ "${#LOG[@]}" == "1" ] && echo "ais,moored" || echo "ais,cruising" )
-		EMAIL_SUBJECT="${WP_CATEGORY}: ${LOG_PRETTY_DAY}"
-		EMAIL_BODY=$(printf "date: ${LOG_DATE}\ntags: ${WP_TAG_STATUS},${WP_TAG_DURATION},${LOG_DATE},${LOG_MONTH},${LOG_YEAR}\n\n")
+
+  # If a new day, then send the consolidated log
+  if [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
+    WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
+
+    EMAIL_SUBJECT="log: ${LOG_PRETTY_DAY}"
+    EMAIL_BODY=$(printf "date: ${LOG_DATE}\ntags: ${WP_TAGS},\n\n")
 		
     # Generate log file attachment
-  	LOG_ATTACHMENT_FILENAME="/tmp/${LOG_DATE}.ais"
-  	echo ${LOG[@]} > "${LOG_ATTACHMENT_FILENAME}"
-  	LOG_ATTACHMENT_CLAUSE="--file-attach ${LOG_ATTACHMENT_FILENAME}"
+    LOG_ATTACHMENT_FILENAME="/tmp/${LOG_DATE}.ais"
+    echo ${LOG[@]} > "${LOG_ATTACHMENT_FILENAME}"
+    LOG_ATTACHMENT_CLAUSE="--file-attach ${LOG_ATTACHMENT_FILENAME}"
 
-		sudo -u beatrice ${MIMECONSTRUCT} ${EMAIL_SEND} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE} 
+    ${MIMECONSTRUCT} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE} 
 
- 		LOG=()
-		LOG_DAY=${MSG_DAY}
-		LOG_PRETTY_DAY="$(date '+%a %-d %B %Y')"
-		LOG_DATE="$(date '+%Y%m%d')"
-		LOG_MONTH="$(date '+%Y%m')"
-		LOG_YEAR="$(date '+%Y')"
+    LOG=()
+    LOG_DAY=${MSG_DAY}
+    LOG_PRETTY_DAY="$(date '+%a %-d %B %Y')"
+    LOG_DATE="$(date '+%Y%m%d')"
+    LOG_MONTH="$(date '+%Y%m')"
+    LOG_YEAR="$(date '+%Y')"
     MSG_COUNT=0
-		LLAT=
-		LLON=
-	fi
+    LLAT=
+    LLON=
+  fi
 
   MSG_DAY_JSON=$(echo ${line} | ${AISDECODE})
 
-	LAT=$(echo "${MSG_DAY_JSON}" | ${JQ} -r --argjson power $ACCURACY '.lat*pow(10;$power)|round/pow(10;$power)')
-	LON=$(echo "${MSG_DAY_JSON}" | ${JQ} -r --argjson power $ACCURACY '.lon*pow(10;$power)|round/pow(10;$power)')
+  LAT=$(echo "${MSG_DAY_JSON}" | ${JQ} -r --argjson power $ACCURACY '.lat*pow(10;$power)|round/pow(10;$power)')
+  LON=$(echo "${MSG_DAY_JSON}" | ${JQ} -r --argjson power $ACCURACY '.lon*pow(10;$power)|round/pow(10;$power)')
 
-	if [[ "${LLAT}" != "${LAT}" ]] || [[ "${LLON}" != "${LON}" ]] ; then
-		LOG+=("$(echo ${line} | ${TS})"$'\n')
-		if [[ "${DEBUG}" == "yes" ]] ; then
-      echo "${MY_NAME}: ${line}"
-		fi
-	else
-		if [[ "${DEBUG}" == "yes" ]] ; then
-      echo "${MY_NAME}: discarding duplicate position"
-		fi
-	fi
+  if [[ "${LLAT}" != "${LAT}" ]] || [[ "${LLON}" != "${LON}" ]] ; then
+    LOG+=("$(echo ${line} | ${TS})"$'\n')
+    [[ "${VERBOSE}" == "yes" ]] && echo "${MY_NAME}[$$]: saving ${line}"
+  else
+    [[ "${VERBOSE}" == "yes" ]] && echo "${MY_NAME}[$$]: discarding duplicate position"
+  fi
 
-	MSG_COUNT=$((MSG_COUNT + 1))
-	LLAT=${LAT}
-	LLON=${LON}
+  LLAT=${LAT}
+  LLON=${LON}
 done
+
+exit
