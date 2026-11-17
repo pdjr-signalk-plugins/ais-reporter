@@ -5,16 +5,15 @@
 #   usage: ais-log-uploader -c [-a accuracy] [-m count] [-p port] [-r recipient]
 #   usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
 # DESCRIPTION
-#   ais-log-uploader is a simple server which listens on a UDP port for
-#   incoming !AIVDM position messages. Consecutive messages which refer
-#   to the same position are silently dropped; other messages are
-#   timestamped and assembled into a sequential log.
+#   ais-log-uploader is a server which listens on a UDP port for AIS
+#   !AIVDM position reports. Consecutive reports which refer to the
+#   same geographic location are discarded and all other messages are
+#   timestamped and logged. At the end of each day the assembled log
+#   is emailed to a specified recipient and a new log started for the
+#   new day.
 #
-#   At the end of each day the assembled log is mailed to a specified
-#   recipient, emptied, and the uploader resumes listening.
-#
-#   The program maintains an internal configuration consisting of
-#   ACCURACY, MESSAGES, PORT and RECIPIENT settings.
+#   The programs operation is defined by four properties which define
+#   its behaviour.
 #
 #   ACCURACY is an integer value which specifies the number of
 #   decimal places in latitude and longitude values which should be
@@ -27,18 +26,17 @@
 #   0 (disabled).
 #
 #   PORT is an integer value which specifies the UDP port on which the
-#   program should listen. This value must be set to the port number to
-#   which the AIS message generator transmits. Defaults to 12345.
+#   program should listen for incoming AIS reports. Defaults to 12345.
 #
 #   RECIPIENT is an email address to which consolidated log data should
-#   sent. Defaults to someuser@somwhere.com and must be set to an
+#   sent. Defaults to "someuser@somwhere.com" and must be set to an
 #   appropriate value.
 #
 #   The program can be invoked in configuration mode which allows these
 #   persistent configuration values to be displayed and updated.
 #
-#   ais-log-uploader is typically run under systemd after a first
-#   interactive configuration.
+#   Once configured ais-log-uploader is typically run as a service
+#   under systemd.
 # PROGRAM OPTIONS
 #   The following options are available. 
 #

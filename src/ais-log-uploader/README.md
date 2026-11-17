@@ -17,10 +17,11 @@ sudo chmod 644 /etc/systemd/system/ais-log-uploader.service
 rm -rf ais-reporter
 ```
 
-Create a system user for the new service.
+Create a system user for the new service and restart `systemd`.
 
 ```bash
 sudo useradd -r -s /usr/sbin/nologin ais-log-uploader
+sudo systemctl daemon-reload
 ```
 
 Run `ais-log-uploader` from the command line using the `-c` (configure)
@@ -37,18 +38,29 @@ $> sudo ais-log-uploader -c -p 12345 -r wordpress9534@gmail.com
 ACCURACY = 4, PORT = 12345, RECIPIENT = wordpress9534@gmail.com
 ```
 
-Finally, set the service to run automatically on system reboot and
-start the service.
+If you want the service to run automatically on system reboot then
+enable the service.
 
 ```bash
 sudo systemctl enable ais-log-uploader
-sudo systemctl start ais-log-uploader
 ```
 
-`ais-log-uploader` has a number of features which support
-reconfiguration and monitoring of the server performance.
-You can get documentation of these using the command:
+## Running the service
+
+`ais-log-uploader` can be run from a terminal prompt with
 
 ```bash
-ais-log-uploader -h
+ais-log-uploader
+```
+
+But since the server immediately enters a listening loop this is not
+very useful except when used with options for configuration, testing
+and displaying program documentation (use `ais-log-uploader -h`).
+
+Typically, `ais-log-uploader` will be started under systemd control.
+Immediately after installation you can start the server for the first
+time.
+
+```bash
+sudo systemctl start ais-log-uploader
 ```
