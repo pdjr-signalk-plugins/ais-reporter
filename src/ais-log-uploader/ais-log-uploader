@@ -25,6 +25,10 @@
 #   rather than at the end of the day. Useful for testing. Defaults to
 #   0 (disabled).
 #
+#   FILENAME is a filename or URL which contains or returns a JSON text
+#   object that is attached to the end-of-day email alongside the
+#   assembled log.  
+#
 #   PORT is an integer value which specifies the UDP port on which the
 #   program should listen for incoming AIS reports. Defaults to 12345.
 #
@@ -47,7 +51,9 @@
 #      -a, -m, -p or -r the root user can update the in-built program
 #      configuration.
 #
-#   -h print (this) help information
+#   -e introduces a filename which identifies an end-of-day attachment.
+#
+#   -h print (this) help information.
 #
 #   -m introduces an integer which sets MESSAGES.
 #
@@ -61,15 +67,17 @@ AISDECODE="/home/preeve/.local/bin/ais-decode -j"
 BASENAME="/usr/bin/basename"
 BC=/usr/bin/bc
 JQ=/usr/bin/jq
+MIMECONSTRUCT=/usr/bin/mime-construct
 REALPATH=/usr/bin/realpath
 SED=/usr/bin/sed
 SOCAT=/usr/bin/socat
 TS="/usr/bin/ts %Y%m%dT%H%M%S"
-MIMECONSTRUCT=/usr/bin/mime-construct
+WGET=/usr/bin/wget
 
 MY_NAME=$(${BASENAME} ${0})
 ACCURACY=4
 CONFIGURE=no
+FILENAME=https://192.168.1.5/signalk/v1/api/vessels/self/
 MESSAGES=0
 PORT=12345
 RECIPIENT=wordpress@pdjr.eu
@@ -84,6 +92,11 @@ while [ "${1}" != "" ] ; do
       ;;
     -c)
       OPTION_CONFIGURE=yes
+      ;;
+    -e)
+      shift
+      OPTION_FILENAME=${1}
+      FILENAME=${1}
       ;;
     -h)
       ${SED} -e '/^$/,$d' ${0} | tail -n +2 | cut -c 3-
@@ -124,6 +137,9 @@ if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
       if [ -v OPTION_ACCURACY ] ; then
         ${SED} -i "s/^ACCURACY=.*$/ACCURACY=${OPTION_ACCURACY}/" $(${REALPATH} ${0})
       fi
+      if [ -v OPTION_FILENAME ] ; then
+        ${SED} -i "s/^FILENAME=.*$/FILENAME=${OPTION_FILENAME}/" $(${REALPATH} ${0})
+      fi
       if [ -v OPTION_MESSAGES ] ; then
         ${SED} -i "s/^MESSAGES=.*$/MESSAGES=${OPTION_MESSAGES}/" $(${REALPATH} ${0})
       fi
@@ -139,7 +155,7 @@ if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
       exit
     fi
   fi
-  echo "${MY_NAME}[$$]: ACCURACY = ${ACCURACY}, MESSAGES = ${MESSAGES}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
+  echo "${MY_NAME}[$$]: ACCURACY = ${ACCURACY}, FILENAME = ${FILENAME}, MESSAGES = ${MESSAGES}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
   exit
 fi
 
@@ -174,7 +190,14 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     echo ${LOG[@]} > "${LOG_ATTACHMENT_FILENAME}"
     LOG_ATTACHMENT_CLAUSE="--file-attach ${LOG_ATTACHMENT_FILENAME}"
 
-    ${MIMECONSTRUCT} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE} 
+    # Generate end-of-day file attachment
+    if [ "${FILENAME}" != "" ] ; then
+      JSON_ATTACHMENT_FILENAME="/tmp/${LOG_DATE}.json"
+      ${WGET} ${FILENAME} > "${JSON_ATTACHMENT_FILENAME}"
+      JSON_ATTACHMENT_CLAUSE="--file-attach ${JSON_ATTACHMENT_FILENAME}"
+    fi
+
+    ${MIMECONSTRUCT} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE} ${JSON_ATTACHMENT_CLAUSE}
     [[ "${VERBOSE}" == "yes" ]] && echo "${MY_NAME}[$$]: uploading log"
 
     LOG=()
