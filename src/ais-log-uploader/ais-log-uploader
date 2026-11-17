@@ -2,7 +2,7 @@
 # NAME
 #   ais-log-uploader - accumulate/upload AIS data to an email address.
 # USAGE
-#   usage: ais-log-uploader -c [-a accuracy] [-m count] [-p port] [-r recipient]
+#   usage: ais-log-uploader -c [-a accuracy] [-e filename] [-m count] [-p port] [-r recipient]
 #   usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
 # DESCRIPTION
 #   ais-log-uploader is a server which listens on a UDP port for AIS
@@ -18,7 +18,7 @@
 #   ACCURACY is an integer value which specifies the number of
 #   decimal places in latitude and longitude values which should be
 #   considered significant when identifying duplicate position reports.
-#   Default is 4.
+#   Default is 4. 
 #
 #   MESSAGES is an integer value which triggers mailing of the current
 #   log after the specified number of UDP messages have been received
