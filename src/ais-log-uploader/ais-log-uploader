@@ -66,13 +66,13 @@
 AISDECODE="/home/preeve/.local/bin/ais-decode -j"
 BASENAME="/usr/bin/basename"
 BC=/usr/bin/bc
+CURL=/usr/bin/curl
 JQ=/usr/bin/jq
 MIMECONSTRUCT=/usr/bin/mime-construct
 REALPATH=/usr/bin/realpath
 SED=/usr/bin/sed
 SOCAT=/usr/bin/socat
 TS="/usr/bin/ts %Y%m%dT%H%M%S"
-WGET=/usr/bin/wget
 
 MY_NAME=$(${BASENAME} ${0})
 ACCURACY=4
@@ -179,7 +179,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
   MSG_DAY=`date +%j`
 
   # If a new day, then send the consolidated log
-  if ( [[ ${MESSAGES} -ne 0 ]] && [[ ${MSG_COUNT} -gt ${MESSAGES} ]] ) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
+  if ( [[ ${MESSAGES} -ne 0 ]] && [[ ${MSG_COUNT} -eq ${MESSAGES} ]] ) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
     WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
 
     EMAIL_SUBJECT="log: ${LOG_PRETTY_DAY}"
@@ -193,7 +193,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     # Generate end-of-day file attachment
     if [ "${FILENAME}" != "" ] ; then
       JSON_ATTACHMENT_FILENAME="/tmp/${LOG_DATE}.json"
-      ${WGET} ${FILENAME} > "${JSON_ATTACHMENT_FILENAME}"
+      ${CURL} ${FILENAME} > "${JSON_ATTACHMENT_FILENAME}"
       JSON_ATTACHMENT_CLAUSE="--file-attach ${JSON_ATTACHMENT_FILENAME}"
     fi
 
@@ -206,7 +206,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     LOG_DATE="$(date '+%Y%m%d')"
     LOG_MONTH="$(date '+%Y%m')"
     LOG_YEAR="$(date '+%Y')"
-    MSG_COUNT=0
+    MSG_COUNT=1
     LLAT=
     LLON=
   fi

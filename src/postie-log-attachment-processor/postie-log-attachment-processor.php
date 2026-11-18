@@ -112,15 +112,61 @@ class SimpleAisDecoder {
 }
 
 /**********************************************************************
+ * Get the Great Circle distance between two points on the surface of
+ * a sphere (defaults to an approximated Earth).
+ * 
+ * @param latitudeFrom - latitude of first point.
+ * @param longitudeFrom - longitude of first point.
+ * @param latitudeTo - latitude of second point.
+ * @param longitudeTo - longitude of second point.
+ * @param sphereRadius - radius of the sphere in fundamental units.
+ * @return - distance in kilometres.
+ */
+function haversineGreatCircleDistance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo, $sphereRadius = 6371000) {
+  $latFrom = deg2rad($latitudeFrom); $lonFrom = deg2rad($longitudeFrom);
+  $latTo = deg2rad($latitudeTo); $lonTo = deg2rad($longitudeTo);
+  $latDelta = $latTo - $latFrom; $lonDelta = $lonTo - $lonFrom;
+  $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) + cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+  return($angle * $sphereRadius);
+}
+
+/**********************************************************************
+ * 
+ */
+function distanceTravelled($log) {
+  $retval = 0;
+  if (count($log) > 1) {
+    for ($i = 0; $i < ($count($log) - 1); $i++) {
+      $retval += haversineGreatCircleDistance($log[$i]['lat'], $log[$i]['lon'], $log[$i + 1]['lat'], $log[$i + 1]['lon']);
+    }
+  }
+  return($retval);
+}
+
+function engineRuntime($file) {
+  $retval = "00:00";
+  $start = null; $end = null;
+  if (($fn = fopen($file, "r")) !== false) {
+    while (($line = fgets($fn)) !== false) {
+      if ($start == null) { $start = trim(strstr($line, ' ', true)); $end = $start; }
+      $end = trim(strstr($line, ' ', true));
+    }
+    $retval = strtotime($end) - strtotime($start);
+    $retval = sprintf("%02d:%02d", intdiv($retval, 3600), intdiv(($retval % 3600), 60));
+  }
+  return($retval);
+}
+
+/**********************************************************************
  * Perform a reverse location search using the OpenStreetMap Nominatum
  * service.
  * 
  * @param location - as [lat, lon] array
  * @param return - recovered location name or "lat, lon" if mot found.
  */
-function nominatum_query($location) {
+function nominatum_query($lat, $lon) {
   $retval = null;
-  $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$location[0]}&lon={$location[1]}";
+  $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$lat}&lon={$lon}";
   $context = stream_context_create([ 'http' => [ 'user_agent' => 'Simon Ferndriger', ], ]);
   $json_text = file_get_contents($url, false, $context);
   if ($json_text != null) {
@@ -129,8 +175,10 @@ function nominatum_query($location) {
       $address = $json->{'address'};
       if ($address != null) {
         foreach(array('hamlet', 'village', 'suburb', 'city_district', 'town', 'municipality', 'city') as $selector) {
-          $retval = $address->{$selector};
-          if ($retval != null) break;
+	        if (property_exists($address, $selector)) {
+	          $retval = $address->{$selector};
+            if ($retval != null) break;
+          }
         }
       }
     }
@@ -139,59 +187,103 @@ function nominatum_query($location) {
 }
 
 /**********************************************************************
- * Called by postie to process a received email and its attachment. If
- * the attachment has a name of the form '*.ais' then the post is
- * assumed to be an AIS log upload sent by ais-log-uploader.
- * The AIS log attachment is processed into a set of Leaflet shortcodes
- * that describe a map representing the AIS log.
- * Some log data is processed to add descriptive text to the nascent
- * post.
+ * Parse a JSON text representation of the Signal K static data model
+ * into an HTML table summarising the current state of the vessel's
+ * tanks and batteries
  * 
- * @param post - the candidate post prepared by postie.
- * @return - the transformed post ready for insertion into WordPress.
+ * @param $url - the url of the JSON file to be parsed.
+ * @return - string containing the parse result.
  */
+function parse_json_attachment($url) {
+  $retval = "<div class='end-of-day'>\n";
+  $json = json_decode(file_get_contents($url), true);
+  if ($json) {
+    $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
+    foreach ($json['tanks'] as $tanktype => $tankids) {
+      foreach ($tankids as $tankid => $tank) {
+        if (array_key_exists('currentLevel', $tank)) {
+          $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
+          $retval .= "<div style='flex: 0.5;'>Tank {$tankid} ({$tanktype})</div>";
+          $retval .= "<div style='flex: 0.5;'>" . round($tank['currentLevel']['value'] * 100) . "%</div>\n";
+          $retval .= "</div>";
+	      }
+      }
+    }
+    $retval .= "</div>";
+    $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
+    foreach ($json['electrical']['batteries'] as $batteryid => $battery) {
+      if (array_key_exists('capacity', $battery) && array_key_exists('stateOfCharge', $battery['capacity'])) {
+          $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
+          $retval .= "<div style='flex: 0.5;'>Battery {$batteryid}</div>";
+          $retval .= "<div style='flex: 0.5;'>" . round($battery['capacity']['stateOfCharge']['value'] * 100) . "%</div>\n";
+          $retval .= "</div>";
+      }
+    }
+    $retval .= "</div>";
+  }
+  $retval .= "</div>\n";
+  return($retval);
+}
+
+
 function postie_log_attachment_processor_function($post) {
   $ais_regex = "/<a href=\"(.*\.ais)\">.*<\/a>/";
+  $json_regex = "/<a href=\"(.*\.json)\">.*<\/a>/";
+
   $matches = array();
   $change_attachment_storage_location = false;
-  $post_id = isset($post['ID']) ? $post['ID'] : 0;
 
   if (preg_match($ais_regex, $post['post_content'], $matches)) {
-    $url_path = parse_url($matches[1])['path'];
-    $ais_log = SimpleAisDecoder::decode_file(
-      $_SERVER['DOCUMENT_ROOT'] . $url_path,
-      array('type' => null, 'repeat' => null, 'mmsi' => null, 'accuracy' => null)
-    );
-    if (count($ais_log) > 0) {
-      if (count($ais_log) == 1) { // One log entry means moored
-        $replacement = "[leaflet-map lat={$ais_log[0]['lat']} lng={$ais_log[0]['lon']} zoom=13]\n";
+    $attachment_filename = $_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path'];
+    $log = SimpleAisDecoder::decode_file($attachment_filename, array('type' => null, 'repeat' => null, 'mmsi' => null, 'accuracy' => null));
+    if (count($log) > 0) {
+      if (count($log) == 1) { // One log entry means moored
+        $retval = "[leaflet-map lat={$log[0]['lat']} lng={$log[0]['lon']} zoom=13]\n";
       } else { // Otherwise must be cruising
-        $replacement = "[leaflet-map fitbounds]\n";
-        $replacement .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['lat'] . "," . $value['lon'], $ais_log)) . "']\n";
+        $retval = "[leaflet-map fitbounds]\n";
+        $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['lat'] . "," . $value['lon'], $log)) . "']\n";
       }
       // Add a marker for every moored position.
-      $stops = array_filter($ais_log, function($ais) { return($ais['status'] == 5); });
-      foreach ($stops as $stop) {
-        $marker_props = "svg iconsize='18,12' color='" . array('#7f7f7f','#007f00','#00007f')[$stop['smi']] . "'";
-        foreach ($stop as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
-        $replacement .= "[leaflet-marker {$marker_props} lat={$ais_log[0]['lat']} lng={$ais_log[0]['lon']}]{$popup}[/leaflet-marker]\n";
+      $moored_positions = array_filter($log, function($position) { return($position['status'] == 5); });
+      if (count($moored_positions) > 0) {
+      	foreach ($moored_positions as $position) {
+        	$marker_props = "svg iconsize='18,12' color='" . array('#7f7f7f','#007f00','#00007f')[$position['smi']] . "'";
+		      $popup = "";
+        	foreach ($position as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
+        	$retval .= "[leaflet-marker {$marker_props} lat={$log[0]['lat']} lng={$log[0]['lon']}]{$popup}[/leaflet-marker]\n";
+      	}
+        // Reverse geo-lookup to get start and stop place names
+        $start = nominatum_query($moored_positions[0]['lat'], $moored_positions[0]['lon']);
+        $end = "";
+        if (count($moored_positions) > 1) {
+          $end = " to " . nominatum_query($moored_positions[count($moored_positions)-1]['lat'], $moored_positions[count($moored_positions)-1]['lon']);
+        }
+        $retval = "<h2>{$start}{$end}</h2><p>" . $retval;
       }
-      $start = nominatum_query($stops[0]['lat'], $stops[0]['lon']);
-      if (count($stops) > 1) {
-        $end = " to " . nominatum_query($stops[count($stops)-1]['lat'], $stops[count($stops)-1]['lon']);
-      }
-      $replacement = "<h2>{$start}{$end}</h2><p>" . $replacement;
-    }
-    
-    $post['post_content'] = str_replace($matches[0], $replacement, $post['post_content']);
-  }
-  
-  $change_attachment_storage_location = true;
-  
 
-  if ($change_attachment_storage_location) {
-    add_filter('upload_dir', 'log_upload_dir');
+      $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
+      $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
+      $retval .= "    <div style='flex: 0.5;'>Distance travelled</div>\n";
+      $retval .= "    <div style='flex: 0.5;'>" . distanceTravelled($log) . "km</div>\n";
+      $retval .= "  </div>\n";
+      $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
+      $retval .= "    <div style='flex: 0.5;'>Engine run-time</div>\n";
+      $retval .= "    <div style='flex: 0.5;'>" . engineRuntime($attachment_filename) . "</div>\n";
+      $retval .= "  </div>\n";
+      $retval .= "</div>\n";
+
+      $post['post_content'] = str_replace($matches[0], $retval, $post['post_content']);
+    }
   }
+
+  if (preg_match($json_regex, $post['post_content'], $matches)) {
+    $content = parse_json_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path']);
+    $post['post_content'] = str_replace($matches[0], $content, $post['post_content']);
+  }
+
+  $change_attachment_storage_location = true;
+
+  if ($change_attachment_storage_location) { add_filter('upload_dir', 'log_upload_dir'); }
 
   return($post);
 }
