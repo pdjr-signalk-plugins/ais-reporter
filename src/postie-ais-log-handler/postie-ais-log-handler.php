@@ -264,7 +264,7 @@ function render_ais_attachment($url) {
     $moored_log = array_filter($log, function($log_item) { return($log_item['ais']['status'] == 5); });
     if (count($moored_log) > 0) {
       foreach ($moored_log as $log_item) {
-        $marker_props = "svg iconsize='18,12' color='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']] . "'";
+        $marker_props = "svg iconsize='18,12' background='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']] . "'";
         $popup = "<b>" . $log_item['timestamp'] . "</b><br>";
         foreach ($log_item['ais'] as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
         $retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']} lng={$log[0]['ais']['lon']}]{$popup}[/leaflet-marker]\n";
