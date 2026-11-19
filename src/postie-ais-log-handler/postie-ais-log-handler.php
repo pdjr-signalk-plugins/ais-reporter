@@ -230,6 +230,19 @@ function render_json_attachment($url) {
           $retval .= "</div>";
       }
     }
+    if (array_key_exists('solar', $json['electrical'])) {
+      $solarYield = 0;
+      foreach ($json['electrical']['solar'] as $solarid => $solar) {
+        if (array_key_exists('yieldToday', $solar) && array_key_exists('value', $solar['yieldToday'])) {
+          $solarYield += $solar['yieldToday']['value'];
+        }
+      }
+      $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
+      $retval .= "<div style='flex: 0.5;'>Solar yield today</div>";
+      $retval .= "<div style='flex: 0.5;'>{$solarYield}J</div>\n";
+      $retval .= "</div>";
+    }
+
     $retval .= "</div>";
   }
   $retval .= "</div>\n";
