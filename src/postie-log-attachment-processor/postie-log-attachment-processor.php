@@ -35,7 +35,6 @@ class SimpleAisDecoder {
         $timestamp = trim(strstr($line, ' ', true));
         $msg = trim(strstr($line, ' '));
         if (str_starts_with($msg, '!AIVDM,')) {
-          $overrides['timestamp'] = $timestamp;
           if ($decoded_msg = SimpleAisDecoder::decode($msg, $overrides)) {
             $retval[] = array('timestamp' => $timestamp, 'ais' => $decoded_msg);
           } else {
@@ -266,15 +265,15 @@ function render_ais_attachment($url) {
     if (count($moored_log) > 0) {
       foreach ($moored_log as $log_item) {
         $marker_props = "svg iconsize='18,12' color='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']] . "'";
-		    $popup = "";
+        $popup = "<b>{$log_item['timestamp']}</b><br>";
         foreach ($log_item['ais'] as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
         $retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']} lng={$log[0]['ais']['lon']}]{$popup}[/leaflet-marker]\n";
       }
       // Reverse geo-lookup to get start and stop place names
-      $start = nominatum_query($moored_positions[0]['ais']['lat'], $moored_positions[0]['ais']['lon']);
+      $start = nominatum_query($moored_log[0]['ais']['lat'], $moored_log[0]['ais']['lon']);
       $end = "";
-      if (count($moored_positions) > 1) {
-        $end = " to " . nominatum_query($moored_positions[count($moored_positions)-1]['ais']['lat'], $moored_positions[count($moored_positions)-1]['ais']['lon']);
+      if (count($moored_log) > 1) {
+        $end = " to " . nominatum_query($moored_log[count($moored_log)-1]['ais']['lat'], $moored_log[count($moored_log)-1]['ais']['lon']);
       }
       $retval = "<h2>{$start}{$end}</h2><p>" . $retval;
     }
@@ -283,22 +282,25 @@ function render_ais_attachment($url) {
   return($retval);
 }
 
-function postie_log_attachment_processor_render_attachments($post) {
+/**********************************************************************
+ * The post's AIS and JSON attachments are rendered here.
+ */
+function postie_log_attachment_processor_postie_post_before($post) {
   $ais_regex = "/<a href=\"(.*\.ais)\">.*<\/a>/";
   $json_regex = "/<a href=\"(.*\.json)\">.*<\/a>/";
   $matches = array();
   $change_attachment_storage_location = false;
 
-  // Render ais attachments
+  // Replace AIS attachment URL with derived content
   if (preg_match($ais_regex, $post['post_content'], $matches)) {    
     $post['post_content'] = str_replace(
       $matches[0],
-      render_ais_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url(matches[1])['path']),
+      render_ais_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path']),
       $post['post_content']
     );
   }
 
-  // If there is a JSON attachment then render it into the the output.
+  // Replace JSON attachment URL with derived content
   if (preg_match($json_regex, $post['post_content'], $matches)) {
     $post['post_content'] = str_replace(
       $matches[0],
@@ -314,7 +316,11 @@ function postie_log_attachment_processor_render_attachments($post) {
   return($post);
 }
 
-function postie_log_attachment_processor_cleanup($post) {
+/**********************************************************************
+ * The post's JSON attachment is not required after rendering by the
+ * the postie_post_before fiter, so we delete it here.
+ */
+function postie_log_attachment_processor_postie_post_after($post) {
   remove_filter('upload_dir', 'log_upload_dir');
 
   $attachments = get_attached_media( '', $post['ID'] );
@@ -325,10 +331,9 @@ function postie_log_attachment_processor_cleanup($post) {
       }
     }
   }
-
 }
 
-add_filter('postie_post_before', 'postie_log_attachment_processor_render_attachments', 10, 2);
-add_filter('postie_post_after', 'postie_log_attachment_processor_cleanup');
+add_filter('postie_post_before', 'postie_log_attachment_processor_postie_post_before', 10, 2);
+add_filter('postie_post_after', 'postie_log_attachment_processor_postie_post_after');
 
 ?>
