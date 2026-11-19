@@ -14,7 +14,7 @@
 
 class SimpleAisDecoder {
   public static function decode_file(string $file, $overrides = []) {
-    $retval = [];
+    $retval = array();
     if (($fn = fopen($file, "r")) !== false) {
       while (($line = fgets($fn)) !== false) {
         $timestamp = trim(strstr($line, ' ', true));
@@ -22,7 +22,7 @@ class SimpleAisDecoder {
         if (str_starts_with($msg, '!AIVDM,')) {
           $overrides['timestamp'] = $timestamp;
           if ($decoded_msg = SimpleAisDecoder::decode($msg, $overrides)) {
-            $retval[] = $decoded_msg;
+            $retval[] = array('timestamp' => $timestamp, 'ais' => $decoded_msg);
           } else {
             DebugEcho(">>> error decoding {$msg}");
           }
@@ -137,21 +137,18 @@ function distanceTravelled($log) {
   $retval = 0;
   if (count($log) > 1) {
     for ($i = 0; $i < ($count($log) - 1); $i++) {
-      $retval += haversineGreatCircleDistance($log[$i]['lat'], $log[$i]['lon'], $log[$i + 1]['lat'], $log[$i + 1]['lon']);
+      $retval += haversineGreatCircleDistance($log[$i]['ais']['lat'], $log[$i]['ais']['lon'], $log[$i + 1]['ais']['lat'], $log[$i + 1]['ais']['lon']);
     }
   }
   return($retval);
 }
 
-function engineRuntime($file) {
+function engineRuntime($log) {
   $retval = "00:00";
-  $start = null; $end = null;
-  if (($fn = fopen($file, "r")) !== false) {
-    while (($line = fgets($fn)) !== false) {
-      if ($start == null) { $start = trim(strstr($line, ' ', true)); $end = $start; }
-      $end = trim(strstr($line, ' ', true));
-    }
-    $retval = strtotime($end) - strtotime($start);
+  if (count($log) > 1) {
+    $start_timestamp = strtotime($log[0]['timestamp']);
+    $end_timestamp = strtotime($log[count($log)-1]['timestamp']);
+    $retval = $end_timestamp - $start_timestamp;
     $retval = sprintf("%02d:%02d", intdiv($retval, 3600), intdiv(($retval % 3600), 60));
   }
   return($retval);
@@ -238,37 +235,38 @@ function postie_log_attachment_processor_function($post) {
     $log = SimpleAisDecoder::decode_file($attachment_filename, array('type' => null, 'repeat' => null, 'mmsi' => null, 'accuracy' => null));
     if (count($log) > 0) {
       if (count($log) == 1) { // One log entry means moored
-        $retval = "[leaflet-map lat={$log[0]['lat']} lng={$log[0]['lon']} zoom=13]\n";
+        $retval = "[leaflet-map lat={$log[0]['ais']['lat']} lng={$log[0]['ais']['lon']} zoom=13]\n";
       } else { // Otherwise must be cruising
         $retval = "[leaflet-map fitbounds]\n";
-        $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['lat'] . "," . $value['lon'], $log)) . "']\n";
+        $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['ais']['lat'] . "," . $value['ais']['lon'], $log)) . "']\n";
       }
       // Add a marker for every moored position.
-      $moored_positions = array_filter($log, function($position) { return($position['status'] == 5); });
-      if (count($moored_positions) > 0) {
-      	foreach ($moored_positions as $position) {
-        	$marker_props = "svg iconsize='18,12' color='" . array('#7f7f7f','#007f00','#00007f')[$position['smi']] . "'";
+      $moored_log = array_filter($log, function($log_item) { return($log_item['ais']['status'] == 5); });
+      if (count($moored_log) > 0) {
+      	foreach ($moored_log as $log_item) {
+        	$marker_props = "svg iconsize='18,12' color='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']] . "'";
 		      $popup = "";
-        	foreach ($position as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
-        	$retval .= "[leaflet-marker {$marker_props} lat={$log[0]['lat']} lng={$log[0]['lon']}]{$popup}[/leaflet-marker]\n";
+        	foreach ($log_item['ais'] as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
+        	$retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']} lng={$log[0]['ais']['lon']}]{$popup}[/leaflet-marker]\n";
       	}
         // Reverse geo-lookup to get start and stop place names
-        $start = nominatum_query($moored_positions[0]['lat'], $moored_positions[0]['lon']);
+        $start = nominatum_query($moored_positions[0]['ais']['lat'], $moored_positions[0]['ais']['lon']);
         $end = "";
         if (count($moored_positions) > 1) {
-          $end = " to " . nominatum_query($moored_positions[count($moored_positions)-1]['lat'], $moored_positions[count($moored_positions)-1]['lon']);
+          $end = " to " . nominatum_query($moored_positions[count($moored_positions)-1]['ais']['lat'], $moored_positions[count($moored_positions)-1]['ais']['lon']);
         }
         $retval = "<h2>{$start}{$end}</h2><p>" . $retval;
       }
 
+      $moving_log = array_filter($log, function($log_item) { return($log_item['ais']['status'] != 5); });
       $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
       $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
       $retval .= "    <div style='flex: 0.5;'>Distance travelled</div>\n";
-      $retval .= "    <div style='flex: 0.5;'>" . distanceTravelled($log) . "km</div>\n";
+      $retval .= "    <div style='flex: 0.5;'>" . distanceTravelled($moving_log) . "km</div>\n";
       $retval .= "  </div>\n";
       $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
       $retval .= "    <div style='flex: 0.5;'>Engine run-time</div>\n";
-      $retval .= "    <div style='flex: 0.5;'>" . engineRuntime($attachment_filename) . "</div>\n";
+      $retval .= "    <div style='flex: 0.5;'>" . engineRuntime($moving_log) . " (hh:mm)</div>\n";
       $retval .= "  </div>\n";
       $retval .= "</div>\n";
 
