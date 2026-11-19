@@ -323,11 +323,11 @@ function postie_log_attachment_processor_postie_post_before($post) {
 function postie_log_attachment_processor_postie_post_after($post) {
   remove_filter('upload_dir', 'log_upload_dir');
 
-  $attachments = get_attached_media( '', $post['ID'] );
+  $attachments = get_attached_media('', $post['ID'] );
   if (!empty($attachments)) {
     foreach ( $attachments as $attachment ) {
-      if ($attachment->post_mime_type === 'text/json') {
-        wp_delete_attachment( $attachment->ID, true );
+      if ($attachment->post_mime_type === 'application/json') {
+        wp_delete_attachment($attachment->ID, true);
       }
     }
   }
