@@ -28,7 +28,7 @@ Configure Postie so that it scans the email account once every hour.
 Login to your WordPress site host, download the git repository and copy
 `postie-ais-log-handler.php` to your WordPress site.
 The following example assumes WordPress is installed at
-`/var/www/wordpress` - adjust as necessary.
+`/srv/www/wordpress` - adjust as necessary.
 
 ```bash
 $> cd ~
