@@ -42,7 +42,7 @@ Delete the git repository.
 $> rm -r ais-reporter
 ```
 
-# Author
+## Author
 
 Paul Reeve (preeve_at_pdjr_dot_eu)
 
