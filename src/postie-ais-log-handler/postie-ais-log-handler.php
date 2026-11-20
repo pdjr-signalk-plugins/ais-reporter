@@ -317,16 +317,14 @@ function render_ais_attachment($url) {
       // Reverse geo-lookup to get start and stop place names
       $start = null; $end = null; $subhead = null; $tags = array();
       $start = nominatum_query($moored_log[0]['ais']['lat']['value'], $moored_log[0]['ais']['lon']['value']);
-      if ($start != null) {
-        $tags[] = $start; $subhead = $start;
-        if (count($moored_log) > 1) {
-          $end = nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
-          if ($end != null) {
-            $tags[] = $end; $subhead .= " to {$end}";
-          }
-        }
+      if ($start != null) $tags[] = $start;
+      $subhead = ($start != null)?$start:"{$moored_log[0]['ais']['lat']['value']},{$moored_log[0]['ais']['lon']['value']}";
+      if (count($moored_log) > 1) {
+        $end = nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
+        if ($end != null) $tags[] = $end;
+        $subhead .= " to " . ($end != null)?$end:"{$moored_log[count($moored_log)-1]['ais']['lat']['value']},{$moored_log[count($moored_log)-1]['ais']['lon']['value']}";
       }
-      if ($subhead != null) $retval = "<h2>{$subhead}</h2><p>" . $retval;
+      $retval = "<h2>{$subhead}</h2><p>" . $retval;
       wp_set_post_tags($post['ID'], $tags, true);
     }
     $retval .= render_log_abstract($moored_log);
