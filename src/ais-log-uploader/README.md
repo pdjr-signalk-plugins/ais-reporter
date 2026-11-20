@@ -1,5 +1,12 @@
 # ais-log-uploader
 
+`ais-log-uploader` is a stand-alone server which listens on a UDP port
+for incoming AIS !AIVDM position reports, collating received reports
+into a log which is eventually transmitted to a specified email address.
+
+
+
+specified over a UDP
 ## Installation
 
 Grab the git repository and install `ais-log-uploader` and its
