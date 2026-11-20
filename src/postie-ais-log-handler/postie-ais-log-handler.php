@@ -12,6 +12,10 @@
  * data is processed to add descriptive text to the nascent post.
  */
 
+$post_discard_attachments = array('application/json');
+$nominatum_url = 'https://nominatim.openstreetmap.org/reverse?';
+$nominatum_address_properties = array('hamlet', 'village', 'suburb', 'city_district', 'town', 'municipality', 'city');
+
 class SimpleAisDecoder {
 
   /********************************************************************
@@ -176,8 +180,9 @@ function engineRuntime($log) {
  * @param return - recovered location name or "lat, lon" if mot found.
  */
 function nominatum_query($lat, $lon) {
+  global $nominatum_url, $nominatum_address_properties;
   $retval = null;
-  $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$lat}&lon={$lon}";
+  $url = "{$nominatum_url}format=json&lat={$lat}&lon={$lon}";
   $context = stream_context_create([ 'http' => [ 'user_agent' => 'Simon Ferndriger', ], ]);
   $json_text = file_get_contents($url, false, $context);
   if ($json_text != null) {
@@ -185,7 +190,7 @@ function nominatum_query($lat, $lon) {
     if ($json != null) {
       $address = $json->{'address'};
       if ($address != null) {
-        foreach(array('hamlet', 'village', 'suburb', 'city_district', 'town', 'municipality', 'city') as $selector) {
+        foreach($nominatum_address_properties as $selector) {
 	        if (property_exists($address, $selector)) {
 	          $retval = $address->{$selector};
             if ($retval != null) break;
@@ -334,12 +339,13 @@ function postie_log_attachment_processor_postie_post_before($post) {
  * the postie_post_before fiter, so we delete it here.
  */
 function postie_log_attachment_processor_postie_post_after($post) {
+  global $post_discard_attachments;
   remove_filter('upload_dir', 'log_upload_dir');
 
   $attachments = get_attached_media('', $post['ID'] );
   if (!empty($attachments)) {
     foreach ( $attachments as $attachment ) {
-      if ($attachment->post_mime_type === 'application/json') {
+      if (in_array($attachment->post_mime_type, $post_discard_attachments, true)) {
         wp_delete_attachment($attachment->ID, true);
       }
     }
