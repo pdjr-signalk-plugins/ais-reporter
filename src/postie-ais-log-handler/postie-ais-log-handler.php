@@ -212,7 +212,7 @@ function nominatum_query($lat, $lon) {
       }
     }
   }
-  return(($retval)?$retval:"{$location[0]}, {$location[1]}");
+  return($retval);
 }
 
 /**********************************************************************
@@ -304,22 +304,30 @@ function render_ais_attachment($url) {
       $retval = "[leaflet-map fitbounds]\n";
       $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['ais']['lat']['value'] . "," . $value['ais']['lon']['value'], $log)) . "']\n";
     }
+
     // Add a marker for every moored position.
     $moored_log = array_filter($log, function($log_item) { return($log_item['ais']['status']['value'] == 5); });
     if (count($moored_log) > 0) {
       foreach ($moored_log as $log_item) {
         $marker_props = "svg iconsize='18,12' background='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']['value']] . "'";
-        $date = new DateTimeImmutable($log_item['timestamp']);
-        $popup = "<b>" . $date->format('H:i:s') . "</b>" . render_log_item_popup($log_item);
+        $popup = "<b>" . (new DateTimeImmutable($log_item['timestamp']))->format('H:i:s') . "</b>" . render_log_item_popup($log_item);
         $retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']}]{$popup}[/leaflet-marker]\n";
       }
+
       // Reverse geo-lookup to get start and stop place names
+      $start = null; $end = null; $subhead = null; $tags = array();
       $start = nominatum_query($moored_log[0]['ais']['lat']['value'], $moored_log[0]['ais']['lon']['value']);
-      $end = "";
-      if (count($moored_log) > 1) {
-        $end = " to " . nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
+      if ($start != null) {
+        $tags[] = $start; $subhead = $start;
+        if (count($moored_log) > 1) {
+          $end = nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
+          if ($end != null) {
+            $tags[] = $end; $subhead .= " to {$end}";
+          }
+        }
       }
-      $retval = "<h2>{$start}{$end}</h2><p>" . $retval;
+      if ($subhead != null) $retval = "<h2>{$subhead}</h2><p>" . $retval;
+      wp_set_post_tags($post['ID'], $tags, true);
     }
     $retval .= render_log_abstract($moored_log);
   }
