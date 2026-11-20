@@ -28,18 +28,18 @@ Configure Postie so that it scans the email account once every hour.
 Login to your WordPress site host, download the git repository and copy
 `postie-ais-log-handler.php` to your WordPress site.
 The following example assumes WordPress is installed at
-`/srv/www/wordpress` - adjust as necessary.
+`/srv/www/wordpress` and runs as user 'www-data' - adjust as necessary.
 
 ```bash
-$> cd ~
-$> git clone https://github.com/pdjr-signalk-plugins/ais-reporter.git
-$> cp ais-reporter/src/postie-ais-log-handler/postie-ais-log-handler.php /var/www/wordpress/wp-content/mu-plugins/
+cd ~
+git clone https://github.com/pdjr-signalk-plugins/ais-reporter.git
+sudo -u www-data cp ais-reporter/src/postie-ais-log-handler/postie-ais-log-handler.php /var/www/wordpress/wp-content/mu-plugins/
 ```
 
 Delete the git repository.
 
 ```bash
-$> rm -r ais-reporter
+rm -r ais-reporter
 ```
 
 ## Author
