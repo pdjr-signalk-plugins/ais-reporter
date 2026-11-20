@@ -239,7 +239,7 @@ function render_json_attachment($url) {
       }
       $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
       $retval .= "<div style='flex: 0.5;'>Solar yield today</div>";
-      $retval .= "<div style='flex: 0.5;'>{$solarYield}J</div>\n";
+      $retval .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield / 3600000) . "kWh</div>\n";
       $retval .= "</div>";
     }
 
