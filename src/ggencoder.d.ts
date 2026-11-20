@@ -27,7 +27,8 @@ declare module 'ggencoder' {
     rot?: number,
     shipname?: string | undefined,
     smi?: number | undefined,
-    sog?: number | undefined
+    sog?: number | undefined,
+    spare?: number | undefined
   }
 
   export class AisEncode {

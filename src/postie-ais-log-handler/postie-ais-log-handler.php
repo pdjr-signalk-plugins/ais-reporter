@@ -15,14 +15,27 @@
 $post_discard_attachments = array('application/json');
 $nominatum_url = 'https://nominatim.openstreetmap.org/reverse?';
 $nominatum_address_properties = array('hamlet', 'village', 'suburb', 'city_district', 'town', 'municipality', 'city');
+$ais_decoder_overrides = array('timestamp' => null,'type' => null, 'repeat' => null, 'mmsi' => null, 'accuracy' => null);
 
 class SimpleAisDecoder {
 
   /********************************************************************
    * Decodes the specified AIS log $file containing lines of the form
+   * 
    *   "timestamp !AIVDM-message"
-   * into an array containing records of the:
-   *   [ 'timestamp' => timestamp, 'ais' => array ]
+   * 
+   * into an array of the form:
+   * 
+   *   [
+   *     'timestamp' => timestamp,
+   *     'ais' => [
+   *       string => [
+   *         'value' => number,
+   *         'units' => string
+   *       ]
+   *     ]
+   *   ]
+   * 
    * where array is an associative array containing the fields of the
    * !AIVDM-message filtered by values passed in $overides.
    * 
@@ -79,25 +92,25 @@ class SimpleAisDecoder {
     // Decode Class A Position Reports (Types 1, 2, 3)
     if (in_array($messageType, [1, 2, 3], true)) {
       $retval = array();
-      $retval['type'] = $messageType;
-      $retval['repeat'] = bindec(substr($bitString, 6, 2));
-      $retval['mmsi'] = bindec(substr($bitString, 8, 30));
-      $retval['status'] = bindec(substr($bitString, 38, 4));
-      $retval['rot'] = pow((self::signedInt(substr($bitString, 42, 8)) / 4.733), 2) * ((self::signedInt(substr($bitString,42,8)) < 0)?-1:1);
-      $retval['sog'] = (bindec(substr($bitString, 50, 10)) / 10.0) * 1.852; // KPH
-      $retval['accuracy'] = bindec(substr($bitString, 60, 1));
-      $retval['lon'] = round(self::signedInt(substr($bitString, 61, 28)) / 600000.0, 4);
-      $retval['lat'] = round(self::signedInt(substr($bitString, 89, 27)) / 600000.0, 4);
-      $retval['cog'] = bindec(substr($bitString, 116, 12)) / 10.0; // Degrees
-      $retval['heading'] = bindec(substr($bitString, 128, 9));
-      $retval['timestamp'] = bindec(substr($bitString, 137, 6));
-      $retval['smi'] = bindec(substr($bitString, 143, 2));
+      $retval['accuracy'] = array('value' => bindec(substr($bitString, 60, 1)), 'units' => '');
+      $retval['cog'] = array('value' => bindec(substr($bitString, 116, 12)) / 10.0, 'units' => 'deg'); // Degrees
+      $retval['heading'] = array('value' => bindec(substr($bitString, 128, 9)), 'units' => 'deg');
+      $retval['lat'] = array('value' => round(self::signedInt(substr($bitString, 89, 27)) / 600000.0, 4), 'units' => 'deg');
+      $retval['lon'] = array('value' => round(self::signedInt(substr($bitString, 61, 28)) / 600000.0, 4), 'units' => 'deg');
+      $retval['mmsi'] = array('value' => bindec(substr($bitString, 8, 30)), 'units' => '');
+      $retval['repeat'] = array('value' => bindec(substr($bitString, 6, 2)), 'units' => '');
+      $retval['rot'] = array('value' => round(pow((self::signedInt(substr($bitString, 42, 8)) / 4.733), 2) * ((self::signedInt(substr($bitString,42,8)) < 0)?-1:1), 2), 'units' => 'deg/min');
+      $retval['smi'] = array('value' => bindec(substr($bitString, 143, 2)), 'units' => '');
+      $retval['sog'] = array('value' => (bindec(substr($bitString, 50, 10)) / 10.0) * 1.852, 'units' => 'kph'); // KPH
+      $retval['status'] = array('value' => bindec(substr($bitString, 38, 4)), 'units' => '');
+      $retval['timestamp'] = array('value' => bindec(substr($bitString, 137, 6)), 'units' => '');
+      $retval['type'] = array('value' => $messageType, 'units' => '');
 
       foreach ($overrides as $key => $value) {
         if ($value == null) {
           unset($retval[$key]);
         } else {
-          $retval[$key] = $value;
+          $retval[$key] = array('value' => $value, 'units' => '');
         }
       }
     }
@@ -155,7 +168,7 @@ function distanceTravelled($log) {
   $retval = 0;
   if (count($log) > 1) {
     for ($i = 0; $i < ($count($log) - 1); $i++) {
-      $retval += haversineGreatCircleDistance($log[$i]['ais']['lat'], $log[$i]['ais']['lon'], $log[$i + 1]['ais']['lat'], $log[$i + 1]['ais']['lon']);
+      $retval += haversineGreatCircleDistance($log[$i]['ais']['lat']['value'], $log[$i]['ais']['lon']['value'], $log[$i + 1]['ais']['lat']['value'], $log[$i + 1]['ais']['lon']['value']);
     }
   }
   return($retval);
@@ -254,6 +267,18 @@ function render_json_attachment($url) {
   return($retval);
 }
 
+function render_log_item_popup($log_item) {
+  $retval = "<div style='display: flex; flex-direction: column; width: 200px; background: #e0e0e0; margin: -7px 0;'>";
+  foreach ($log_item['ais'] as $key => $value) {
+    $retval .= "<div style='display: flex; flex-direction: row; width: 100%; margin: -7px 0;'>";
+    $retval .= "<div style='flex: 0.5;'>{$key}</div>";
+    $retval .= "<div style='flex: 0.5;'>{$value['value']}&nbsp;{$value['units']}</div>";
+    $retval .= "</div>"; 
+  }
+  $retval .= "</div>";
+  return($retval);
+}
+
 function render_log_abstract($log) {
   $retval = "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
   $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
@@ -269,30 +294,30 @@ function render_log_abstract($log) {
 }
 
 function render_ais_attachment($url) {
+  global $ais_decoder_overrides;
   $retval = "";
-  $log = SimpleAisDecoder::decode_file($url, array('type' => null, 'repeat' => null, 'mmsi' => null, 'accuracy' => null));
+  $log = SimpleAisDecoder::decode_file($url, $ais_decoder_overrides);
   if (count($log) > 0) {
     if (count($log) == 1) { // One log entry means moored
-      $retval = "[leaflet-map lat={$log[0]['ais']['lat']} lng={$log[0]['ais']['lon']} zoom=13]\n";
+      $retval = "[leaflet-map lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']} zoom=13]\n";
     } else { // Otherwise must be cruising
       $retval = "[leaflet-map fitbounds]\n";
-      $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['ais']['lat'] . "," . $value['ais']['lon'], $log)) . "']\n";
+      $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['ais']['lat']['value'] . "," . $value['ais']['lon']['value'], $log)) . "']\n";
     }
     // Add a marker for every moored position.
-    $moored_log = array_filter($log, function($log_item) { return($log_item['ais']['status'] == 5); });
+    $moored_log = array_filter($log, function($log_item) { return($log_item['ais']['status']['value'] == 5); });
     if (count($moored_log) > 0) {
       foreach ($moored_log as $log_item) {
-        $marker_props = "svg iconsize='18,12' background='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']] . "'";
+        $marker_props = "svg iconsize='18,12' background='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']['value']] . "'";
         $date = new DateTimeImmutable($log_item['timestamp']);
-        $popup = "<b>" . $date->format('H:i:s') . "</b><p>";
-        foreach ($log_item['ais'] as $key => $value) $popup .= ($key . " -> " . $value . "<br>");
-        $retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']} lng={$log[0]['ais']['lon']}]{$popup}[/leaflet-marker]\n";
+        $popup = "<b>" . $date->format('H:i:s') . "</b>" . render_log_item_popup($log_item);
+        $retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']}]{$popup}[/leaflet-marker]\n";
       }
       // Reverse geo-lookup to get start and stop place names
-      $start = nominatum_query($moored_log[0]['ais']['lat'], $moored_log[0]['ais']['lon']);
+      $start = nominatum_query($moored_log[0]['ais']['lat']['value'], $moored_log[0]['ais']['lon']['value']);
       $end = "";
       if (count($moored_log) > 1) {
-        $end = " to " . nominatum_query($moored_log[count($moored_log)-1]['ais']['lat'], $moored_log[count($moored_log)-1]['ais']['lon']);
+        $end = " to " . nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
       }
       $retval = "<h2>{$start}{$end}</h2><p>" . $retval;
     }
