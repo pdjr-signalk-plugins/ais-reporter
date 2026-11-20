@@ -9,6 +9,13 @@ The plugin operates alongside the WordPress
 plugin which is responsible for all email handling and WordPress
 integration.
 
+## Operating principles
+
+* Post are assigned to the 'log' category.
+* Each post is decorated with a number of tags.
+* Attachments of type 'text/ais' are saved as WordPress media.
+* Attachments of type 'application/json' are deleted after processing.
+
 ## Installation
 
 `postie-ais-log-handler.php` implements the final stage of an ais log
