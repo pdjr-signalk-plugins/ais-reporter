@@ -95,8 +95,8 @@ class SimpleAisDecoder {
       $retval['accuracy'] = array('value' => bindec(substr($bitString, 60, 1)), 'units' => '');
       $retval['cog'] = array('value' => bindec(substr($bitString, 116, 12)) / 10.0, 'units' => 'deg'); // Degrees
       $retval['heading'] = array('value' => bindec(substr($bitString, 128, 9)), 'units' => 'deg');
-      $retval['lat'] = array('value' => round(self::signedInt(substr($bitString, 89, 27)) / 600000.0, 4), 'units' => 'deg');
-      $retval['lon'] = array('value' => round(self::signedInt(substr($bitString, 61, 28)) / 600000.0, 4), 'units' => 'deg');
+      $retval['lat'] = array('value' => round(self::signedInt(substr($bitString, 89, 27)) / 600000.0, 6), 'units' => 'deg');
+      $retval['lon'] = array('value' => round(self::signedInt(substr($bitString, 61, 28)) / 600000.0, 6), 'units' => 'deg');
       $retval['mmsi'] = array('value' => bindec(substr($bitString, 8, 30)), 'units' => '');
       $retval['repeat'] = array('value' => bindec(substr($bitString, 6, 2)), 'units' => '');
       $retval['rot'] = array('value' => round(pow((self::signedInt(substr($bitString, 42, 8)) / 4.733), 2) * ((self::signedInt(substr($bitString,42,8)) < 0)?-1:1), 2), 'units' => 'deg/min');
@@ -257,7 +257,7 @@ function render_json_attachment($url) {
       }
       $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
       $retval .= "<div style='flex: 0.5;'>Solar yield today</div>";
-      $retval .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield / 3600000) . "kWh</div>\n";
+      $retval .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield / 3600000) . " kWh</div>\n";
       $retval .= "</div>";
     }
 
@@ -283,7 +283,7 @@ function render_log_abstract($log) {
   $retval = "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
   $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
   $retval .= "    <div style='flex: 0.5;'>Distance travelled</div>\n";
-  $retval .= "    <div style='flex: 0.5;'>" . distanceTravelled($log) . "km</div>\n";
+  $retval .= "    <div style='flex: 0.5;'>" . distanceTravelled($log) . " km</div>\n";
   $retval .= "  </div>\n";
   $retval .= "  <div style='display: flex; flex-direction: row; width: 100%;'>\n";
   $retval .= "    <div style='flex: 0.5;'>Engine run-time</div>\n";
