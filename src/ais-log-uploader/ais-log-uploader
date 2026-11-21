@@ -1,127 +1,58 @@
 #!/bin/bash
-# NAME
-#   ais-log-uploader - accumulate/upload AIS data to an email address.
-# USAGE
-#   usage: ais-log-uploader -c [-a accuracy] [-e filename] [-m count] [-p port] [-r recipient]
-#   usage: ais-log-uploader [-a accuracy] [-h] [-m count] [-p port] [-r recipient] [-v]
-# DESCRIPTION
-#   ais-log-uploader is a server which listens on a UDP port for AIS
-#   !AIVDM position reports. Consecutive reports which refer to the
-#   same geographic location are discarded and all other messages are
-#   timestamped and logged. At the end of each day the assembled log
-#   is emailed to a specified recipient and a new log started for the
-#   new day.
-#
-#   The programs operation is defined by four properties which define
-#   its behaviour.
-#
-#   ACCURACY is an integer value which specifies the number of
-#   decimal places in latitude and longitude values which should be
-#   considered significant when identifying duplicate position reports.
-#   Default is 4. 
-#
-#   MESSAGES is an integer value which triggers mailing of the current
-#   log after the specified number of UDP messages have been received
-#   rather than at the end of the day. Useful for testing. Defaults to
-#   0 (disabled).
-#
-#   FILENAME is a filename or URL which contains or returns a JSON text
-#   object that is attached to the end-of-day email alongside the
-#   assembled log.  
-#
-#   PORT is an integer value which specifies the UDP port on which the
-#   program should listen for incoming AIS reports. Defaults to 12345.
-#
-#   RECIPIENT is an email address to which consolidated log data should
-#   sent. Defaults to "someuser@somwhere.com" and must be set to an
-#   appropriate value.
-#
-#   The program can be invoked in configuration mode which allows these
-#   persistent configuration values to be displayed and updated.
-#
-#   Once configured ais-log-uploader is typically run as a service
-#   under systemd.
-# PROGRAM OPTIONS
-#   The following options are available. 
-#
-#   -a introduces an integer which sets ACCURACY.
-#
-#   -c runs the program in configuration mode. On its own the switch
-#      simply reports the program configuration. If used with any of
-#      -a, -m, -p or -r the root user can update the in-built program
-#      configuration.
-#
-#   -e introduces a filename which identifies an end-of-day attachment.
-#
-#   -h print (this) help information.
-#
-#   -m introduces an integer which sets MESSAGES.
-#
-#   -p introduces an integer which set PORT.
-#
-#   -r introduces an email address which sets RECIPIENT.
-#
-#   -v print diagnostics
 
 AISDECODE="/home/preeve/.local/bin/ais-decode -j"
 BASENAME="/usr/bin/basename"
 BC=/usr/bin/bc
+CAT=/usr/bin/cat
 CURL=/usr/bin/curl
+GREP=/usr/bin/grep
 JQ=/usr/bin/jq
 MIMECONSTRUCT=/usr/bin/mime-construct
 REALPATH=/usr/bin/realpath
 SED=/usr/bin/sed
 SOCAT=/usr/bin/socat
+TAC=/usr/bin/tac
 TS="/usr/bin/ts %Y%m%dT%H%M%S"
 
 MY_NAME=$(${BASENAME} ${0})
-ACCURACY=4
+
+ATTACHMENTS=(http://192.168.1.1:3000/signalk/v1/api/vessels/self/)
 CONFIGURE=no
-FILENAME=https://192.168.1.5/signalk/v1/api/vessels/self/
-MESSAGES=0
+DEBUG=no
 PORT=12345
 RECIPIENT=wordpress@pdjr.eu
 VERBOSE=no
+ACCURACY=4
 
 while [ "${1}" != "" ] ; do
   case ${1} in
-    -a)
+    --attachment | -a)
       shift
-      OPTION_ACCURACY=${1}
-      ACCURACY=${1}
+      ATTACHMENTS+=(${1})
       ;;
-    -c)
-      OPTION_CONFIGURE=yes
+    --configure | -c)
+      CONFIGURE=yes
       ;;
-    -e)
-      shift
-      OPTION_FILENAME=${1}
-      FILENAME=${1}
+    --debug | -d)
+      DEBUG=yes
       ;;
-    -h)
-      ${SED} -e '/^$/,$d' ${0} | tail -n +2 | cut -c 3-
+    --help | -h)
+      ${TAC} ${0} | ${SED} '/^$/,$d' | ${TAC} | cut -c 3-
       exit 0
       ;;
-    -m)
+    --port | -p)
       shift
-      OPTION_MESSAGES=${1}
-      MESSAGES=${1}
-      ;;
-    -p)
-      shift
-      OPTION_PORT=${1}
       PORT=${1}
       ;;
-    -r)
+    --recipient | -r)
       shift
-      OPTION_RECIPIENT=${1}
       RECIPIENT=${1}
       ;;
-    -v)
+    --verbose | -v)
       VERBOSE=yes
       ;;
     *)
-      echo "syntax error"
+      echo "${MY_NAME}[$$]: bad option (${1})"
       exit 1
       ;;
   esac
@@ -131,32 +62,22 @@ done
 #######################################################################
 # Configuration mode (invoked by -c option)
 #
-if [[ "${OPTION_CONFIGURE}" == "yes" ]] ; then
-  if [ -v OPTION_ACCURACY ] || [ -v OPTION_MESSAGES ] || [ -v OPTION_PORT ] || [ -v OPTION_RECIPIENT ] ; then
-    if [[ ${EUID} -eq 0 ]] ; then
-      if [ -v OPTION_ACCURACY ] ; then
-        ${SED} -i "s/^ACCURACY=.*$/ACCURACY=${OPTION_ACCURACY}/" $(${REALPATH} ${0})
-      fi
-      if [ -v OPTION_FILENAME ] ; then
-        ${SED} -i "s/^FILENAME=.*$/FILENAME=${OPTION_FILENAME}/" $(${REALPATH} ${0})
-      fi
-      if [ -v OPTION_MESSAGES ] ; then
-        ${SED} -i "s/^MESSAGES=.*$/MESSAGES=${OPTION_MESSAGES}/" $(${REALPATH} ${0})
-      fi
-      if [ -v OPTION_PORT ] ; then
-        ${SED} -i "s/^PORT=.*$/PORT=${OPTION_PORT}/" $(${REALPATH} ${0})
-	    fi
-      if [ -v OPTION_RECIPIENT ] ; then
-        ${SED} -i "s/^RECIPIENT=.*$/RECIPIENT=${OPTION_RECIPIENT}/" $(${REALPATH} ${0})
-	    fi
-      exec "$(${REALPATH} ${0})" "-c"
-    else
-      echo "${MY_NAME}[$$]: sorry, only root can do that"
-      exit
-    fi
+if [[ "${CONFIGURE}" == "yes" ]] ; then
+  if [[ ${EUID} -eq 0 ]] ; then
+    attachments=$( IFS=$'\n'; echo "${ATTACHMENTS[*]}" )
+    attachments=$(echo ${attachments} | sed -e 's/[\/&]/\\&/g')
+    ${SED} -i "s/^ATTACHMENTS=.*$/ATTACHMENTS=(${attachments})/" $(${REALPATH} ${0})
+    ${SED} -i "s/^PORT=.*$/PORT=${PORT}/" $(${REALPATH} ${0})
+    ${SED} -i "s/^RECIPIENT=.*$/RECIPIENT=${RECIPIENT}/" $(${REALPATH} ${0})
+  else
+    echo "${MY_NAME}[$$]: sorry, the -c option is only available to root."
+    exit 1
   fi
-  echo "${MY_NAME}[$$]: ACCURACY = ${ACCURACY}, FILENAME = ${FILENAME}, MESSAGES = ${MESSAGES}, PORT = ${PORT}, RECIPIENT = ${RECIPIENT}"
-  exit
+  echo "${MY_NAME}[$$]: current configuration:"
+  echo "  ATTACHMENTS = ${ATTACHMENTS[@]}"
+  echo "  PORT = ${PORT}"
+  echo "  RECIPIENT = ${RECIPIENT}"
+  exit 0
 fi
 
 #######################################################################
@@ -179,26 +100,32 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
   MSG_DAY=`date +%j`
 
   # If a new day, then send the consolidated log
-  if ( [[ ${MESSAGES} -ne 0 ]] && [[ ${MSG_COUNT} -eq ${MESSAGES} ]] ) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
+  if ( [[ "${DEBUG}" == "yes" ]] && [[ ${MSG_COUNT} -eq 3 ]] ) || [[ "${MSG_DAY}" != "${LOG_DAY}" ]] ; then
     WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
 
-    EMAIL_SUBJECT="log: ${LOG_PRETTY_DAY}"
-    EMAIL_BODY=$(printf "date: ${LOG_DATE}\ntags: ${WP_TAGS},\n\n")
+    EMAIL_SUBJECT="${LOG_PRETTY_DAY}"
+    EMAIL_BODY=$(printf "tags: ${WP_TAGS},\n\n")
 		
     # Generate log file attachment
-    LOG_ATTACHMENT_FILENAME="/tmp/${LOG_DATE}.ais"
-    echo ${LOG[@]} > "${LOG_ATTACHMENT_FILENAME}"
-    LOG_ATTACHMENT_CLAUSE="--file-attach ${LOG_ATTACHMENT_FILENAME}"
+    LOG_ATTACHMENT_="/tmp/${LOG_DATE}.ais"
+    echo ${LOG[@]} > "${LOG_ATTACHMENT_}"
+    LOG_ATTACHMENT_CLAUSE="--file-attach ${LOG_ATTACHMENT_}"
 
-    # Generate end-of-day file attachment
-    if [ "${FILENAME}" != "" ] ; then
-      JSON_ATTACHMENT_FILENAME="/tmp/${LOG_DATE}.json"
-      ${CURL} ${FILENAME} > "${JSON_ATTACHMENT_FILENAME}"
-      JSON_ATTACHMENT_CLAUSE="--file-attach ${JSON_ATTACHMENT_FILENAME}"
+    # Generate end-of-day file attachments
+    if [[ ${#ATTACHMENTS[@]} -gt 0 ]] ; then
+      for ((i = 0; i < ${#ATTACHMENTS[@]}; i++)) ; do
+        if [[ "${ATTACHMENTS[${i}]}" =~ ^http* ]] ; then
+          aname="/tmp/${LOG_DATE}[${i}].json"; rm "${aname}"
+          ${CURL} -s -o "${aname}" "${ATTACHMENTS[${i}]}"
+        else
+          ${CAT} "${ATTACHMENTS[${i}]}" > "${aname}"
+        fi
+        if [ -e "${aname}" ] ; then LOG_ATTACHMENT_CLAUSE="${LOG_ATTACHMENT_CLAUSE} --file-attach ${aname}" ; fi
+      done
     fi
 
-    ${MIMECONSTRUCT} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE} ${JSON_ATTACHMENT_CLAUSE}
-    [[ "${VERBOSE}" == "yes" ]] && echo "${MY_NAME}[$$]: uploading log"
+    ${MIMECONSTRUCT} --to "${RECIPIENT}" --subject "${EMAIL_SUBJECT}" --encoding 8bit --string "${EMAIL_BODY}" ${LOG_ATTACHMENT_CLAUSE}
+    [[ "${VERBOSE}" == "yes" ]] && echo "${MY_NAME}[$$]: uploading log with ${LOG_ATTACHMENT_CLAUSE}"
 
     LOG=()
     LOG_DAY=${MSG_DAY}
@@ -229,3 +156,68 @@ done
 
 exit
 
+# NAME
+#   ais-log-uploader - accumulate/upload AIS data to an email address.
+#
+# USAGE
+#   usage: ais-log-uploader -h
+#   usage: ais-log-uploader -c [-a attachment]... [-p port] [-r recipient]
+#   usage: ais-log-uploader [-a attachment]... [-d] [-p port] [-r recipient] [-v]
+#
+# DESCRIPTION
+#   ais-log-uploader is a server which listens on a UDP port for AIS
+#   !AIVDM position reports. Consecutive reports which refer to the
+#   same geographic location are discarded and all other messages are
+#   timestamped and logged. At the end of each day the assembled log
+#   is emailed to a specified recipient and a new log started for the
+#   new day.
+#
+#   The programs maintains a persistent internal configuration which
+#   can be displayed and set from the command line.
+#
+#   Once configured ais-log-uploader is typically run as a service
+#   under systemd.
+#
+# PROGRAM OPTIONS
+#   The following options are available. 
+#
+#   --attachment resource
+#   -a resource
+#   resource identifies a local or remote resource that should be
+#   attached to the log email when it is sent. If resource starts
+#   with 'http' then it is treated as a URL addressing some remote
+#   API, otherwise it is treated as a local filename. API results
+#   are assumed to be a JSON strings which become the content of
+#   the attachment
+#
+#   --configure
+#   -c
+#   runs the program in configuration mode. On its own the switch
+#   simply reports the program configuration. If used with any of
+#   -a, -p or -r the root user can update the in-built program
+#   configuration.
+#
+#   --debug
+#   -d
+#   engages debug mode in which the reporting email is sent after
+#   receipt of every three AIS position reports (rather than at the
+#   end of each day). 
+#
+#   --help
+#   -h
+#   prints (this) help information.
+#
+#   --port port
+#   -p port
+#   specifies the UDP port number on which the server should listen
+#   for incoming position reports.
+#
+#   --recipient email-address
+#   -r email-address
+#   specifies the email-address of the recipient to which log reports
+#   should be sent.
+#
+#   --verbose
+#   -v
+#   engages verbose mode in which diagnostic messages are printed to
+#   standard output.

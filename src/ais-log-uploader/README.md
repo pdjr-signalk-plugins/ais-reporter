@@ -6,6 +6,10 @@ duplicates, and collates filtered reports into a daily log.
 At end-of-day the daily log is sent by email to some recipient for
 archive storage or further processing.
 
+The end-of-day email can be configured to include attachments in
+addition to the log itself: either local files or the output from
+API calls.
+
 ## Installation
 
 Grab the git repository and install **ais-log-uploader** and its
@@ -57,8 +61,9 @@ ais-log-uploader
 ```
 
 But since the server immediately enters a listening loop this is only
-really useful for configuration, testing and displaying program
-documentation (use `ais-log-uploader -h`).
+really useful for configuration (with `-c` option), testing (with `-d`
+and/or `-v` options) and displaying program documentation (with `-h`
+option).
 
 Typically, **ais-log-uploader** will be started under systemd control.
 Immediately after installation you can start the server for the first
