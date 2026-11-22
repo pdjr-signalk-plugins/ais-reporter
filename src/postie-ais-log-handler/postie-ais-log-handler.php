@@ -196,7 +196,7 @@ function nominatum_query($lat, $lon) {
   global $nominatum_url, $nominatum_address_properties;
   $retval = null;
   $url = "{$nominatum_url}format=json&lat={$lat}&lon={$lon}";
-  $context = stream_context_create([ 'http' => [ 'user_agent' => 'Simon Ferndriger', ], ]);
+//  $context = stream_context_create([ 'http' => [ 'user_agent' => 'Simon Ferndriger', ], ]);
   $json_text = file_get_contents($url, false, $context);
   if ($json_text != null) {
     $json = json_decode($json_text);
