@@ -224,9 +224,10 @@ function nominatum_query($lat, $lon) {
  * @return - string containing the parse result.
  */
 function render_json_attachment($url) {
-  $retval = "<div class='end-of-day'>\n";
+  $retval = "";
   $json = json_decode(file_get_contents($url), true);
   if ($json) {
+    $retval .= "<div class='end-of-day'>\n";
     $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
     foreach ($json['tanks'] as $tanktype => $tankids) {
       foreach ($tankids as $tankid => $tank) {
@@ -251,19 +252,19 @@ function render_json_attachment($url) {
     if (array_key_exists('solar', $json['electrical'])) {
       $solarYield = 0;
       foreach ($json['electrical']['solar'] as $solarid => $solar) {
-        if (array_key_exists('yieldToday', $solar) && array_key_exists('value', $solar['yieldToday'])) {
-          $solarYield += $solar['yieldToday']['value'];
+        if (array_key_exists('yieldYesterday', $solar) && array_key_exists('value', $solar['yieldYesterday'])) {
+          $solarYield += ($solar['yieldYesterday']['value'] / 3600000);
         }
       }
       $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
       $retval .= "<div style='flex: 0.5;'>Solar yield today</div>";
-      $retval .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield / 3600000) . " kWh</div>\n";
+      $retval .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield) . " kWh</div>\n";
       $retval .= "</div>";
     }
 
     $retval .= "</div>";
+    $retval .= "</div>\n";
   }
-  $retval .= "</div>\n";
   return($retval);
 }
 

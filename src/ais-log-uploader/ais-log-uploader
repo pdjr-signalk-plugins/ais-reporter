@@ -114,13 +114,22 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     # Generate end-of-day file attachments
     if [[ ${#ATTACHMENTS[@]} -gt 0 ]] ; then
       for ((i = 0; i < ${#ATTACHMENTS[@]}; i++)) ; do
-        if [[ "${ATTACHMENTS[${i}]}" =~ ^http* ]] ; then
-          aname="/tmp/${LOG_DATE}[${i}].json"; rm "${aname}"
-          ${CURL} -s -o "${aname}" "${ATTACHMENTS[${i}]}"
+        if [[ "${ATTACHMENTS[${i}]}" =~ ^(http.*)(\..*)$ ]] ; then
+          if [[ "${BASH_REMATCH[1]}" != "" ]] && [[ "${BASH_REMATCH[2]}" != "" ]] ; then
+            aname=$(printf("/tmp/%s.%s.%s", ${LOG_DATE}, $(${CAT} /proc/sys/kernel/random/uuid), ${BASH_REMATCH[2]}))
+            ${CURL} -s -o "${aname}" "${BASH_REMATCH[1]}"
+          else
+            echo "${MY_NAME}[$$]: bad -a option value"
+            exit 1
+          fi
         else
-          ${CAT} "${ATTACHMENTS[${i}]}" > "${aname}"
+          $aname=${ATTACHMENTS[${i}]}
+        fi            
+        if [ -e "${aname}" ] ; then
+          LOG_ATTACHMENT_CLAUSE="${LOG_ATTACHMENT_CLAUSE} --file-attach ${aname}" ; 
+        else
+          echo "${MY_NAME}[$$]: skipping unavailable attachment (${ATTACHMENTS[${i}]})"
         fi
-        if [ -e "${aname}" ] ; then LOG_ATTACHMENT_CLAUSE="${LOG_ATTACHMENT_CLAUSE} --file-attach ${aname}" ; fi
       done
     fi
 
@@ -181,14 +190,20 @@ exit
 # PROGRAM OPTIONS
 #   The following options are available. 
 #
-#   --attachment resource
-#   -a resource
+#   --attachment resource[.ext]
+#   -a resource[.ext]
 #   resource identifies a local or remote resource that should be
-#   attached to the log email when it is sent. If resource starts
-#   with 'http' then it is treated as a URL addressing some remote
-#   API, otherwise it is treated as a local filename. API results
-#   are assumed to be a JSON strings which become the content of
-#   the attachment
+#   attached to the log email when it is sent. If there is any
+#   ambiguity in the type of the data referenced by resource then
+#   .ext should be appended to characterise the type of contained
+#   data.
+#   
+#   If resource starts with 'http' then it is treated as a URL
+#   addressing some remote API and the data retuned from the API
+#   is saved to a local file called 'uuid.date.ext', otherwise
+#   resource is assumed to be the name of a local file (in this
+#   case .ext may not be redundant). In either case, the local
+#   file is attached to the outgoing email.
 #
 #   --configure
 #   -c
