@@ -104,7 +104,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
 
     EMAIL_SUBJECT="${LOG_PRETTY_DAY}"
-    EMAIL_BODY=$(printf "date: ${LOG_DATE}\ntags: ${WP_TAGS},\n\n")
+    EMAIL_BODY=$(printf "tags: ${WP_TAGS},\n\n")
 
     # Generate log file attachment
     LOG_ATTACHMENT_="/tmp/${LOG_DATE}.ais"
