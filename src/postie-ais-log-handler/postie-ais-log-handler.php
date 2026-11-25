@@ -95,8 +95,8 @@ class SimpleAisDecoder {
       $retval['accuracy'] = array('value' => bindec(substr($bitString, 60, 1)), 'units' => '');
       $retval['cog'] = array('value' => bindec(substr($bitString, 116, 12)) / 10.0, 'units' => 'deg'); // Degrees
       $retval['heading'] = array('value' => bindec(substr($bitString, 128, 9)), 'units' => 'deg');
-      $retval['lat'] = array('value' => round(self::signedInt(substr($bitString, 89, 27)) / 600000.0, 6), 'units' => 'deg');
-      $retval['lon'] = array('value' => round(self::signedInt(substr($bitString, 61, 28)) / 600000.0, 6), 'units' => 'deg');
+      $retval['lat'] = array('value' => round(self::signedInt(substr($bitString, 89, 27)) / 600000.0, 4), 'units' => 'deg');
+      $retval['lon'] = array('value' => round(self::signedInt(substr($bitString, 61, 28)) / 600000.0, 4), 'units' => 'deg');
       $retval['mmsi'] = array('value' => bindec(substr($bitString, 8, 30)), 'units' => '');
       $retval['repeat'] = array('value' => bindec(substr($bitString, 6, 2)), 'units' => '');
       $retval['rot'] = array('value' => round(pow((self::signedInt(substr($bitString, 42, 8)) / 4.733), 2) * ((self::signedInt(substr($bitString,42,8)) < 0)?-1:1), 2), 'units' => 'deg/min');
@@ -196,7 +196,8 @@ function nominatum_query($lat, $lon) {
   global $nominatum_url, $nominatum_address_properties;
   $retval = null;
   $url = "{$nominatum_url}format=json&lat={$lat}&lon={$lon}";
-  $context = stream_context_create([ 'http' => [ 'user_agent' => basename('__FILE__', '.php'), ], ]);
+  $context = stream_context_create([ 'http' => [ 'user_agent' => basename(__FILE__, '.php') ] ]);
+
   $json_text = file_get_contents($url, false, $context);
   if ($json_text != null) {
     $json = json_decode($json_text);
@@ -218,16 +219,16 @@ function nominatum_query($lat, $lon) {
 /**********************************************************************
  * Render a JSON text representation of the Signal K static data model
  * into an HTML table summarising the current state of the vessel's
- * tankage and electrics.
+ * tanks and batteries
  * 
  * @param $url - the url of the JSON file to be parsed.
- * @return - array [ "parse result", [tags] ].
+ * @return - string containing the parse result.
  */
 function render_json_attachment($url) {
-  $retval = [ "", [] ];
+  $retval=["", []];
+  $retval[0] = "<div class='end-of-day'>\n";
   $json = json_decode(file_get_contents($url), true);
   if ($json) {
-    $retval[0] .= "<div class='end-of-day'>\n";
     $retval[0] .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
     foreach ($json['tanks'] as $tanktype => $tankids) {
       foreach ($tankids as $tankid => $tank) {
@@ -263,8 +264,8 @@ function render_json_attachment($url) {
     }
 
     $retval[0] .= "</div>";
-    $retval[0] .= "</div>\n";
   }
+  $retval[0] .= "</div>\n";
   return($retval);
 }
 
@@ -296,7 +297,7 @@ function render_log_abstract($log) {
 
 function render_ais_attachment($url) {
   global $ais_decoder_overrides;
-  $retval = [ "", [] ];
+  $retval = ["", []];
   $log = SimpleAisDecoder::decode_file($url, $ais_decoder_overrides);
   if (count($log) > 0) {
     if (count($log) == 1) { // One log entry means moored
@@ -325,7 +326,7 @@ function render_ais_attachment($url) {
         if ($end != null) $retval[1][] = $end;
         $subhead .= " to " . ($end != null)?$end:"{$moored_log[count($moored_log)-1]['ais']['lat']['value']},{$moored_log[count($moored_log)-1]['ais']['lon']['value']}";
       }
-      $retval[0] = "<h2>{$subhead}</h2><p>" . $retval;
+      $retval[0] = "<h2>{$subhead}</h2><p>" . $retval[0];
     }
     $retval[0] .= render_log_abstract($moored_log);
   }
@@ -342,8 +343,8 @@ function postie_log_attachment_processor_postie_post_before($post) {
   $change_attachment_storage_location = false;
 
   // Replace AIS attachment URL with derived content
-  if (preg_match($ais_regex, $post['post_content'], $matches)) {   
-    $update = render_ais_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path'])[0];
+  if (preg_match($ais_regex, $post['post_content'], $matches)) {    
+    $update = render_ais_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path']);
     $post['post_content'] = str_replace($matches[0], $update[0], $post['post_content']);
     $post['tags_input'] = array_merge($post['tags_input'], $update[1]);
   }
