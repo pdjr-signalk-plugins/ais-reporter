@@ -218,35 +218,35 @@ function nominatum_query($lat, $lon) {
 /**********************************************************************
  * Render a JSON text representation of the Signal K static data model
  * into an HTML table summarising the current state of the vessel's
- * tanks and batteries
+ * tankage and electrics.
  * 
  * @param $url - the url of the JSON file to be parsed.
- * @return - string containing the parse result.
+ * @return - array [ "parse result", [tags] ].
  */
 function render_json_attachment($url) {
-  $retval = "";
+  $retval = [ "", [] ];
   $json = json_decode(file_get_contents($url), true);
   if ($json) {
-    $retval .= "<div class='end-of-day'>\n";
-    $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
+    $retval[0] .= "<div class='end-of-day'>\n";
+    $retval[0] .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
     foreach ($json['tanks'] as $tanktype => $tankids) {
       foreach ($tankids as $tankid => $tank) {
         if (array_key_exists('currentLevel', $tank)) {
-          $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
-          $retval .= "<div style='flex: 0.5;'>Tank {$tankid} ({$tanktype})</div>";
-          $retval .= "<div style='flex: 0.5;'>" . round($tank['currentLevel']['value'] * 100) . "%</div>\n";
-          $retval .= "</div>";
+          $retval[0] .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
+          $retval[0] .= "<div style='flex: 0.5;'>Tank {$tankid} ({$tanktype})</div>";
+          $retval[0] .= "<div style='flex: 0.5;'>" . round($tank['currentLevel']['value'] * 100) . "%</div>\n";
+          $retval[0] .= "</div>";
 	      }
       }
     }
-    $retval .= "</div>";
-    $retval .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
+    $retval[0] .= "</div>";
+    $retval[0] .= "<div style='display: flex; flex-direction: column; width: 100%; background: #e0e0e0; margin-top: 20px;'>\n";
     foreach ($json['electrical']['batteries'] as $batteryid => $battery) {
       if (array_key_exists('capacity', $battery) && array_key_exists('stateOfCharge', $battery['capacity'])) {
-          $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
-          $retval .= "<div style='flex: 0.5;'>Battery {$batteryid}</div>";
-          $retval .= "<div style='flex: 0.5;'>" . round($battery['capacity']['stateOfCharge']['value'] * 100) . "%</div>\n";
-          $retval .= "</div>";
+          $retval[0] .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
+          $retval[0] .= "<div style='flex: 0.5;'>Battery {$batteryid}</div>";
+          $retval[0] .= "<div style='flex: 0.5;'>" . round($battery['capacity']['stateOfCharge']['value'] * 100) . "%</div>\n";
+          $retval[0] .= "</div>";
       }
     }
     if (array_key_exists('solar', $json['electrical'])) {
@@ -256,14 +256,14 @@ function render_json_attachment($url) {
           $solarYield += ($solar['yieldYesterday']['value'] / 3600000);
         }
       }
-      $retval .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
-      $retval .= "<div style='flex: 0.5;'>Solar yield today</div>";
-      $retval .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield) . " kWh</div>\n";
-      $retval .= "</div>";
+      $retval[0] .= "<div style='display: flex; flex-direction: row; width: 100%;'>";
+      $retval[0] .= "<div style='flex: 0.5;'>Solar yield today</div>";
+      $retval[0] .= "<div style='flex: 0.5;'>" . sprintf("%.2f", $solarYield) . " kWh</div>\n";
+      $retval[0] .= "</div>";
     }
 
-    $retval .= "</div>";
-    $retval .= "</div>\n";
+    $retval[0] .= "</div>";
+    $retval[0] .= "</div>\n";
   }
   return($retval);
 }
@@ -296,14 +296,14 @@ function render_log_abstract($log) {
 
 function render_ais_attachment($url) {
   global $ais_decoder_overrides;
-  $retval = "";
+  $retval = [ "", [] ];
   $log = SimpleAisDecoder::decode_file($url, $ais_decoder_overrides);
   if (count($log) > 0) {
     if (count($log) == 1) { // One log entry means moored
-      $retval = "[leaflet-map lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']} zoom=13]\n";
+      $retval[0] = "[leaflet-map lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']} zoom=13]\n";
     } else { // Otherwise must be cruising
-      $retval = "[leaflet-map fitbounds]\n";
-      $retval .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['ais']['lat']['value'] . "," . $value['ais']['lon']['value'], $log)) . "']\n";
+      $retval[0] = "[leaflet-map fitbounds]\n";
+      $retval[0] .= "[leaflet-line latlngs='" . join(";", array_map(fn($value): string => $value['ais']['lat']['value'] . "," . $value['ais']['lon']['value'], $log)) . "']\n";
     }
 
     // Add a marker for every moored position.
@@ -312,23 +312,22 @@ function render_ais_attachment($url) {
       foreach ($moored_log as $log_item) {
         $marker_props = "svg iconsize='18,12' background='" . array('#7f7f7f','#007f00','#00007f')[$log_item['ais']['smi']['value']] . "'";
         $popup = "<b>" . (new DateTimeImmutable($log_item['timestamp']))->format('H:i:s') . "</b>" . render_log_item_popup($log_item);
-        $retval .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']}]{$popup}[/leaflet-marker]\n";
+        $retval[0] .= "[leaflet-marker {$marker_props} lat={$log[0]['ais']['lat']['value']} lng={$log[0]['ais']['lon']['value']}]{$popup}[/leaflet-marker]\n";
       }
 
       // Reverse geo-lookup to get start and stop place names
       $start = null; $end = null; $subhead = null; $tags = array();
       $start = nominatum_query($moored_log[0]['ais']['lat']['value'], $moored_log[0]['ais']['lon']['value']);
-      if ($start != null) $post['tags_input'][] = $start;
+      if ($start != null) $retval[1][] = $start;
       $subhead = ($start != null)?$start:"{$moored_log[0]['ais']['lat']['value']},{$moored_log[0]['ais']['lon']['value']}";
       if (count($moored_log) > 1) {
         $end = nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
-        if ($end != null) $post['tags_input'][] = $end;
+        if ($end != null) $retval[1][] = $end;
         $subhead .= " to " . ($end != null)?$end:"{$moored_log[count($moored_log)-1]['ais']['lat']['value']},{$moored_log[count($moored_log)-1]['ais']['lon']['value']}";
       }
-      $retval = "<h2>{$subhead}</h2><p>" . $retval;
-      wp_set_post_tags($post['ID'], $tags, true);
+      $retval[0] = "<h2>{$subhead}</h2><p>" . $retval;
     }
-    $retval .= render_log_abstract($moored_log);
+    $retval[0] .= render_log_abstract($moored_log);
   }
   return($retval);
 }
@@ -343,21 +342,16 @@ function postie_log_attachment_processor_postie_post_before($post) {
   $change_attachment_storage_location = false;
 
   // Replace AIS attachment URL with derived content
-  if (preg_match($ais_regex, $post['post_content'], $matches)) {    
-    $post['post_content'] = str_replace(
-      $matches[0],
-      render_ais_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path']),
-      $post['post_content']
-    );
+  if (preg_match($ais_regex, $post['post_content'], $matches)) {   
+    $update = render_ais_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path'])[0];
+    $post['post_content'] = str_replace($matches[0], $update[0], $post['post_content']);
+    $post['tags_input'] = array_merge($post['tags_input'], $update[1]);
   }
 
   // Replace JSON attachment URL with derived content
   if (preg_match($json_regex, $post['post_content'], $matches)) {
-    $post['post_content'] = str_replace(
-      $matches[0],
-      render_json_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path']),
-      $post['post_content']
-    );
+    $update = render_json_attachment($_SERVER['DOCUMENT_ROOT'] . parse_url($matches[1])['path']);
+    $post['post_content'] = str_replace($matches[0], $update[0], $post['post_content']);
   }
 
   $change_attachment_storage_location = true;
