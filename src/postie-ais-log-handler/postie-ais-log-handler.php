@@ -318,11 +318,11 @@ function render_ais_attachment($url) {
       // Reverse geo-lookup to get start and stop place names
       $start = null; $end = null; $subhead = null; $tags = array();
       $start = nominatum_query($moored_log[0]['ais']['lat']['value'], $moored_log[0]['ais']['lon']['value']);
-      if ($start != null) $tags[] = $start;
+      if ($start != null) $post['tags_input'][] = $start;
       $subhead = ($start != null)?$start:"{$moored_log[0]['ais']['lat']['value']},{$moored_log[0]['ais']['lon']['value']}";
       if (count($moored_log) > 1) {
         $end = nominatum_query($moored_log[count($moored_log)-1]['ais']['lat']['value'], $moored_log[count($moored_log)-1]['ais']['lon']['value']);
-        if ($end != null) $tags[] = $end;
+        if ($end != null) $post['tags_input'][] = $end;
         $subhead .= " to " . ($end != null)?$end:"{$moored_log[count($moored_log)-1]['ais']['lat']['value']},{$moored_log[count($moored_log)-1]['ais']['lon']['value']}";
       }
       $retval = "<h2>{$subhead}</h2><p>" . $retval;
