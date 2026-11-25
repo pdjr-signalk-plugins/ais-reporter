@@ -60,7 +60,7 @@ while [ "${1}" != "" ] ; do
 done
 
 #######################################################################
-# Configuration mode (invoked by -c option)
+# Configuration mode (invoked by -c option).
 #
 if [[ "${CONFIGURE}" == "yes" ]] ; then
   if [[ ${EUID} -eq 0 ]] ; then
@@ -70,7 +70,7 @@ if [[ "${CONFIGURE}" == "yes" ]] ; then
     ${SED} -i "s/^PORT=.*$/PORT=${PORT}/" $(${REALPATH} ${0})
     ${SED} -i "s/^RECIPIENT=.*$/RECIPIENT=${RECIPIENT}/" $(${REALPATH} ${0})
   else
-    echo "${MY_NAME}[$$]: sorry, the -c option is only available to root."
+    echo "${MY_NAME}[$$]: sorry, using the -c option to set defaults can only be done by root."
     exit 1
   fi
   echo "${MY_NAME}[$$]: current configuration:"
