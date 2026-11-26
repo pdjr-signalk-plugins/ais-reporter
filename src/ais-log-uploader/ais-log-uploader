@@ -16,7 +16,7 @@ TS="/usr/bin/ts %Y%m%dT%H%M%S"
 
 MY_NAME=$(${BASENAME} ${0})
 
-ATTACHMENTS=(http://192.168.1.1:3000/signalk/v1/api/vessels/self/.json)
+ATTACHMENTS=("http://192.168.1.1:3000/signalk/v1/api/vessels/self/tanks/;tanks" "http://192.168.1.1:3000/signalk/v1/api/vessels/self/electrical/batteries/;batteries" "http://192.168.1.1:3000/signalk/v1/api/vessels/self/electrical/solar/;solar")
 CONFIGURE=no
 DEBUG=no
 PORT=12345
@@ -60,7 +60,7 @@ while [ "${1}" != "" ] ; do
 done
 
 #######################################################################
-# Configuration mode (invoked by -c option).
+# Configuration mode (invoked by -c option)
 #
 if [[ "${CONFIGURE}" == "yes" ]] ; then
   if [[ ${EUID} -eq 0 ]] ; then
@@ -70,7 +70,7 @@ if [[ "${CONFIGURE}" == "yes" ]] ; then
     ${SED} -i "s/^PORT=.*$/PORT=${PORT}/" $(${REALPATH} ${0})
     ${SED} -i "s/^RECIPIENT=.*$/RECIPIENT=${RECIPIENT}/" $(${REALPATH} ${0})
   else
-    echo "${MY_NAME}[$$]: sorry, using the -c option to set defaults can only be done by root."
+    echo "${MY_NAME}[$$]: sorry, the -c option is only available to root."
     exit 1
   fi
   echo "${MY_NAME}[$$]: current configuration:"
@@ -104,7 +104,7 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     WP_TAGS="ais,day,${LOG_DATE},${LOG_MONTH},${LOG_YEAR}"
 
     EMAIL_SUBJECT="${LOG_PRETTY_DAY}"
-    EMAIL_BODY=$(printf "tags: ${WP_TAGS},\n\n")
+    EMAIL_BODY=$(printf "date: ${LOG_DATE}\ntags: ${WP_TAGS},\n\n")
 
     # Generate log file attachment
     LOG_ATTACHMENT_="/tmp/${LOG_DATE}.ais"
@@ -115,19 +115,13 @@ ${SOCAT} -u UDP-RECV:${PORT} STDOUT | while IFS= read -r line ; do
     # Generate end-of-day file attachments
     if [[ ${#ATTACHMENTS[@]} -gt 0 ]] ; then
       for ((i = 0; i < ${#ATTACHMENTS[@]}; i++)) ; do
-        if [[ "${ATTACHMENTS[${i}]}" =~ ^http.*$ ]] ; then
-          if [[ "${ATTACHMENTS[${i}]}" =~ ^(.*?)(\.[^.]*)$ ]] ; then
-            if [[ ${#BASH_REMATCH[@]} -eq 3 ]] ; then
-              printf -v aname "/tmp/%s.%s%s" ${LOG_DATE} $(${CAT} /proc/sys/kernel/random/uuid) ${BASH_REMATCH[2]}
-              ${CURL} -s -o "${aname}" "${BASH_REMATCH[1]}"
-            else
-              echo "${MY_NAME}[$$]: skipping bad -a option value"
-            fi
-	        else
-            echo "${MY_NAME}[$$]: skipping bad -a option value"
-          fi
+        if [[ "${ATTACHMENTS[${i}]}" =~ ^(http.*)\;(.*)$ ]] ; then
+          url=${BASH_REMATCH[1]}
+          ext=${BASH_REMATCH[2]}
+          printf -v aname "/tmp/%s.%s" ${LOG_DATE} ${ext}
+          ${CURL} -s -o "${aname}" "${url}"
         else
-          $aname=${ATTACHMENTS[${i}]}
+          aname=${ATTACHMENTS[${i}]}
         fi            
         if [ -e "${aname}" ] ; then
           LOG_ATTACHMENT_CLAUSE="${LOG_ATTACHMENT_CLAUSE} --file-attach ${aname}" ; 
