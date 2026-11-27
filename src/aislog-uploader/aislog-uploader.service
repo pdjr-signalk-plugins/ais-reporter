@@ -7,8 +7,8 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=ais-log-uploader
-ExecStart=/usr/local/bin/ais-log-uploader
+User=aislog-uploader
+ExecStart=/usr/local/bin/aislog-uploader
 
 [Install]
 WantedBy=multi-user.target

@@ -1,9 +1,11 @@
 <?php
-# Add support for [aislog] shortcode.
-#
-# [log url="some_log_file"]
 
-namespace PDJR\LogAisShortcode;
+namespace PDJR\AisLogAisShortcode;
+
+/**********************************************************************
+ * Add support for [ais url='...'] shortcode.
+ */
+
 
 $post_discard_attachments = array('application/json');
 $nominatum_url = 'https://nominatim.openstreetmap.org/reverse?';
@@ -252,7 +254,7 @@ function render_ais_attachment($url) {
 
 }
 
-function log_ais_shortcode($atts, $content = null) {
+function shortcode($atts, $content = null) {
   $retval = "";
   if ($atts['url']) {
     $retval = do_shortcode(render_ais_attachment($atts['url'])[0]);
@@ -260,6 +262,6 @@ function log_ais_shortcode($atts, $content = null) {
   return($retval);
 }
 
-add_shortcode('ais', 'PDJR\LogAisShortcode\log_ais_shortcode');
+add_shortcode('ais', 'PDJR\AisLogAisShortcode\shortcode');
 
 ?>

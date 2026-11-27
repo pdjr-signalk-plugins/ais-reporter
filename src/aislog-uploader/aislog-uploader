@@ -165,15 +165,15 @@ done
 exit
 
 # NAME
-#   ais-log-uploader - accumulate/upload AIS data to an email address.
+#   aislog-uploader - accumulate/upload AIS data to an email address.
 #
 # USAGE
-#   usage: ais-log-uploader -h
-#   usage: ais-log-uploader -c [-a attachment]... [-p port] [-r recipient]
-#   usage: ais-log-uploader [-a attachment]... [-d] [-p port] [-r recipient] [-v]
+#   usage: aislog-uploader -h
+#   usage: aislog-uploader -c [-a attachment]... [-p port] [-r recipient]
+#   usage: aislog-uploader [-a attachment]... [-d] [-p port] [-r recipient] [-v]
 #
 # DESCRIPTION
-#   ais-log-uploader is a server which listens on a UDP port for AIS
+#   aislog-uploader is a server which listens on a UDP port for AIS
 #   !AIVDM position reports. Consecutive reports which refer to the
 #   same geographic location are discarded and all other messages are
 #   timestamped and logged. At the end of each day the assembled log
@@ -183,7 +183,7 @@ exit
 #   The programs maintains a persistent internal configuration which
 #   can be displayed and set from the command line.
 #
-#   Once configured ais-log-uploader is typically run as a service
+#   Once configured aislog-uploader is typically run as a service
 #   under systemd.
 #
 # PROGRAM OPTIONS

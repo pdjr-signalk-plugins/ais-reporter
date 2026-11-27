@@ -1,7 +1,10 @@
 <?php
-# Add support for [batteries url="..."] shortcode.
 
-namespace PDJR\LogBatteriesShortcode;
+namespace PDJR\AisLogBatteriesShortcode;
+
+/**********************************************************************
+ * Add support for [batteries url='...'] shortcode.
+ */
 
 function render_attachment($url) {
   $retval=["", []];
@@ -28,6 +31,6 @@ function shortcode($atts, $content = null) {
   return($retval);
 }
 
-add_shortcode('batteries', 'PDJR\LogBatteriesShortcode\shortcode');
+add_shortcode('batteries', 'PDJR\AisLogBatteriesShortcode\shortcode');
 
 ?>

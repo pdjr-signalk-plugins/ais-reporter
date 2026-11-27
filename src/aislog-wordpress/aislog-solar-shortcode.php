@@ -1,7 +1,10 @@
 <?php
-# Add support for [solar url="..."] shortcode.
 
 namespace PDJR\LogSolarShortcode;
+
+/**********************************************************************
+ * Add support for [solar url='...'] shortcode. 
+ */
 
 function render_solar_attachment($url) {
   $retval=["", []];
@@ -28,6 +31,6 @@ function shortcode($atts, $content = null) {
   return($retval);
 }
 
-add_shortcode('solar', 'PDJR\LogSolarShortcode\shortcode');
+add_shortcode('solar', 'PDJR\AisLogSolarShortcode\shortcode');
 
 ?>
