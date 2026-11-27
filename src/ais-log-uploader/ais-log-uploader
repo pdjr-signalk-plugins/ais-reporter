@@ -189,22 +189,20 @@ exit
 # PROGRAM OPTIONS
 #   The following options are available. 
 #
-#   --attachment resource[.ext]
-#   -a resource[.ext]
-#   resource identifies a local or remote resource that should be
-#   attached to the log email when it is sent. If there is any
-#   ambiguity in the type of the data referenced by resource then
-#   .ext should be appended to characterise the type of contained
-#   data.
-#   
-#   If resource starts with 'http' then it is treated as a URL
-#   addressing some remote API and the data retuned from the API
-#   is saved to a local file called 'date.uuid.ext', where date
-#   is the date of the log as 'YYYYMMDD' and uuid is a standard
-#   Unix unique identifier and .ext must be specified. Otherwise,
-#   resource is assumed to be the name of a local file (in this
-#   case .ext may not be required). In either case, the local
-#   file is attached to the outgoing email.
+#   --attachment filename
+#   -a filename
+#   --attachment url;ext
+#   -a url;ext
+#   specifies a resource identified by a filename or url that should be
+#   attached to the log email when it is sent. A url is differentiated
+#   from a filename by having the form 'http*' and When a url is used
+#   (typically to reference an API) then ext must be supplied to
+#   identify the type of the data returned by the API call. 
+#
+#   It is possible to use ext (and any extension embedded in filename)
+#   to identify the logical content of the data being referenced,
+#   leaving the final recipient of the attachment to handle downstream
+#   processing.
 #
 #   --configure
 #   -c
